@@ -184,6 +184,7 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-300 mb-1">รหัส PIN</label>
                     <input type="password" id="admin-pin" class="block w-full px-3 py-2.5 bg-gray-900 border border-dark-border rounded-lg text-white text-center tracking-widest text-lg focus:outline-none focus:ring-2 focus:ring-brand-500 transition" placeholder="••••">
+                    <p class="text-xs text-gray-500 mt-2 text-center">รหัสทดสอบ: 1234</p>
                 </div>
                 <button type="submit" class="w-full bg-gray-700 hover:bg-gray-600 text-white font-medium py-2.5 rounded-lg transition duration-200">
                     เข้าสู่ระบบ
@@ -392,8 +393,13 @@
         }
 
         async function handleScan(qrData) {
-            if (qrData !== COMPANY_QR_CODE) {
+            // ถอดแท็ก HTML ออก เผื่อเครื่องสแกนอ่านมาติด <p></p> หรือแท็กอื่นๆ
+            const cleanQrData = qrData.replace(/(<([^>]+)>)/gi, "").trim();
+
+            if (cleanQrData !== COMPANY_QR_CODE) {
                 closeScanner();
+                // แสดงค่าที่สแกนได้ในคอนโซลเผื่อไว้ใช้ดีบั๊ก
+                console.log("สแกนได้:", cleanQrData, "แต่รหัสที่ต้องการคือ:", COMPANY_QR_CODE);
                 showToast('QR Code ไม่ถูกต้องหรือไม่ใช่ของบริษัท', 'error');
                 return;
             }
