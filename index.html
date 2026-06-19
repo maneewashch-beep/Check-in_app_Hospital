@@ -450,7 +450,11 @@
             showToast('กำลังบันทึกข้อมูล...', 'info', true);
 
             const now = new Date();
-            const dateStr = now.toLocaleDateString('en-CA'); // format: YYYY-MM-DD
+            // [แก้ไข] บังคับดึงวันที่แบบ ค.ศ. (YYYY-MM-DD) เพื่อป้องกันปัญหามือถือใช้ปี พ.ศ. (2569)
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const dateStr = `${year}-${month}-${day}`; 
             const timeStr = now.toLocaleTimeString('th-TH', { hour12: false });
             
             let allLogs = [];
@@ -465,7 +469,17 @@
                 allLogs = mockDB.getLogs();
             }
 
-            const myLogsToday = allLogs.filter(l => l.empId === currentUser.empId && l.date === dateStr);
+            // [แก้ไข] กรองวันที่โดยดักจับรูปแบบ GMT ด้วย
+            const myLogsToday = allLogs.filter(l => {
+                let logDateStr = String(l.date || '').trim();
+                if (logDateStr.includes('GMT')) {
+                    try {
+                        const d = new Date(logDateStr);
+                        logDateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+                    } catch(e) {}
+                }
+                return l.empId === currentUser.empId && logDateStr === dateStr;
+            });
             const isLastActionIn = myLogsToday.length > 0 && myLogsToday[myLogsToday.length-1].type === 'IN';
             const actionType = isLastActionIn ? 'OUT' : 'IN';
 
@@ -514,7 +528,9 @@
 
         async function loadTodayLogsForUser() {
             const container = document.getElementById('today-logs-container');
-            const dateStr = new Date().toLocaleDateString('en-CA');
+            // [แก้ไข] บังคับดึงวันที่แบบ ค.ศ. (YYYY-MM-DD)
+            const d = new Date();
+            const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
             
             let allLogs = [];
             try {
@@ -537,7 +553,17 @@
                 allLogs = mockDB.getLogs();
             }
 
-            const myLogs = allLogs.filter(l => l.empId === currentUser.empId && String(l.date || '').trim() === dateStr);
+            // [แก้ไข] กรองวันที่โดยดักจับรูปแบบ GMT
+            const myLogs = allLogs.filter(l => {
+                let logDateStr = String(l.date || '').trim();
+                if (logDateStr.includes('GMT')) {
+                    try {
+                        const dl = new Date(logDateStr);
+                        logDateStr = `${dl.getFullYear()}-${String(dl.getMonth() + 1).padStart(2, '0')}-${String(dl.getDate()).padStart(2, '0')}`;
+                    } catch(e) {}
+                }
+                return l.empId === currentUser.empId && logDateStr === dateStr;
+            });
             
             if (myLogs.length === 0) {
                 container.innerHTML = '<div class="text-center text-sm text-gray-600 py-2">ยังไม่มีบันทึกในวันนี้</div>';
