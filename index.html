@@ -2,753 +2,1158 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Enterprise Time Attendance System</title>
-    <!-- Tailwind CSS -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>AttendanceSys — ระบบลงเวลาทำการ</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- HTML5 QR Code Scanner -->
     <script src="https://unpkg.com/html5-qrcode"></script>
-    <!-- Google Fonts: Noto Sans Thai -->
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+
     <script>
         tailwind.config = {
             darkMode: 'class',
             theme: {
                 extend: {
                     fontFamily: {
-                        sans: ['"Noto Sans Thai"', 'sans-serif'],
+                        sans: ['"IBM Plex Sans Thai"', 'sans-serif'],
+                        mono: ['"IBM Plex Mono"', 'monospace'],
                     },
-                    colors: {
-                        brand: {
-                            500: '#3b82f6', // Corporate Blue
-                            600: '#2563eb',
-                            700: '#1d4ed8',
-                        },
-                        dark: {
-                            bg: '#000000',    // Pure Black Background
-                            card: '#111827',  // Gray 900
-                            border: '#1f2937' // Gray 800
-                        }
-                    }
                 }
             }
         }
     </script>
+
     <style>
-        body { font-family: 'Noto Sans Thai', sans-serif; }
-        .hide { display: none !important; }
-        #reader { border: none !important; border-radius: 0.5rem; overflow: hidden; }
-        #reader video { object-fit: cover; border-radius: 0.5rem; }
-        #reader__dashboard_section_csr span { color: #f8fafc !important; }
-        #reader__dashboard_section_swaplink { color: #3b82f6 !important; text-decoration: none; }
-        #reader button { background-color: #2563eb; color: white; padding: 0.5rem 1rem; border-radius: 0.25rem; border: none; cursor: pointer; margin-top: 0.5rem; }
+        :root {
+            --bg:       #0a0a0a;
+            --surface:  #111111;
+            --surface2: #1a1a1a;
+            --border:   #242424;
+            --border2:  #2e2e2e;
+            --text:     #e8e8e8;
+            --muted:    #888888;
+            --muted2:   #555555;
+            --accent:   #4f7fff;
+            --accent-h: #3a6eee;
+            --green:    #3ecf8e;
+            --orange:   #f97316;
+            --red:      #ef4444;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: 'IBM Plex Sans Thai', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100dvh;
+            min-height: 100vh;
+        }
+
+        /* ─── Layout ─── */
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+        }
+        .card-inner {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+        }
+
+        /* ─── Inputs ─── */
+        .field {
+            width: 100%;
+            background: #000;
+            border: 1px solid var(--border2);
+            border-radius: 10px;
+            color: var(--text);
+            padding: 14px 14px 14px 44px;
+            font-family: inherit;
+            font-size: 0.95rem;
+            transition: border-color .15s, box-shadow .15s;
+            outline: none;
+        }
+        .field:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(79,127,255,.15);
+        }
+        .field::placeholder { color: var(--muted2); }
+        .field-icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--muted2);
+            font-size: .85rem;
+            pointer-events: none;
+        }
+
+        /* ─── Buttons ─── */
+        .btn-primary {
+            width: 100%;
+            background: var(--accent);
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            padding: 15px;
+            font-family: inherit;
+            font-size: .95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background .15s, transform .1s, box-shadow .15s;
+            letter-spacing: .01em;
+        }
+        .btn-primary:hover { background: var(--accent-h); box-shadow: 0 4px 18px rgba(79,127,255,.3); }
+        .btn-primary:active { transform: scale(.99); }
+
+        .btn-ghost {
+            background: var(--surface2);
+            color: var(--muted);
+            border: 1px solid var(--border2);
+            border-radius: 10px;
+            padding: 11px 18px;
+            font-family: inherit;
+            font-size: .85rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background .15s, color .15s, border-color .15s;
+        }
+        .btn-ghost:hover { background: var(--border); color: var(--text); border-color: var(--border2); }
+
+        /* ─── Scanner Button ─── */
+        .scan-btn {
+            width: 100%;
+            background: var(--surface2);
+            border: 1px solid var(--border2);
+            border-radius: 14px;
+            padding: 36px 24px;
+            cursor: pointer;
+            transition: background .2s, border-color .2s, transform .15s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            position: relative;
+            overflow: hidden;
+        }
+        .scan-btn::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(79,127,255,.08) 0%, transparent 60%);
+            opacity: 0;
+            transition: opacity .2s;
+        }
+        .scan-btn:hover { border-color: var(--accent); background: #161622; transform: translateY(-1px); }
+        .scan-btn:hover::before { opacity: 1; }
+        .scan-btn:active { transform: translateY(0); }
+        .scan-icon-ring {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            background: rgba(79,127,255,.12);
+            border: 1px solid rgba(79,127,255,.25);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.75rem;
+            color: var(--accent);
+        }
+
+        /* ─── Log Items ─── */
+        .log-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 16px;
+            border-radius: 10px;
+            border: 1px solid;
+        }
+        .log-in  { background: rgba(62,207,142,.06); border-color: rgba(62,207,142,.2); color: var(--green); }
+        .log-out { background: rgba(249,115,22,.06);  border-color: rgba(249,115,22,.2);  color: var(--orange); }
+
+        /* ─── Stat Cards ─── */
+        .stat-card {
+            background: #000;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            transition: border-color .15s;
+        }
+        .stat-card:hover { border-color: var(--border2); }
+
+        /* ─── Table ─── */
+        .data-table { width: 100%; border-collapse: collapse; font-size: .875rem; }
+        .data-table th {
+            background: #0e0e0e;
+            color: var(--muted);
+            font-weight: 500;
+            font-size: .75rem;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            padding: 14px 20px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+            white-space: nowrap;
+        }
+        .data-table td {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+            vertical-align: middle;
+            white-space: nowrap;
+        }
+        .data-table tr:last-child td { border-bottom: none; }
+        .data-table tr:hover td { background: rgba(255,255,255,.02); }
+
+        /* ─── Badge ─── */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: .78rem;
+            font-weight: 500;
+        }
+        .badge-green  { background: rgba(62,207,142,.1);  color: var(--green);  border: 1px solid rgba(62,207,142,.2); }
+        .badge-orange { background: rgba(249,115,22,.1);  color: var(--orange); border: 1px solid rgba(249,115,22,.2); }
+        .badge-red    { background: rgba(239,68,68,.1);   color: var(--red);    border: 1px solid rgba(239,68,68,.2); }
+        .badge-blue   { background: rgba(79,127,255,.1);  color: var(--accent); border: 1px solid rgba(79,127,255,.2); }
+
+        /* ─── Scrollbar ─── */
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #3a3a3a; }
+
+        /* ─── Scanner reader override ─── */
+        #reader { border: none !important; border-radius: 10px; overflow: hidden; }
+        #reader video { object-fit: cover; border-radius: 10px; }
+        #reader__dashboard_section_csr span { color: var(--text) !important; font-family: inherit !important; }
+        #reader__dashboard_section_swaplink { color: var(--accent) !important; }
+        #reader button {
+            background: var(--accent) !important;
+            color: #fff !important;
+            padding: 8px 18px !important;
+            border-radius: 8px !important;
+            border: none !important;
+            cursor: pointer !important;
+            margin-top: 8px !important;
+            font-family: inherit !important;
+        }
+
+        /* ─── Modal backdrop ─── */
+        .modal-backdrop {
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,.85);
+            backdrop-filter: blur(4px);
+            z-index: 100;
+            display: flex; align-items: center; justify-content: center;
+            padding: 16px;
+            opacity: 0;
+            transition: opacity .2s;
+        }
+        .modal-backdrop.open { opacity: 1; }
+        .modal-box {
+            background: var(--surface);
+            border: 1px solid var(--border2);
+            border-radius: 20px;
+            padding: 32px;
+            width: 100%; max-width: 380px;
+            transform: scale(.96) translateY(6px);
+            transition: transform .2s;
+        }
+        .modal-backdrop.open .modal-box { transform: scale(1) translateY(0); }
+
+        /* ─── Toast ─── */
+        #toast {
+            position: fixed;
+            bottom: calc(20px + env(safe-area-inset-bottom));
+            left: 50%;
+            transform: translateX(-50%) translateY(12px);
+            background: var(--surface2);
+            border: 1px solid var(--border2);
+            color: var(--text);
+            padding: 12px 22px;
+            border-radius: 100px;
+            font-size: .875rem;
+            font-weight: 500;
+            white-space: nowrap;
+            display: flex; align-items: center; gap: 10px;
+            z-index: 200;
+            opacity: 0;
+            transition: opacity .25s, transform .25s;
+            pointer-events: none;
+            box-shadow: 0 8px 32px rgba(0,0,0,.5);
+        }
+        #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+        /* ─── Header ─── */
+        header {
+            position: sticky; top: 0; z-index: 50;
+            background: rgba(10,10,10,.92);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--border);
+            padding: 0 20px;
+            height: 58px;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .logo { display: flex; align-items: center; gap: 10px; }
+        .logo-icon {
+            width: 34px; height: 34px;
+            background: var(--accent);
+            border-radius: 9px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: .85rem; color: #fff;
+        }
+        .logo-text { font-size: 1rem; font-weight: 700; color: var(--text); letter-spacing: -.01em; }
+        .logo-text span { color: var(--accent); font-weight: 300; }
+
+        /* ─── Main layout ─── */
+        main {
+            min-height: calc(100dvh - 58px);
+            min-height: calc(100vh - 58px);
+            display: flex; align-items: flex-start; justify-content: center;
+            padding: 24px 16px;
+            padding-bottom: calc(24px + env(safe-area-inset-bottom));
+        }
+
+        /* ─── Views ─── */
+        .view { display: none; width: 100%; }
+        .view.active { display: block; }
+        .view.active-flex { display: flex; }
+
+        /* ─── Clock ─── */
+        #current-time {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: clamp(2.5rem, 8vw, 3.5rem);
+            font-weight: 400;
+            color: var(--text);
+            letter-spacing: .04em;
+            line-height: 1;
+        }
+
+        /* ─── Divider ─── */
+        .divider { height: 1px; background: var(--border); margin: 0; }
+
+        /* ─── Split layout for register/admin views ─── */
+        .split { display: flex; flex-direction: column; }
+        @media (min-width: 768px) {
+            .split { flex-direction: row; }
+            .split-left { width: 40%; border-right: 1px solid var(--border); border-bottom: none; }
+            .split-right { width: 60%; }
+        }
+        .split-left {
+            padding: 40px 32px;
+            background: #0d0d0d;
+            border-bottom: 1px solid var(--border);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            gap: 12px;
+            border-radius: 16px 16px 0 0;
+            text-align: center;
+        }
+        @media (min-width: 768px) {
+            .split-left { border-radius: 16px 0 0 16px; }
+            .split-right { border-radius: 0 16px 16px 0; }
+        }
+        .split-right { padding: 32px; }
+
+        /* ─── Employee 2-col layout ─── */
+        .emp-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 24px;
+        }
+        @media (min-width: 900px) {
+            .emp-grid { grid-template-columns: 5fr 7fr; gap: 32px; }
+        }
+
+        /* ─── Admin table responsive ─── */
+        @media (max-width: 640px) {
+            .data-table .hide-mobile { display: none; }
+            .data-table td, .data-table th { padding: 12px 14px; }
+        }
+
+        /* ─── Scrollable table wrapper ─── */
+        .table-wrap { overflow-x: auto; border-radius: 12px; background: #000; border: 1px solid var(--border); }
+
+        /* ─── Section label ─── */
+        .section-label {
+            font-size: .7rem;
+            font-weight: 600;
+            letter-spacing: .1em;
+            text-transform: uppercase;
+            color: var(--muted2);
+            margin-bottom: 12px;
+        }
+
+        /* ─── Input PIN center ─── */
+        .pin-field {
+            width: 100%;
+            background: #000;
+            border: 1px solid var(--border2);
+            border-radius: 10px;
+            color: var(--text);
+            padding: 16px;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 1.5rem;
+            text-align: center;
+            letter-spacing: .5em;
+            outline: none;
+            transition: border-color .15s, box-shadow .15s;
+        }
+        .pin-field:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(79,127,255,.15);
+        }
+        .pin-field::placeholder { letter-spacing: .3em; color: var(--muted2); }
+
+        /* ─── Empty state ─── */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--muted2);
+        }
+        .empty-state i { font-size: 2rem; margin-bottom: 12px; display: block; }
     </style>
 </head>
-<body class="bg-dark-bg text-gray-200 min-h-screen flex flex-col antialiased selection:bg-brand-500 selection:text-white">
+<body>
 
-    <!-- Header -->
-    <header class="bg-dark-card border-b border-dark-border shadow-md py-4 px-6 flex justify-between items-center sticky top-0 z-50">
-        <div class="flex items-center gap-3">
-            <div class="bg-brand-600 p-2 rounded-lg text-white shadow-lg shadow-brand-500/30">
-                <i class="fa-solid fa-clock"></i>
-            </div>
-            <h1 class="text-xl font-semibold tracking-wide text-white">ATTENDANCE<span class="font-light text-brand-500">SYS</span></h1>
-        </div>
-        <button onclick="showAdminLogin()" class="text-gray-400 hover:text-white transition p-2 rounded-lg hover:bg-gray-800" title="สำหรับผู้ดูแลระบบ">
-            <i class="fa-solid fa-user-shield"></i>
-        </button>
-    </header>
+<!-- ══════════════ HEADER ══════════════ -->
+<header>
+    <div class="logo">
+        <div class="logo-icon"><i class="fa-solid fa-fingerprint"></i></div>
+        <span class="logo-text">ATTEND<span>SYS</span></span>
+    </div>
+    <button onclick="showAdminLogin()" style="background:none;border:none;cursor:pointer;color:var(--muted);padding:8px;border-radius:8px;transition:color .15s,background .15s;" onmouseover="this.style.color='var(--text)';this.style.background='var(--surface2)'" onmouseout="this.style.color='var(--muted)';this.style.background='none'" title="เข้าสู่ระบบผู้ดูแล">
+        <i class="fa-solid fa-user-shield"></i>
+    </button>
+</header>
 
-    <main class="flex-grow flex items-center justify-center p-4">
-        
-        <!-- View 1: Device Registration -->
-        <!-- Desktop: Split layout (Icon left, Form right). Mobile: Stacked -->
-        <div id="view-register" class="bg-dark-card w-full max-w-md md:max-w-3xl rounded-2xl shadow-2xl border border-dark-border hide flex-col md:flex-row overflow-hidden">
-            <!-- Left Side (Desktop) / Top Side (Mobile) -->
-            <div class="p-8 md:w-2/5 bg-gray-900/50 flex flex-col justify-center items-center border-b md:border-b-0 md:border-r border-dark-border relative overflow-hidden">
-                <div class="absolute -top-10 -left-10 w-40 h-40 bg-brand-500/10 rounded-full blur-3xl"></div>
-                <div class="w-20 h-20 bg-gray-900 rounded-full flex items-center justify-center mb-6 border border-dark-border text-brand-500 text-3xl shadow-xl relative z-10">
+<main>
+
+    <!-- ══ VIEW 1: Device Registration ══ -->
+    <div id="view-register" class="view" style="max-width:680px;">
+        <div class="card split">
+            <div class="split-left">
+                <div style="width:64px;height:64px;background:var(--surface2);border:1px solid var(--border2);border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:1.75rem;color:var(--accent);margin-bottom:4px;">
                     <i class="fa-solid fa-mobile-screen-button"></i>
                 </div>
-                <h2 class="text-2xl font-bold text-white mb-2 text-center relative z-10">ลงทะเบียนอุปกรณ์</h2>
-                <p class="text-sm text-gray-400 text-center relative z-10">ยืนยันตัวตนเพียงครั้งแรก เพื่อผูกมือถือหรือแท็บเล็ตนี้เข้ากับระบบ</p>
+                <h2 style="font-size:1.25rem;font-weight:700;color:var(--text);margin:0;">ลงทะเบียนอุปกรณ์</h2>
+                <p style="font-size:.85rem;color:var(--muted);max-width:220px;line-height:1.6;margin:0;">ยืนยันตัวตนครั้งเดียว เพื่อผูกอุปกรณ์นี้เข้าระบบบันทึกเวลา</p>
             </div>
-            
-            <!-- Right Side (Desktop) / Bottom Side (Mobile) -->
-            <div class="p-8 md:w-3/5 flex flex-col justify-center">
-                <form id="form-register" onsubmit="handleRegister(event)" class="space-y-5">
+            <div class="split-right">
+                <form id="form-register" onsubmit="handleRegister(event)" style="display:flex;flex-direction:column;gap:20px;">
                     <div>
-                        <label class="block text-sm font-medium text-gray-300 mb-1">รหัสพนักงาน (Employee ID)</label>
-                        <div class="relative">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <i class="fa-solid fa-id-badge text-gray-500"></i>
-                            </div>
-                            <input type="text" id="reg-emp-id" required class="block w-full pl-10 pr-3 py-3 bg-black border border-dark-border rounded-lg text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition" placeholder="เช่น EMP001">
+                        <label style="display:block;font-size:.8rem;font-weight:500;color:var(--muted);margin-bottom:8px;">รหัสพนักงาน</label>
+                        <div style="position:relative;">
+                            <span class="field-icon"><i class="fa-solid fa-id-badge"></i></span>
+                            <input type="text" id="reg-emp-id" required class="field" placeholder="เช่น EMP001" autocomplete="off">
                         </div>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-300 mb-1">ชื่อ - นามสกุล</label>
-                        <div class="relative">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <i class="fa-solid fa-user text-gray-500"></i>
-                            </div>
-                            <input type="text" id="reg-emp-name" required class="block w-full pl-10 pr-3 py-3 bg-black border border-dark-border rounded-lg text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition" placeholder="ระบุชื่อจริงของคุณ">
+                        <label style="display:block;font-size:.8rem;font-weight:500;color:var(--muted);margin-bottom:8px;">ชื่อ – นามสกุล</label>
+                        <div style="position:relative;">
+                            <span class="field-icon"><i class="fa-solid fa-user"></i></span>
+                            <input type="text" id="reg-emp-name" required class="field" placeholder="ระบุชื่อจริงของคุณ" autocomplete="off">
                         </div>
                     </div>
-                    <button type="submit" class="w-full bg-brand-600 hover:bg-brand-700 text-white font-medium py-3.5 px-4 rounded-lg shadow-lg hover:shadow-brand-500/30 transition duration-200 mt-6">
-                        <i class="fa-solid fa-check-circle mr-2"></i> ยืนยันการลงทะเบียน
+                    <button type="submit" class="btn-primary" style="margin-top:4px;">
+                        <i class="fa-solid fa-check-circle" style="margin-right:8px;"></i>ยืนยันการลงทะเบียน
                     </button>
                 </form>
             </div>
         </div>
+    </div>
 
-        <!-- View 2: Employee Dashboard -->
-        <!-- Desktop: 2 Columns (Info Left, Scanner/Logs Right). Mobile: Stacked -->
-        <div id="view-employee" class="bg-dark-card w-full max-w-md md:max-w-4xl rounded-2xl shadow-2xl border border-dark-border p-6 md:p-8 hide">
-            
-            <div class="grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-10">
-                
-                <!-- Left Column (Profile & Time) -->
-                <div class="md:col-span-5 flex flex-col justify-between space-y-8">
-                    <div>
-                        <div class="flex justify-between items-start border-b border-dark-border pb-4 mb-6">
-                            <div>
-                                <p class="text-sm text-gray-400 mb-1">ยินดีต้อนรับ</p>
-                                <h2 id="display-emp-name" class="text-2xl md:text-xl font-bold text-white">ชื่อพนักงาน</h2>
-                                <p id="display-emp-id" class="text-sm text-brand-400 mt-1">EMP000</p>
-                            </div>
-                            <div class="text-right">
-                                <span class="inline-flex items-center px-2.5 py-1 md:py-0.5 rounded-full text-xs font-medium bg-green-900/30 text-green-400 border border-green-800">
-                                    <i class="fa-solid fa-circle text-[8px] mr-1.5"></i> ยืนยันแล้ว
-                                </span>
-                            </div>
-                        </div>
+    <!-- ══ VIEW 2: Employee Dashboard ══ -->
+    <div id="view-employee" class="view" style="max-width:900px;">
+        <div class="emp-grid">
 
-                        <div class="text-center md:text-left bg-black md:bg-transparent p-6 md:p-0 rounded-xl border border-dark-border md:border-none">
-                            <p class="text-xs text-gray-500 mb-2 uppercase tracking-wider hidden md:block">เวลาปัจจุบัน</p>
-                            <div id="current-time" class="text-5xl md:text-4xl font-light text-white tracking-widest mb-2 font-mono">00:00:00</div>
-                            <div id="current-date" class="text-sm text-gray-400">วัน จันทร์ ที่ 1 มกราคม 2026</div>
+            <!-- Left: Profile & Clock -->
+            <div style="display:flex;flex-direction:column;gap:20px;">
+
+                <!-- Profile card -->
+                <div class="card" style="padding:24px;">
+                    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;">
+                        <div>
+                            <p style="font-size:.75rem;color:var(--muted);margin:0 0 4px;">ยินดีต้อนรับกลับ</p>
+                            <h2 id="display-emp-name" style="font-size:1.25rem;font-weight:700;color:var(--text);margin:0 0 4px;"></h2>
+                            <p id="display-emp-id" style="font-size:.8rem;color:var(--accent);margin:0;font-family:'IBM Plex Mono',monospace;"></p>
                         </div>
+                        <span class="badge badge-green"><i class="fa-solid fa-circle" style="font-size:.5rem;"></i>พร้อมใช้งาน</span>
                     </div>
-                    
-                    <div class="hidden md:block">
-                        <button onclick="showResetPrompt()" class="text-xs text-gray-600 hover:text-red-400 transition flex items-center">
-                            <i class="fa-solid fa-lock mr-2"></i> Admin: ล้างข้อมูลอุปกรณ์นี้
-                        </button>
+                    <div class="divider"></div>
+                    <!-- Clock -->
+                    <div style="padding-top:20px;text-align:center;">
+                        <div id="current-time">00:00:00</div>
+                        <p id="current-date" style="font-size:.825rem;color:var(--muted);margin-top:6px;"></p>
                     </div>
                 </div>
 
-                <!-- Right Column (Action & Logs) -->
-                <div class="md:col-span-7 flex flex-col space-y-6">
-                    <!-- Scanner Button -->
-                    <button onclick="openScanner()" class="w-full relative group overflow-hidden rounded-xl p-1 shrink-0">
-                        <div class="absolute inset-0 bg-gradient-to-r from-brand-500 to-indigo-600 opacity-80 group-hover:opacity-100 transition duration-300"></div>
-                        <div class="relative bg-black px-4 py-8 md:py-10 rounded-lg flex flex-col items-center justify-center transition duration-300 group-hover:bg-opacity-0">
-                            <div class="w-16 h-16 md:w-20 md:h-20 bg-white/10 rounded-full flex items-center justify-center mb-4 backdrop-blur-sm">
-                                <i class="fa-solid fa-qrcode text-3xl md:text-4xl text-white"></i>
-                            </div>
-                            <h3 class="text-xl md:text-2xl font-bold text-white mb-2 shadow-sm">สแกน QR Code</h3>
-                            <p class="text-sm text-gray-200 font-medium">แตะเพื่อเปิดกล้องตอกบัตรเข้า-ออกงาน</p>
-                        </div>
+                <!-- Admin reset (subtle) -->
+                <div style="text-align:center;">
+                    <button onclick="showResetPrompt()" style="background:none;border:none;font-size:.75rem;color:var(--muted2);cursor:pointer;transition:color .15s;font-family:inherit;" onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--muted2)'">
+                        <i class="fa-solid fa-lock" style="margin-right:5px;"></i>Admin: ล้างข้อมูลอุปกรณ์
                     </button>
+                </div>
+            </div>
 
-                    <!-- Today's Logs -->
-                    <div class="bg-black rounded-xl p-5 border border-dark-border flex-grow">
-                        <div class="flex items-center justify-between border-b border-dark-border pb-3 mb-4">
-                            <h4 class="text-sm font-medium text-gray-300"><i class="fa-solid fa-list-check text-brand-500 mr-2"></i>บันทึกของวันนี้</h4>
-                            <span class="text-xs bg-gray-800 text-gray-400 px-2 py-1 rounded">ล่าสุด</span>
+            <!-- Right: Scan + Logs -->
+            <div style="display:flex;flex-direction:column;gap:20px;">
+
+                <!-- Scan button -->
+                <button class="scan-btn" onclick="openScanner()">
+                    <div class="scan-icon-ring">
+                        <i class="fa-solid fa-qrcode"></i>
+                    </div>
+                    <div>
+                        <div style="font-size:1.15rem;font-weight:700;color:var(--text);margin-bottom:4px;">สแกน QR Code</div>
+                        <div style="font-size:.825rem;color:var(--muted);">แตะเพื่อบันทึกเวลาเข้า-ออกงาน</div>
+                    </div>
+                </button>
+
+                <!-- Today Status Summary -->
+                <div class="card" style="padding:20px;">
+                    <div class="section-label">สรุปการลงเวลาวันนี้</div>
+                    <div id="today-summary" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;">
+                        <!-- IN slot -->
+                        <div id="summary-in" style="background:#000;border:1px solid var(--border);border-radius:10px;padding:14px 16px;">
+                            <div style="display:flex;align-items:center;gap:7px;margin-bottom:8px;">
+                                <i class="fa-solid fa-arrow-right-to-bracket" style="color:var(--green);font-size:.8rem;"></i>
+                                <span style="font-size:.7rem;font-weight:600;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;">เข้างาน</span>
+                            </div>
+                            <div id="summary-in-time" style="font-family:'IBM Plex Mono',monospace;font-size:1.35rem;font-weight:500;color:var(--muted2);">—</div>
+                            <div id="summary-in-status" style="margin-top:4px;font-size:.72rem;color:var(--muted2);"></div>
                         </div>
-                        <div id="today-logs-container" class="space-y-3 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
-                            <!-- ถูกแก้ไขให้แสดงผลข้อมูลได้ทันที -->
+                        <!-- OUT slot -->
+                        <div id="summary-out" style="background:#000;border:1px solid var(--border);border-radius:10px;padding:14px 16px;">
+                            <div style="display:flex;align-items:center;gap:7px;margin-bottom:8px;">
+                                <i class="fa-solid fa-arrow-right-from-bracket" style="color:var(--orange);font-size:.8rem;"></i>
+                                <span style="font-size:.7rem;font-weight:600;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;">ออกงาน</span>
+                            </div>
+                            <div id="summary-out-time" style="font-family:'IBM Plex Mono',monospace;font-size:1.35rem;font-weight:500;color:var(--muted2);">—</div>
+                            <div id="summary-out-status" style="margin-top:4px;font-size:.72rem;color:var(--muted2);"></div>
                         </div>
                     </div>
-                    
-                    <div class="md:hidden text-center mt-4">
-                        <button onclick="showResetPrompt()" class="text-xs text-gray-600 hover:text-red-400 transition">
-                            <i class="fa-solid fa-lock mr-1"></i> Admin: ล้างข้อมูลอุปกรณ์นี้
-                        </button>
+
+                    <!-- Error banner (hidden by default) -->
+                    <div id="error-banner" style="display:none;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.25);border-radius:10px;padding:14px 16px;margin-bottom:16px;">
+                        <div style="display:flex;align-items:flex-start;gap:10px;">
+                            <i class="fa-solid fa-triangle-exclamation" style="color:var(--red);margin-top:2px;flex-shrink:0;"></i>
+                            <div>
+                                <div style="font-size:.875rem;font-weight:600;color:var(--red);margin-bottom:4px;">ไม่สามารถบันทึกข้อมูลได้</div>
+                                <div id="error-detail" style="font-size:.8rem;color:rgba(239,68,68,.75);line-height:1.6;"></div>
+                                <div style="margin-top:8px;font-size:.775rem;color:var(--muted);line-height:1.6;">
+                                    กรุณาแจ้ง<strong style="color:var(--text);">ผู้ดูแลระบบ</strong>หรือ<strong style="color:var(--text);">เจ้าหน้าที่ HR</strong> และจดเวลาของคุณไว้เป็นหลักฐาน
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Log history -->
+                    <div class="section-label" style="margin-top:4px;">ประวัติทั้งหมดวันนี้</div>
+                    <div id="today-logs-container" style="display:flex;flex-direction:column;gap:8px;max-height:220px;overflow-y:auto;padding-right:2px;">
                     </div>
                 </div>
 
             </div>
         </div>
+    </div>
 
-        <!-- View 3: Scanner View -->
-        <div id="view-scanner" class="bg-dark-card w-full max-w-md md:max-w-lg rounded-2xl shadow-2xl border border-dark-border p-6 hide">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-xl font-bold text-white"><i class="fa-solid fa-camera text-brand-500 mr-2"></i>สแกนตอกบัตร</h2>
-                <button onclick="closeScanner()" class="text-gray-400 hover:text-white bg-gray-900 hover:bg-red-900/50 rounded-full w-10 h-10 flex items-center justify-center transition">
-                    <i class="fa-solid fa-times text-lg"></i>
+    <!-- ══ VIEW 3: Scanner ══ -->
+    <div id="view-scanner" class="view" style="max-width:440px;">
+        <div class="card" style="padding:24px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+                <h2 style="font-size:1.1rem;font-weight:700;color:var(--text);margin:0;"><i class="fa-solid fa-camera" style="color:var(--accent);margin-right:8px;"></i>สแกนตอกบัตร</h2>
+                <button onclick="closeScanner()" style="background:var(--surface2);border:1px solid var(--border2);color:var(--muted);width:36px;height:36px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s,color .15s;" onmouseover="this.style.background='rgba(239,68,68,.15)';this.style.color='var(--red)'" onmouseout="this.style.background='var(--surface2)';this.style.color='var(--muted)'">
+                    <i class="fa-solid fa-times"></i>
                 </button>
             </div>
-            
-            <div class="bg-black rounded-xl overflow-hidden border border-dark-border mb-6 aspect-square flex items-center justify-center relative shadow-inner">
-                <div id="reader" class="w-full h-full"></div>
-                <div class="absolute inset-0 border-2 border-brand-500/50 rounded-xl pointer-events-none"></div>
-                <!-- Scanning Frame Overlay -->
-                <div class="absolute inset-10 border-2 border-dashed border-white/30 rounded-3xl pointer-events-none"></div>
+
+            <div style="background:#000;border-radius:12px;overflow:hidden;border:1px solid var(--border);aspect-ratio:1;position:relative;margin-bottom:16px;">
+                <div id="reader" style="width:100%;height:100%;"></div>
+                <!-- Corner markers -->
+                <div style="position:absolute;inset:0;pointer-events:none;">
+                    <div style="position:absolute;top:20px;left:20px;width:28px;height:28px;border-top:2px solid var(--accent);border-left:2px solid var(--accent);border-radius:3px 0 0 0;"></div>
+                    <div style="position:absolute;top:20px;right:20px;width:28px;height:28px;border-top:2px solid var(--accent);border-right:2px solid var(--accent);border-radius:0 3px 0 0;"></div>
+                    <div style="position:absolute;bottom:20px;left:20px;width:28px;height:28px;border-bottom:2px solid var(--accent);border-left:2px solid var(--accent);border-radius:0 0 0 3px;"></div>
+                    <div style="position:absolute;bottom:20px;right:20px;width:28px;height:28px;border-bottom:2px solid var(--accent);border-right:2px solid var(--accent);border-radius:0 0 3px 0;"></div>
+                </div>
             </div>
-            
-            <p class="text-center text-sm text-gray-400 mb-6 bg-gray-900 p-3 rounded-lg border border-dark-border">หันกล้องไปที่ QR Code ของบริษัทเพื่อบันทึกเวลา</p>
-            
-            <button onclick="handleScan('COMPANY_QR_SECRET_2026')" class="w-full py-3 bg-gray-900 border border-gray-800 text-gray-400 rounded-lg text-sm hover:bg-gray-800 transition">
-                <i class="fa-solid fa-flask text-brand-500 mr-2"></i> จำลองการสแกน (สำหรับทดสอบ)
+
+            <p style="font-size:.825rem;color:var(--muted);text-align:center;margin-bottom:16px;">หันกล้องไปที่ QR Code ของบริษัท</p>
+
+            <button onclick="handleScan('COMPANY_QR_SECRET_2026')" class="btn-ghost" style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px;">
+                <i class="fa-solid fa-flask" style="color:var(--accent);"></i>จำลองการสแกน (ทดสอบ)
             </button>
         </div>
+    </div>
 
-        <!-- View 4: Admin Login -->
-        <div id="view-admin-login" class="bg-dark-card w-full max-w-md md:max-w-3xl rounded-2xl shadow-2xl border border-dark-border hide flex-col md:flex-row overflow-hidden">
-            <div class="p-8 md:w-2/5 bg-gray-900/50 flex flex-col justify-center items-center border-b md:border-b-0 md:border-r border-dark-border relative">
-                <i class="fa-solid fa-shield-halved text-6xl text-brand-600 mb-4 drop-shadow-[0_0_15px_rgba(37,99,235,0.5)]"></i>
-                <h2 class="text-2xl font-bold text-white mb-2">Admin Access</h2>
-                <p class="text-sm text-gray-400 text-center">ระบบสำหรับผู้ดูแลและหัวหน้างาน</p>
+    <!-- ══ VIEW 4: Admin Login ══ -->
+    <div id="view-admin-login" class="view" style="max-width:620px;">
+        <div class="card split">
+            <div class="split-left">
+                <i class="fa-solid fa-shield-halved" style="font-size:3rem;color:var(--accent);filter:drop-shadow(0 0 20px rgba(79,127,255,.4));margin-bottom:4px;"></i>
+                <h2 style="font-size:1.25rem;font-weight:700;color:var(--text);margin:0;">Admin Access</h2>
+                <p style="font-size:.85rem;color:var(--muted);margin:0;">ระบบสำหรับผู้ดูแลและหัวหน้างาน</p>
             </div>
-            
-            <div class="p-8 md:w-3/5 flex flex-col justify-center">
-                <form onsubmit="handleAdminLogin(event)" class="space-y-5">
+            <div class="split-right">
+                <form onsubmit="handleAdminLogin(event)" style="display:flex;flex-direction:column;gap:20px;">
                     <div>
-                        <label class="block text-sm font-medium text-gray-300 mb-2">กรุณาใส่รหัส PIN 4 หลัก</label>
-                        <input type="password" id="admin-pin" class="block w-full px-3 py-4 bg-black border border-dark-border rounded-lg text-white text-center tracking-[1em] text-2xl font-mono focus:outline-none focus:ring-2 focus:ring-brand-500 transition" placeholder="••••" maxlength="4">
+                        <label style="display:block;font-size:.8rem;font-weight:500;color:var(--muted);margin-bottom:8px;">รหัส PIN 4 หลัก</label>
+                        <input type="password" id="admin-pin" class="pin-field" placeholder="••••" maxlength="4">
                     </div>
-                    <button type="submit" class="w-full bg-brand-600 hover:bg-brand-700 text-white font-medium py-3.5 rounded-lg transition duration-200 border border-brand-500 shadow-lg shadow-brand-500/20">
-                        <i class="fa-solid fa-right-to-bracket mr-2"></i>เข้าสู่ระบบ
+                    <button type="submit" class="btn-primary">
+                        <i class="fa-solid fa-right-to-bracket" style="margin-right:8px;"></i>เข้าสู่ระบบ
                     </button>
-                    <button type="button" onclick="checkAuthStatus()" class="w-full text-sm text-gray-500 hover:text-white mt-4 py-2">
-                        <i class="fa-solid fa-arrow-left mr-2"></i>กลับหน้าหลักพนักงาน
+                    <button type="button" onclick="checkAuthStatus()" class="btn-ghost" style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px;">
+                        <i class="fa-solid fa-arrow-left"></i>กลับหน้าพนักงาน
                     </button>
                 </form>
             </div>
         </div>
+    </div>
 
-        <!-- View 5: Admin Dashboard -->
-        <div id="view-admin-dashboard" class="bg-dark-card w-full max-w-6xl rounded-2xl shadow-2xl border border-dark-border p-6 md:p-8 hide">
-            <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8 gap-4 border-b border-dark-border pb-6">
-                <div>
-                    <h2 class="text-2xl font-bold text-white"><i class="fa-solid fa-chart-line text-brand-500 mr-3"></i>ข้อมูลลงเวลาทำการ</h2>
-                    <p class="text-sm text-gray-400 mt-2">ดูข้อมูลการเข้า-ออกงานของพนักงานทั้งหมด (ซิงค์กับ Google Sheets เรียลไทม์)</p>
-                </div>
-                <div class="flex flex-wrap gap-3 w-full lg:w-auto">
-                    <div class="relative flex-grow lg:flex-grow-0">
-                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <i class="fa-solid fa-calendar-day text-gray-500"></i>
-                        </div>
-                        <input type="date" id="filter-date" class="w-full lg:w-auto bg-black border border-dark-border rounded-lg text-white pl-10 pr-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-brand-500" onchange="loadAdminData()">
-                    </div>
-                    <button onclick="loadAdminData()" class="flex-1 lg:flex-none bg-brand-600 hover:bg-brand-700 text-white px-5 py-2.5 rounded-lg text-sm font-medium transition shadow-lg shadow-brand-500/20">
-                        <i class="fa-solid fa-rotate-right mr-2"></i> รีเฟรช
-                    </button>
-                    <button onclick="runDebug()" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2.5 rounded-lg text-sm font-medium transition shadow-lg shadow-purple-500/20" title="เช็คสถานะการเชื่อมต่อ">
-                        <i class="fa-solid fa-bug"></i>
-                    </button>
-                    <button onclick="checkAuthStatus()" class="bg-gray-800 hover:bg-red-900/80 border border-gray-700 text-white px-5 py-2.5 rounded-lg text-sm font-medium transition">
-                        <i class="fa-solid fa-power-off mr-2"></i>ปิด
-                    </button>
-                </div>
+    <!-- ══ VIEW 5: Admin Dashboard ══ -->
+    <div id="view-admin-dashboard" class="view" style="max-width:1100px;">
+
+        <!-- Header row -->
+        <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:24px;">
+            <div>
+                <h2 style="font-size:1.3rem;font-weight:700;color:var(--text);margin:0 0 4px;">
+                    <i class="fa-solid fa-chart-line" style="color:var(--accent);margin-right:10px;"></i>ข้อมูลลงเวลาทำการ
+                </h2>
+                <p style="font-size:.825rem;color:var(--muted);margin:0;">ซิงค์กับ Google Sheets แบบเรียลไทม์</p>
             </div>
-
-            <!-- Stats -->
-            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8">
-                <div class="bg-black rounded-xl p-5 md:p-6 border border-dark-border text-center hover:border-gray-600 transition">
-                    <div class="text-gray-400 text-xs md:text-sm mb-2 font-medium">พนักงานทั้งหมด (วันนี้)</div>
-                    <div id="stat-total" class="text-3xl md:text-4xl font-bold text-white">0</div>
+            <div style="display:flex;flex-wrap:wrap;gap:8px;">
+                <div style="position:relative;">
+                    <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted2);font-size:.8rem;pointer-events:none;"><i class="fa-solid fa-calendar-day"></i></span>
+                    <input type="date" id="filter-date" onchange="loadAdminData()" style="background:#000;border:1px solid var(--border2);border-radius:10px;color:var(--text);padding:10px 12px 10px 36px;font-family:inherit;font-size:.85rem;outline:none;cursor:pointer;min-width:160px;transition:border-color .15s;" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border2)'">
                 </div>
-                <div class="bg-black rounded-xl p-5 md:p-6 border border-green-900/50 text-center relative overflow-hidden hover:border-green-700 transition">
-                    <div class="absolute top-0 right-0 p-3 md:p-4 text-green-500/10"><i class="fa-solid fa-arrow-right-to-bracket text-4xl md:text-5xl"></i></div>
-                    <div class="text-green-500 text-xs md:text-sm mb-2 font-medium relative z-10">เข้างานแล้ว</div>
-                    <div id="stat-in" class="text-3xl md:text-4xl font-bold text-green-500 relative z-10">0</div>
-                </div>
-                <div class="bg-black rounded-xl p-5 md:p-6 border border-orange-900/50 text-center relative overflow-hidden hover:border-orange-700 transition">
-                    <div class="absolute top-0 right-0 p-3 md:p-4 text-orange-500/10"><i class="fa-solid fa-arrow-right-from-bracket text-4xl md:text-5xl"></i></div>
-                    <div class="text-orange-500 text-xs md:text-sm mb-2 font-medium relative z-10">ออกงานแล้ว</div>
-                    <div id="stat-out" class="text-3xl md:text-4xl font-bold text-orange-500 relative z-10">0</div>
-                </div>
-                <div class="bg-black rounded-xl p-5 md:p-6 border border-red-900/50 text-center relative overflow-hidden hover:border-red-700 transition">
-                    <div class="absolute top-0 right-0 p-3 md:p-4 text-red-500/10"><i class="fa-solid fa-clock-rotate-left text-4xl md:text-5xl"></i></div>
-                    <div class="text-red-500 text-xs md:text-sm mb-2 font-medium relative z-10">มาสาย (คน)</div>
-                    <div id="stat-late" class="text-3xl md:text-4xl font-bold text-red-500 relative z-10">0</div>
-                </div>
-            </div>
-
-            <!-- Table -->
-            <div class="overflow-x-auto bg-black rounded-xl border border-dark-border shadow-inner custom-scrollbar">
-                <table class="w-full text-left text-sm text-gray-300">
-                    <thead class="text-xs text-gray-400 uppercase bg-gray-900/80 border-b border-dark-border tracking-wider">
-                        <tr>
-                            <th scope="col" class="px-6 py-5 font-semibold">เวลา</th>
-                            <th scope="col" class="px-6 py-5 font-semibold">รหัสพนักงาน</th>
-                            <th scope="col" class="px-6 py-5 font-semibold">ชื่อ-นามสกุล</th>
-                            <th scope="col" class="px-6 py-5 font-semibold">ประเภท</th>
-                            <th scope="col" class="px-6 py-5 font-semibold">สถานะ (สาย)</th>
-                            <th scope="col" class="px-6 py-5 font-semibold hidden md:table-cell">Device ID</th>
-                        </tr>
-                    </thead>
-                    <tbody id="admin-table-body" class="divide-y divide-dark-border">
-                        <!-- Rows injected by JS -->
-                    </tbody>
-                </table>
+                <button onclick="loadAdminData()" class="btn-ghost" style="display:flex;align-items:center;gap:7px;">
+                    <i class="fa-solid fa-rotate-right"></i>รีเฟรช
+                </button>
+                <button onclick="runDebug()" class="btn-ghost" style="color:#a855f7;border-color:rgba(168,85,247,.3);display:flex;align-items:center;gap:7px;">
+                    <i class="fa-solid fa-bug"></i>เช็คระบบ
+                </button>
+                <button onclick="checkAuthStatus()" class="btn-ghost" style="display:flex;align-items:center;gap:7px;">
+                    <i class="fa-solid fa-power-off" style="color:var(--red);"></i>ปิด
+                </button>
             </div>
         </div>
 
-    </main>
-
-    <!-- Admin Reset Prompt Modal -->
-    <div id="reset-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center hide opacity-0 transition-opacity duration-300 p-4">
-        <div class="bg-dark-card border border-dark-border rounded-2xl p-8 w-full max-w-sm shadow-2xl transform scale-95 transition-transform duration-300">
-            <div class="w-14 h-14 bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-900/50">
-                <i class="fa-solid fa-lock text-red-500 text-xl"></i>
+        <!-- Stats -->
+        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:24px;" id="stats-grid">
+            <div class="stat-card">
+                <div style="font-size:.75rem;color:var(--muted);margin-bottom:8px;font-weight:500;">พนักงานวันนี้</div>
+                <div id="stat-total" style="font-size:2.25rem;font-weight:700;color:var(--text);font-family:'IBM Plex Mono',monospace;">0</div>
             </div>
-            <h3 class="text-xl font-bold text-white mb-2 text-center">ยืนยันการล้างอุปกรณ์</h3>
-            <p class="text-sm text-gray-400 mb-6 text-center">การล้างอุปกรณ์จะต้องใช้รหัสผ่าน Admin เพื่อความปลอดภัย</p>
-            <input type="password" id="reset-pin" class="w-full px-4 py-3 bg-black border border-dark-border rounded-xl text-white text-center tracking-widest focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 mb-6 font-mono text-lg" placeholder="PIN Admin">
-            <div class="flex gap-3">
-                <button onclick="closeResetPrompt()" class="flex-1 bg-gray-800 hover:bg-gray-700 text-white py-3 rounded-xl font-medium transition">ยกเลิก</button>
-                <button onclick="confirmReset()" class="flex-1 bg-red-600 hover:bg-red-700 text-white py-3 rounded-xl font-medium transition shadow-lg shadow-red-500/20">ยืนยัน</button>
+            <div class="stat-card" style="border-color:rgba(62,207,142,.15);">
+                <div style="font-size:.75rem;color:var(--green);margin-bottom:8px;font-weight:500;">เข้างานแล้ว</div>
+                <div id="stat-in" style="font-size:2.25rem;font-weight:700;color:var(--green);font-family:'IBM Plex Mono',monospace;">0</div>
+            </div>
+            <div class="stat-card" style="border-color:rgba(249,115,22,.15);">
+                <div style="font-size:.75rem;color:var(--orange);margin-bottom:8px;font-weight:500;">ออกงานแล้ว</div>
+                <div id="stat-out" style="font-size:2.25rem;font-weight:700;color:var(--orange);font-family:'IBM Plex Mono',monospace;">0</div>
+            </div>
+            <div class="stat-card" style="border-color:rgba(239,68,68,.15);">
+                <div style="font-size:.75rem;color:var(--red);margin-bottom:8px;font-weight:500;">มาสาย</div>
+                <div id="stat-late" style="font-size:2.25rem;font-weight:700;color:var(--red);font-family:'IBM Plex Mono',monospace;">0</div>
             </div>
         </div>
+
+        <!-- Table -->
+        <div class="table-wrap">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>เวลา</th>
+                        <th>รหัสพนักงาน</th>
+                        <th>ชื่อ-นามสกุล</th>
+                        <th>ประเภท</th>
+                        <th>สถานะ</th>
+                        <th class="hide-mobile">Device ID</th>
+                    </tr>
+                </thead>
+                <tbody id="admin-table-body"></tbody>
+            </table>
+        </div>
+
     </div>
 
-    <!-- Notification Toast -->
-    <div id="toast" class="fixed bottom-5 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white px-6 py-4 rounded-full shadow-2xl border border-gray-800 transition-all duration-300 opacity-0 translate-y-10 pointer-events-none z-50 flex items-center gap-4 min-w-[280px] max-w-sm justify-center">
-        <i id="toast-icon" class="fa-solid fa-circle-check text-green-500 text-xl"></i>
-        <span id="toast-msg" class="font-medium text-sm">แจ้งเตือน</span>
+</main>
+
+<!-- ══ MODAL: Admin Reset ══ -->
+<div id="reset-modal" class="modal-backdrop" style="display:none;" onclick="if(event.target===this)closeResetPrompt()">
+    <div class="modal-box">
+        <div style="width:52px;height:52px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;color:var(--red);font-size:1.25rem;">
+            <i class="fa-solid fa-lock"></i>
+        </div>
+        <h3 style="font-size:1.1rem;font-weight:700;color:var(--text);text-align:center;margin:0 0 6px;">ล้างข้อมูลอุปกรณ์</h3>
+        <p style="font-size:.825rem;color:var(--muted);text-align:center;margin:0 0 20px;">ใส่รหัส Admin เพื่อยืนยัน</p>
+        <input type="password" id="reset-pin" class="pin-field" placeholder="PIN" style="margin-bottom:16px;">
+        <div style="display:flex;gap:10px;">
+            <button onclick="closeResetPrompt()" class="btn-ghost" style="flex:1;">ยกเลิก</button>
+            <button onclick="confirmReset()" style="flex:1;background:var(--red);color:#fff;border:none;border-radius:10px;padding:13px;font-family:inherit;font-size:.9rem;font-weight:600;cursor:pointer;transition:opacity .15s;" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">ยืนยัน</button>
+        </div>
     </div>
+</div>
 
-    <!-- Add Custom Scrollbar for better UI on Desktop -->
-    <style>
-        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: #000; border-radius: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #475569; }
-    </style>
+<!-- ══ TOAST ══ -->
+<div id="toast">
+    <i id="toast-icon" class="fa-solid fa-circle-check"></i>
+    <span id="toast-msg"></span>
+</div>
 
-    <script>
-        // --- Configuration ---
-        const GOOGLE_APP_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxC1A0RVRD7qEUclxGlZ5CudI7lWyWEVYP-zP0BMRmfC18snr08kLljyngntOEjXkTr/exec"; 
-        const COMPANY_QR_CODE = "COMPANY_QR_SECRET_2026"; 
-        const LATE_TIME_LIMIT = "08:30:00"; // กำหนดเวลาสาย
+<script>
+// ─── Config ───────────────────────────────────────────────
+const GOOGLE_APP_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxC1A0RVRD7qEUclxGlZ5CudI7lWyWEVYP-zP0BMRmfC18snr08kLljyngntOEjXkTr/exec";
+const COMPANY_QR_CODE  = "COMPANY_QR_SECRET_2026";
+const LATE_TIME_LIMIT  = "08:30:00";
+const SESSION_KEY      = 'attendance_device_auth';
+const STORAGE_KEY      = 'attendance_logs_v2';
 
-        // --- State Variables ---
-        let currentUser = null;
-        let html5QrcodeScanner = null;
-        let clockInterval = null;
+// ─── State ────────────────────────────────────────────────
+let currentUser       = null;
+let html5QrcodeScanner = null;
+let clockInterval     = null;
 
-        // --- Utility: Simulate Backend Database (Fallback) ---
-        const mockDB = {
-            getLogs: () => JSON.parse(localStorage.getItem('mock_gsheets_logs')) || [],
-            saveLog: (log) => {
-                const logs = mockDB.getLogs();
-                logs.push(log);
-                localStorage.setItem('mock_gsheets_logs', JSON.stringify(logs));
-            }
-        };
+// ─── Local DB ─────────────────────────────────────────────
+const db = {
+    getLogs: () => { try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; } catch { return []; } },
+    saveLog: (log) => {
+        const logs = db.getLogs();
+        logs.push(log);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(logs));
+    }
+};
 
-        // --- Core Application Logic ---
-        document.addEventListener("DOMContentLoaded", () => {
-            initClock();
-            document.getElementById('filter-date').valueAsDate = new Date();
-            checkAuthStatus();
-        });
+// ─── Boot ─────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+    initClock();
+    document.getElementById('filter-date').valueAsDate = new Date();
+    restoreSession();
+});
 
-        function showView(viewId) {
-            ['view-register', 'view-employee', 'view-scanner', 'view-admin-login', 'view-admin-dashboard'].forEach(id => {
-                const el = document.getElementById(id);
-                // Handle split layouts cleanly by combining tailwind flex classes with hide logic
-                if(el.id === 'view-register' || el.id === 'view-admin-login') {
-                    el.classList.add('hide');
-                    el.classList.remove('flex');
-                } else {
-                    el.classList.add('hide');
-                }
-            });
-            
-            const targetEl = document.getElementById(viewId);
-            if(viewId === 'view-register' || viewId === 'view-admin-login') {
-                targetEl.classList.remove('hide');
-                targetEl.classList.add('flex'); // necessary for md:flex-row to work after removing hide
-            } else {
-                targetEl.classList.remove('hide');
-            }
-        }
-
-        function checkAuthStatus() {
-            const savedData = localStorage.getItem('attendance_device_auth');
-            if (savedData) {
-                currentUser = JSON.parse(savedData);
-                setupEmployeeDashboard();
-                showView('view-employee');
-            } else {
-                showView('view-register');
-            }
-        }
-
-        function handleRegister(e) {
-            e.preventDefault();
-            const empId = document.getElementById('reg-emp-id').value.trim();
-            const empName = document.getElementById('reg-emp-name').value.trim();
-            
-            if(!empId || !empName) return;
-
-            const deviceId = 'dev_' + Math.random().toString(36).substr(2, 9) + Date.now().toString(36);
-            
-            currentUser = { empId, empName, deviceId };
-            localStorage.setItem('attendance_device_auth', JSON.stringify(currentUser));
-            
-            showToast('ลงทะเบียนอุปกรณ์สำเร็จ', 'success');
+// ─── Session (persists across page refresh) ───────────────
+function restoreSession() {
+    try {
+        const saved = localStorage.getItem(SESSION_KEY);
+        if (saved) {
+            currentUser = JSON.parse(saved);
             setupEmployeeDashboard();
             showView('view-employee');
+        } else {
+            showView('view-register');
+        }
+    } catch(e) {
+        showView('view-register');
+    }
+}
+
+function checkAuthStatus() {
+    restoreSession();
+}
+
+// ─── View Controller ──────────────────────────────────────
+function showView(id) {
+    ['view-register','view-employee','view-scanner','view-admin-login','view-admin-dashboard']
+        .forEach(v => {
+            const el = document.getElementById(v);
+            el.classList.remove('active','active-flex');
+        });
+    const target = document.getElementById(id);
+    // split-layout views need flex
+    if (id === 'view-register' || id === 'view-admin-login') {
+        target.classList.add('active-flex');
+    } else {
+        target.classList.add('active');
+    }
+}
+
+// ─── Registration ─────────────────────────────────────────
+function handleRegister(e) {
+    e.preventDefault();
+    const empId   = document.getElementById('reg-emp-id').value.trim();
+    const empName = document.getElementById('reg-emp-name').value.trim();
+    if (!empId || !empName) return;
+
+    const deviceId = 'dev_' + Math.random().toString(36).slice(2, 9) + Date.now().toString(36);
+    currentUser = { empId, empName, deviceId };
+    localStorage.setItem(SESSION_KEY, JSON.stringify(currentUser));
+
+    showToast('ลงทะเบียนอุปกรณ์สำเร็จ', 'success');
+    setupEmployeeDashboard();
+    showView('view-employee');
+}
+
+// ─── Reset ────────────────────────────────────────────────
+function showResetPrompt() {
+    document.getElementById('reset-pin').value = '';
+    const modal = document.getElementById('reset-modal');
+    modal.style.display = 'flex';
+    requestAnimationFrame(() => modal.classList.add('open'));
+}
+function closeResetPrompt() {
+    const modal = document.getElementById('reset-modal');
+    modal.classList.remove('open');
+    setTimeout(() => { modal.style.display = 'none'; }, 200);
+}
+function confirmReset() {
+    if (document.getElementById('reset-pin').value === '2026') {
+        localStorage.removeItem(SESSION_KEY);
+        currentUser = null;
+        document.getElementById('form-register').reset();
+        closeResetPrompt();
+        showToast('รีเซ็ตอุปกรณ์สำเร็จ', 'success');
+        setTimeout(() => showView('view-register'), 300);
+    } else {
+        showToast('รหัส PIN ไม่ถูกต้อง', 'error');
+    }
+}
+
+// ─── Employee Dashboard ───────────────────────────────────
+function setupEmployeeDashboard() {
+    document.getElementById('display-emp-name').textContent = currentUser.empName;
+    document.getElementById('display-emp-id').textContent   = currentUser.empId;
+    loadTodayLogsForUser();
+}
+
+// ─── Clock ────────────────────────────────────────────────
+function initClock() {
+    const timeEl = document.getElementById('current-time');
+    const dateEl = document.getElementById('current-date');
+    const tick = () => {
+        const now = new Date();
+        timeEl.textContent = now.toLocaleTimeString('th-TH', { hour12: false });
+        dateEl.textContent = now.toLocaleDateString('th-TH', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    };
+    tick();
+    if (clockInterval) clearInterval(clockInterval);
+    clockInterval = setInterval(tick, 1000);
+}
+
+// ─── Scanner ──────────────────────────────────────────────
+function openScanner() {
+    showView('view-scanner');
+    html5QrcodeScanner = new Html5Qrcode('reader');
+    html5QrcodeScanner.start(
+        { facingMode: 'environment' },
+        { fps: 10, qrbox: { width: 220, height: 220 } },
+        onScanSuccess,
+        () => {}
+    ).catch(err => {
+        console.error(err);
+        showToast('ไม่สามารถเปิดกล้องได้ กรุณาให้สิทธิ์', 'error');
+    });
+}
+
+function closeScanner() {
+    if (html5QrcodeScanner) {
+        html5QrcodeScanner.stop().then(() => html5QrcodeScanner.clear()).catch(() => {});
+        html5QrcodeScanner = null;
+    }
+    showView('view-employee');
+}
+
+function onScanSuccess(decoded) { handleScan(decoded); }
+
+// ─── Scan Handler ─────────────────────────────────────────
+function calculateLateMinutes(timeStr) {
+    const [h1, m1] = LATE_TIME_LIMIT.split(':').map(Number);
+    const [h2, m2] = timeStr.split(':').map(Number);
+    const diff = (h2 * 60 + m2) - (h1 * 60 + m1);
+    return diff > 0 ? diff : 0;
+}
+
+function handleScan(qrData) {
+    const clean = qrData.replace(/(<([^>]+)>)/gi, '').trim();
+    if (clean !== COMPANY_QR_CODE) {
+        closeScanner();
+        showToast('QR Code ไม่ถูกต้อง', 'error');
+        return;
+    }
+    closeScanner();
+    showToast('กำลังบันทึก...', 'info');
+    hideErrorBanner();
+
+    const now     = new Date();
+    const dateStr = now.toLocaleDateString('en-CA');
+    const timeStr = now.toLocaleTimeString('th-TH', { hour12: false });
+
+    try {
+        const allLogs  = db.getLogs();
+        const myToday  = allLogs.filter(l => l.empId === currentUser.empId && l.date === dateStr);
+        const lastIsIn = myToday.length > 0 && myToday[myToday.length - 1].type === 'IN';
+        const actionType = lastIsIn ? 'OUT' : 'IN';
+
+        let status = 'ปกติ', lateMins = 0;
+        if (actionType === 'IN') {
+            lateMins = calculateLateMinutes(timeStr);
+            if (lateMins > 0) status = 'สาย';
         }
 
-        // --- Admin Reset Flow ---
-        function showResetPrompt() {
-            const modal = document.getElementById('reset-modal');
-            document.getElementById('reset-pin').value = '';
-            modal.classList.remove('hide');
-            setTimeout(() => {
-                modal.classList.remove('opacity-0');
-                modal.querySelector('div').classList.remove('scale-95');
-            }, 10);
+        const payload = {
+            date: dateStr, time: timeStr,
+            empId: currentUser.empId, empName: currentUser.empName,
+            type: actionType, status, lateMinutes: lateMins,
+            deviceId: currentUser.deviceId,
+            savedAt: new Date().toISOString()
+        };
+
+        // Save to local storage
+        db.saveLog(payload);
+
+        // Verify the save actually worked
+        const verification = db.getLogs().filter(
+            l => l.empId === currentUser.empId && l.date === dateStr && l.time === timeStr && l.type === actionType
+        );
+
+        if (verification.length === 0) {
+            throw new Error('บันทึกลงอุปกรณ์ไม่สำเร็จ (localStorage อาจเต็มหรือถูกปิดกั้น)');
         }
 
-        function closeResetPrompt() {
-            const modal = document.getElementById('reset-modal');
-            modal.classList.add('opacity-0');
-            modal.querySelector('div').classList.add('scale-95');
-            setTimeout(() => {
-                modal.classList.add('hide');
-            }, 300);
-        }
+        // Update UI
+        loadTodayLogsForUser();
 
-        function confirmReset() {
-            const pin = document.getElementById('reset-pin').value;
-            if(pin === 'png20122555') { 
-                localStorage.removeItem('attendance_device_auth');
-                currentUser = null;
-                document.getElementById('form-register').reset();
-                closeResetPrompt();
-                showToast('รีเซ็ตอุปกรณ์สำเร็จ', 'success');
-                showView('view-register');
-            } else {
-                showToast('รหัส PIN ไม่ถูกต้อง', 'error');
-            }
-        }
+        let msg = `บันทึกเวลา${actionType === 'IN' ? 'เข้างาน' : 'ออกงาน'} ${timeStr} สำเร็จ`;
+        if (status === 'สาย') msg += ` · สาย ${lateMins} นาที`;
+        showToast(msg, status === 'สาย' ? 'error' : 'success');
 
-        function setupEmployeeDashboard() {
-            document.getElementById('display-emp-name').innerText = currentUser.empName;
-            document.getElementById('display-emp-id').innerText = currentUser.empId;
-            loadTodayLogsForUser();
-        }
-
-        function initClock() {
-            const timeEl = document.getElementById('current-time');
-            const dateEl = document.getElementById('current-date');
-            
-            const updateTime = () => {
-                const now = new Date();
-                timeEl.innerText = now.toLocaleTimeString('th-TH', { hour12: false });
-                dateEl.innerText = now.toLocaleDateString('th-TH', { 
-                    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' 
-                });
-            };
-            
-            updateTime();
-            if(clockInterval) clearInterval(clockInterval);
-            clockInterval = setInterval(updateTime, 1000);
-        }
-
-        // --- Scanner Logic ---
-        function openScanner() {
-            showView('view-scanner');
-            html5QrcodeScanner = new Html5Qrcode("reader");
-            const config = { fps: 10, qrbox: { width: 250, height: 250 } };
-
-            html5QrcodeScanner.start({ facingMode: "environment" }, config, onScanSuccess, onScanFailure)
-                .catch(err => {
-                    console.error("Camera access error:", err);
-                    showToast('ไม่สามารถเปิดกล้องได้ กรุณาให้สิทธิ์', 'error');
-                });
-        }
-
-        function closeScanner() {
-            if (html5QrcodeScanner) {
-                html5QrcodeScanner.stop().then(() => {
-                    html5QrcodeScanner.clear();
-                }).catch(err => console.error("Failed to stop", err));
-            }
-            showView('view-employee');
-        }
-
-        function onScanSuccess(decodedText) {
-            handleScan(decodedText);
-        }
-        function onScanFailure() {}
-
-        function calculateLateMinutes(currentTimeStr) {
-            const [h1, m1] = LATE_TIME_LIMIT.split(':').map(Number);
-            const [h2, m2] = currentTimeStr.split(':').map(Number);
-            
-            const limitMins = (h1 * 60) + m1;
-            const currentMins = (h2 * 60) + m2;
-            
-            if (currentMins > limitMins) {
-                return currentMins - limitMins;
-            }
-            return 0;
-        }
-
-        // [สำคัญ] ฟังก์ชันจัดการการสแกน ปรับปรุงให้บันทึกและแสดงผลทันทีแบบไม่ต้องรอเน็ต
-        function handleScan(qrData) {
-            const cleanQrData = qrData.replace(/(<([^>]+)>)/gi, "").trim();
-            if (cleanQrData !== COMPANY_QR_CODE) {
-                closeScanner();
-                showToast('QR Code ไม่ถูกต้อง', 'error');
-                return;
-            }
-
-            closeScanner();
-            showToast('กำลังบันทึกข้อมูล...', 'info');
-
-            const now = new Date();
-            const dateStr = now.toLocaleDateString('en-CA'); 
-            const timeStr = now.toLocaleTimeString('th-TH', { hour12: false });
-            
-            // อ่านประวัติจากในเครื่องทันทีเพื่อหาว่าเป็น "เข้า" หรือ "ออก"
-            const allLogs = mockDB.getLogs();
-            const myLogsToday = allLogs.filter(l => l.empId === currentUser.empId && l.date === dateStr);
-            const isLastActionIn = myLogsToday.length > 0 && myLogsToday[myLogsToday.length-1].type === 'IN';
-            const actionType = isLastActionIn ? 'OUT' : 'IN';
-
-            let status = 'ปกติ';
-            let lateMins = 0;
-            
-            if (actionType === 'IN') {
-                lateMins = calculateLateMinutes(timeStr);
-                if (lateMins > 0) {
-                    status = 'สาย';
-                }
-            }
-
-            const payload = {
-                date: dateStr,
-                time: timeStr,
-                empId: currentUser.empId,
-                empName: currentUser.empName,
-                type: actionType,
-                status: status,
-                lateMinutes: lateMins,
-                deviceId: currentUser.deviceId
-            };
-
-            // 1. บันทึกลงหน่วยความจำมือถือ และ อัปเดต UI ทันที! (ไม่มีอาการหน่วง)
-            mockDB.saveLog(payload);
-            loadTodayLogsForUser(); 
-            
-            let msg = `บันทึกเวลา${actionType === 'IN' ? 'เข้างาน' : 'ออกงาน'} สำเร็จ!`;
-            if(status === 'สาย') msg += ` (สาย ${lateMins} นาที)`;
-            showToast(msg, status === 'สาย' ? 'error' : 'success');
-
-            // 2. แอบส่งข้อมูลไปเข้า Google Sheets ด้านหลังแบบเงียบๆ
-            if (GOOGLE_APP_SCRIPT_URL) {
-                fetch(GOOGLE_APP_SCRIPT_URL, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                }).catch(e => console.error("Background sync error:", e));
-            }
-        }
-
-        // [สำคัญ] ฟังก์ชันสำหรับแสดงประวัติบนมือถือพนักงาน (โหลดจากเครื่องเลย เร็วและโชว์ทันที)
-        function loadTodayLogsForUser() {
-            const container = document.getElementById('today-logs-container');
-            const dateStr = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD
-            
-            // อ่านจาก Local Storage ของเครื่องโดยตรง
-            const allLogs = mockDB.getLogs();
-            const myLogs = allLogs.filter(l => l.empId === currentUser.empId && String(l.date || '').trim() === dateStr);
-            
-            if (myLogs.length === 0) {
-                container.innerHTML = '<div class="text-center text-sm text-gray-600 py-6"><i class="fa-regular fa-calendar-xmark text-2xl mb-2 block text-gray-700"></i>ยังไม่มีบันทึกในวันนี้</div>';
-                return;
-            }
-
-            container.innerHTML = '';
-            // โชว์รายการใหม่ล่าสุดไว้บนสุด
-            [...myLogs].reverse().forEach(log => {
-                const colorClass = log.type === 'IN' ? 'text-green-500 border-green-900/30 bg-green-900/10' : 'text-orange-500 border-orange-900/30 bg-orange-900/10';
-                const icon = log.type === 'IN' ? 'fa-arrow-right-to-bracket' : 'fa-arrow-right-from-bracket';
-                const label = log.type === 'IN' ? 'เข้างาน' : 'ออกงาน';
-                
-                let lateTag = '';
-                if(log.status === 'สาย') {
-                    lateTag = `<span class="text-[10px] md:text-xs bg-red-900/30 text-red-500 px-2 py-0.5 rounded border border-red-900/50 ml-2 whitespace-nowrap">สาย ${log.lateMinutes} นาที</span>`;
-                }
-
-                container.innerHTML += `
-                    <div class="flex justify-between items-center p-4 rounded-xl border ${colorClass} hover:brightness-110 transition">
-                        <div class="flex items-center gap-3">
-                            <div class="w-8 h-8 rounded-full flex items-center justify-center ${log.type === 'IN' ? 'bg-green-500/20' : 'bg-orange-500/20'}">
-                                <i class="fa-solid ${icon}"></i>
-                            </div>
-                            <span class="font-medium">${label}</span>
-                            ${lateTag}
-                        </div>
-                        <span class="font-bold tracking-wider text-lg">${log.time}</span>
-                    </div>
-                `;
+        // Background sync to Google Sheets (best-effort, non-blocking)
+        if (GOOGLE_APP_SCRIPT_URL) {
+            fetch(GOOGLE_APP_SCRIPT_URL, {
+                method: 'POST', mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            }).catch(e => {
+                console.warn('Background sync failed (data saved locally):', e);
+                // Not a fatal error — local save succeeded
             });
         }
 
-        // --- Admin Logic ---
-        function showAdminLogin() {
-            showView('view-admin-login');
-        }
+    } catch (err) {
+        console.error('handleScan error:', err);
+        showErrorBanner(err.message || 'เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ', timeStr);
+        showToast('บันทึกไม่สำเร็จ กรุณาแจ้งเจ้าหน้าที่', 'error');
+        loadTodayLogsForUser(); // Still refresh to show current state
+    }
+}
 
-        function handleAdminLogin(e) {
-            e.preventDefault();
-            const pin = document.getElementById('admin-pin').value;
-            if(pin === '1234') { 
-                document.getElementById('admin-pin').value = '';
-                showView('view-admin-dashboard');
-                loadAdminData();
-            } else {
-                showToast('รหัส PIN ไม่ถูกต้อง', 'error');
-            }
-        }
+function showErrorBanner(detail, timeStr) {
+    const banner = document.getElementById('error-banner');
+    document.getElementById('error-detail').innerHTML =
+        `เวลาที่พยายามบันทึก: <strong style="color:var(--text);font-family:'IBM Plex Mono',monospace;">${timeStr}</strong><br>สาเหตุ: ${detail}`;
+    banner.style.display = 'block';
+}
 
-        async function runDebug() {
+function hideErrorBanner() {
+    document.getElementById('error-banner').style.display = 'none';
+}
+
+// ─── Today Logs + Summary ─────────────────────────────────
+function loadTodayLogsForUser() {
+    const container = document.getElementById('today-logs-container');
+    const dateStr   = new Date().toLocaleDateString('en-CA');
+    const logs      = db.getLogs().filter(l => l.empId === currentUser.empId && String(l.date || '').trim() === dateStr);
+
+    // ── Update summary cards ──
+    const firstIn  = logs.find(l => l.type === 'IN');
+    const lastOut  = [...logs].reverse().find(l => l.type === 'OUT');
+
+    const inTimeEl     = document.getElementById('summary-in-time');
+    const inStatusEl   = document.getElementById('summary-in-status');
+    const outTimeEl    = document.getElementById('summary-out-time');
+    const outStatusEl  = document.getElementById('summary-out-status');
+    const inBox        = document.getElementById('summary-in');
+    const outBox       = document.getElementById('summary-out');
+
+    if (firstIn) {
+        inTimeEl.textContent  = firstIn.time;
+        inTimeEl.style.color  = 'var(--green)';
+        inBox.style.borderColor = 'rgba(62,207,142,.25)';
+        inBox.style.background  = 'rgba(62,207,142,.05)';
+        if (firstIn.status === 'สาย') {
+            inStatusEl.innerHTML = `<span style="color:var(--red);">⚠ สาย ${firstIn.lateMinutes} นาที</span>`;
+        } else {
+            inStatusEl.innerHTML = `<span style="color:var(--green);">✓ ตรงเวลา</span>`;
+        }
+    } else {
+        inTimeEl.textContent    = '—';
+        inTimeEl.style.color    = 'var(--muted2)';
+        inBox.style.borderColor = 'var(--border)';
+        inBox.style.background  = '#000';
+        inStatusEl.innerHTML    = '<span style="color:var(--muted2);">ยังไม่ได้สแกน</span>';
+    }
+
+    if (lastOut) {
+        outTimeEl.textContent   = lastOut.time;
+        outTimeEl.style.color   = 'var(--orange)';
+        outBox.style.borderColor = 'rgba(249,115,22,.25)';
+        outBox.style.background  = 'rgba(249,115,22,.05)';
+        outStatusEl.innerHTML   = `<span style="color:var(--orange);">✓ บันทึกแล้ว</span>`;
+    } else {
+        outTimeEl.textContent   = '—';
+        outTimeEl.style.color   = 'var(--muted2)';
+        outBox.style.borderColor = 'var(--border)';
+        outBox.style.background  = '#000';
+        outStatusEl.innerHTML   = '<span style="color:var(--muted2);">ยังไม่ได้สแกน</span>';
+    }
+
+    // ── Log history list ──
+    if (logs.length === 0) {
+        container.innerHTML = '<div class="empty-state" style="padding:24px 0;"><i class="fa-regular fa-calendar-xmark"></i>ยังไม่มีบันทึกในวันนี้</div>';
+        return;
+    }
+
+    container.innerHTML = '';
+    [...logs].reverse().forEach((log, idx) => {
+        const isIn = log.type === 'IN';
+        const div  = document.createElement('div');
+        div.className = 'log-item ' + (isIn ? 'log-in' : 'log-out');
+        div.style.transition = 'opacity .3s, transform .3s';
+        div.style.opacity    = '0';
+        div.style.transform  = 'translateY(6px)';
+        div.innerHTML = `
+            <div style="display:flex;align-items:center;gap:10px;">
+                <div style="width:32px;height:32px;border-radius:50%;background:${isIn ? 'rgba(62,207,142,.15)' : 'rgba(249,115,22,.15)'};display:flex;align-items:center;justify-content:center;font-size:.75rem;flex-shrink:0;">
+                    <i class="fa-solid ${isIn ? 'fa-arrow-right-to-bracket' : 'fa-arrow-right-from-bracket'}"></i>
+                </div>
+                <div>
+                    <div style="font-weight:600;font-size:.875rem;">${isIn ? 'เข้างาน' : 'ออกงาน'}</div>
+                    ${log.status === 'สาย' ? `<div style="font-size:.72rem;color:var(--red);">สาย ${log.lateMinutes} นาที</div>` : ''}
+                </div>
+            </div>
+            <div style="text-align:right;">
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:1rem;font-weight:500;">${log.time}</div>
+                <div style="font-size:.7rem;color:var(--muted2);margin-top:2px;">${log.status === 'สาย' ? '⚠ สาย' : '✓ ปกติ'}</div>
+            </div>
+        `;
+        container.appendChild(div);
+        // Staggered fade-in
+        setTimeout(() => {
+            div.style.opacity   = '1';
+            div.style.transform = 'translateY(0)';
+        }, idx * 60);
+    });
+}
+
+// ─── Admin Auth ───────────────────────────────────────────
+function showAdminLogin() { showView('view-admin-login'); }
+
+function handleAdminLogin(e) {
+    e.preventDefault();
+    const pin = document.getElementById('admin-pin').value;
+    if (pin === '2026') {
+        document.getElementById('admin-pin').value = '';
+        showView('view-admin-dashboard');
+        loadAdminData();
+    } else {
+        showToast('รหัส PIN ไม่ถูกต้อง', 'error');
+    }
+}
+
+// ─── Debug ────────────────────────────────────────────────
+async function runDebug() {
+    try {
+        showToast('กำลังทดสอบการเชื่อมต่อ...', 'info');
+        const res  = await fetch(GOOGLE_APP_SCRIPT_URL + '?t=' + Date.now());
+        const text = await res.text();
+        try {
+            const json = JSON.parse(text);
+            if (json.error) { alert('❌ ' + json.error); }
+            else { alert(`✅ เชื่อมต่อสำเร็จ! พบข้อมูล ${json.length} รายการ\n\n${JSON.stringify(json[0] || 'ไม่มีข้อมูล')}`); loadAdminData(); }
+        } catch { alert('❌ ข้อมูลไม่ใช่ตาราง (ลืมเลือก "ทุกคน" ตอน Deploy?)\n\n' + text.substring(0, 200)); }
+        showToast('ทดสอบเสร็จสิ้น', 'success');
+    } catch(e) {
+        alert('❌ CORS Error / URL ผิด\nตรวจสอบการตั้งค่า Deploy ว่าเป็น "ทุกคน (Anyone)" ');
+        showToast('การเชื่อมต่อล้มเหลว', 'error');
+    }
+}
+
+// ─── Admin Data ───────────────────────────────────────────
+async function loadAdminData() {
+    const dateInput = document.getElementById('filter-date').value;
+    const tbody     = document.getElementById('admin-table-body');
+    tbody.innerHTML = `<tr><td colspan="6" class="empty-state"><i class="fa-solid fa-spinner fa-spin"></i>กำลังโหลดข้อมูล...</td></tr>`;
+
+    let allLogs = [];
+    try {
+        if (GOOGLE_APP_SCRIPT_URL) {
+            const res  = await fetch(GOOGLE_APP_SCRIPT_URL + '?t=' + Date.now());
+            const text = await res.text();
             try {
-                showToast('กำลังทดสอบการเชื่อมต่อ...', 'info', true);
-                const res = await fetch(GOOGLE_APP_SCRIPT_URL + "?t=" + Date.now());
-                const text = await res.text();
-                
-                try {
-                    const json = JSON.parse(text);
-                    if(json.error) {
-                        alert("❌ สคริปต์แจ้งข้อผิดพลาด:\n" + json.error);
-                    } else {
-                        alert(`✅ เชื่อมต่อสำเร็จ! ดึงข้อมูลมาได้ ${json.length} รายการ\n\nตัวอย่างข้อมูล:\n${JSON.stringify(json[0] || 'ไม่มีข้อมูล')}`);
-                        loadAdminData();
-                    }
-                } catch(e) {
-                    alert("❌ เชื่อมต่อได้ แต่ข้อมูลที่ส่งกลับมาไม่ใช่ตาราง (น่าจะลืมเลือก 'เวอร์ชันใหม่' ตอน Deploy)\n\nข้อมูลที่ตอบกลับมาคือ:\n" + text.substring(0, 200));
-                }
-                showToast('ทดสอบเสร็จสิ้น', 'success');
-            } catch(e) {
-                alert("❌ การเชื่อมต่อถูกบล็อก (CORS Error) หรือ URL ผิด\n\nสาเหตุหลัก: ตอน Deploy คุณตั้งค่า 'ผู้มีสิทธิ์เข้าถึง' เป็น 'ทุกคนที่มีบัญชี Google' \n\nวิธีแก้: ต้องเลือกเป็น 'ทุกคน (Anyone)' เท่านั้นครับ!");
-                showToast('การเชื่อมต่อล้มเหลว', 'error');
-            }
-        }
+                allLogs = JSON.parse(text);
+                if (allLogs.error) throw new Error(allLogs.error);
+                if (!Array.isArray(allLogs)) allLogs = [];
+            } catch(e) { throw new Error('ข้อมูลไม่ถูกต้อง'); }
+        } else { allLogs = db.getLogs(); }
+    } catch(err) {
+        showToast('ดึงข้อมูลล้มเหลว ใช้ข้อมูลในเครื่องแทน', 'error');
+        allLogs = db.getLogs();
+    }
 
-        // [สำคัญ] ปรับแก้ระบบตัวกรองวันที่ของ Admin ให้ฉลาดขึ้น
-        async function loadAdminData() {
-            const dateInput = document.getElementById('filter-date').value;
-            const tbody = document.getElementById('admin-table-body');
-            
-            tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-10 text-center text-gray-500"><i class="fa-solid fa-spinner fa-spin text-2xl mb-3 block"></i> กำลังซิงค์ข้อมูลจาก Google Sheets...</td></tr>';
-            
-            let allLogs = [];
-            
-            try {
-                if(GOOGLE_APP_SCRIPT_URL) {
-                    const response = await fetch(GOOGLE_APP_SCRIPT_URL + "?t=" + Date.now());
-                    const text = await response.text();
-                    try {
-                        allLogs = JSON.parse(text);
-                        if (allLogs.error) throw new Error(allLogs.error);
-                        if (!Array.isArray(allLogs)) allLogs = [];
-                    } catch(e) {
-                        throw new Error("ระบบตอบกลับมาไม่ใช่ตารางข้อมูล (กรุณากดปุ่ม 'เช็คระบบ' สีม่วงเพื่อดูสาเหตุ)");
-                    }
-                } else {
-                    allLogs = mockDB.getLogs();
-                }
-            } catch (error) {
-                showToast('ดึงข้อมูลล้มเหลว: ' + error.message, 'error', true);
-                allLogs = mockDB.getLogs(); 
-                setTimeout(() => { document.getElementById('toast').classList.add('opacity-0'); }, 6000);
-            }
+    if (dateInput) {
+        const [y, m, d] = dateInput.split('-');
+        allLogs = allLogs.filter(l => {
+            const s = String(l.date || '').trim();
+            return s === dateInput || s === `${d}/${m}/${y}` || s === `${m}/${d}/${y}`;
+        });
+    }
 
-            if (dateInput) {
-                // รองรับตัวกรองวันที่หลายรูปแบบ (เผื่อ Google Sheets ส่งมาแบบแปลกๆ)
-                const [y, m, d] = dateInput.split('-');
-                allLogs = allLogs.filter(l => {
-                    const dStr = String(l.date || '').trim();
-                    return dStr === dateInput || 
-                           dStr === `${d}/${m}/${y}` || 
-                           dStr === `${m}/${d}/${y}`;
-                });
-            }
+    document.getElementById('stat-total').textContent = new Set(allLogs.map(l => l.empId)).size;
+    document.getElementById('stat-in').textContent    = allLogs.filter(l => l.type === 'IN').length;
+    document.getElementById('stat-out').textContent   = allLogs.filter(l => l.type === 'OUT').length;
+    document.getElementById('stat-late').textContent  = allLogs.filter(l => l.status === 'สาย').length;
 
-            const uniqueEmps = new Set(allLogs.map(l => l.empId)).size;
-            const ins = allLogs.filter(l => l.type === 'IN').length;
-            const outs = allLogs.filter(l => l.type === 'OUT').length;
-            const lates = allLogs.filter(l => l.status === 'สาย').length;
+    tbody.innerHTML = '';
+    if (allLogs.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" class="empty-state"><i class="fa-regular fa-folder-open"></i>ไม่มีข้อมูลในวันที่เลือก</td></tr>`;
+        return;
+    }
 
-            document.getElementById('stat-total').innerText = uniqueEmps;
-            document.getElementById('stat-in').innerText = ins;
-            document.getElementById('stat-out').innerText = outs;
-            document.getElementById('stat-late').innerText = lates;
+    [...allLogs].reverse().forEach(log => {
+        const typeBadge   = log.type === 'IN'
+            ? `<span class="badge badge-green"><i class="fa-solid fa-arrow-right-to-bracket" style="font-size:.7rem;"></i>เข้างาน</span>`
+            : `<span class="badge badge-orange"><i class="fa-solid fa-arrow-right-from-bracket" style="font-size:.7rem;"></i>ออกงาน</span>`;
+        const statusBadge = log.status === 'สาย'
+            ? `<span class="badge badge-red">สาย ${log.lateMinutes} นาที</span>`
+            : `<span style="color:var(--muted2);">—</span>`;
 
-            tbody.innerHTML = '';
-            if(allLogs.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-10 text-center text-gray-600"><i class="fa-regular fa-folder-open text-3xl mb-3 block text-gray-700"></i>ไม่มีข้อมูลในวันที่เลือก</td></tr>';
-                return;
-            }
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td style="font-family:'IBM Plex Mono',monospace;font-weight:500;">${log.time}</td>
+            <td style="color:var(--accent);font-family:'IBM Plex Mono',monospace;font-size:.825rem;">${log.empId}</td>
+            <td style="color:var(--text);">${log.empName}</td>
+            <td>${typeBadge}</td>
+            <td>${statusBadge}</td>
+            <td class="hide-mobile" style="font-family:'IBM Plex Mono',monospace;font-size:.75rem;color:var(--muted2);">${(log.deviceId || '').slice(0, 12)}…</td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
 
-            [...allLogs].reverse().forEach(log => {
-                const typeHtml = log.type === 'IN' 
-                    ? `<span class="bg-green-900/30 text-green-500 text-xs font-medium px-3 py-1 rounded-full border border-green-800">เข้างาน</span>`
-                    : `<span class="bg-orange-900/30 text-orange-500 text-xs font-medium px-3 py-1 rounded-full border border-orange-800">ออกงาน</span>`;
-                
-                const statusHtml = log.status === 'สาย'
-                    ? `<span class="text-red-500 font-medium bg-red-900/10 px-2 py-1 rounded">สาย ${log.lateMinutes} นาที</span>`
-                    : `<span class="text-gray-500">-</span>`;
+// ─── Toast ────────────────────────────────────────────────
+let _toastTimer;
+function showToast(msg, type = 'success') {
+    const toast = document.getElementById('toast');
+    const icon  = document.getElementById('toast-icon');
+    document.getElementById('toast-msg').textContent = msg;
 
-                tbody.innerHTML += `
-                    <tr class="border-b border-dark-border hover:bg-gray-800/60 transition duration-150">
-                        <td class="px-6 py-5 whitespace-nowrap text-gray-200 font-medium">${log.time}</td>
-                        <td class="px-6 py-5 font-semibold text-brand-400">${log.empId}</td>
-                        <td class="px-6 py-5 text-gray-300">${log.empName}</td>
-                        <td class="px-6 py-5">${typeHtml}</td>
-                        <td class="px-6 py-5">${statusHtml}</td>
-                        <td class="px-6 py-5 text-xs text-gray-500 font-mono hidden md:table-cell">${(log.deviceId||'').substring(0,10)}...</td>
-                    </tr>
-                `;
-            });
-        }
+    const icons = { success: 'fa-circle-check', error: 'fa-circle-xmark', info: 'fa-spinner fa-spin' };
+    const colors = { success: 'var(--green)', error: 'var(--red)', info: 'var(--accent)' };
+    icon.className = `fa-solid ${icons[type] || icons.success}`;
+    icon.style.color = colors[type] || colors.success;
 
-        // --- UI Utilities ---
-        let toastTimeout;
-        function showToast(msg, type = 'success', keepAlive = false) {
-            const toast = document.getElementById('toast');
-            const icon = document.getElementById('toast-icon');
-            document.getElementById('toast-msg').innerText = msg;
-            
-            toast.className = 'fixed bottom-5 left-1/2 transform -translate-x-1/2 px-6 py-4 rounded-full shadow-2xl border transition-all duration-300 z-50 flex items-center gap-4 min-w-[280px] max-w-sm justify-center';
-            
-            if(type === 'success') {
-                toast.classList.add('bg-gray-900', 'border-gray-700', 'text-white');
-                icon.className = 'fa-solid fa-circle-check text-green-500 text-xl';
-            } else if (type === 'error') {
-                toast.classList.add('bg-red-950', 'border-red-900', 'text-red-200');
-                icon.className = 'fa-solid fa-circle-xmark text-red-500 text-xl';
-            } else {
-                toast.classList.add('bg-blue-950', 'border-blue-900', 'text-blue-200');
-                icon.className = 'fa-solid fa-spinner fa-spin text-blue-500 text-xl';
-            }
-
-            toast.classList.remove('opacity-0', 'translate-y-10', 'pointer-events-none');
-
-            clearTimeout(toastTimeout);
-            if(!keepAlive) {
-                toastTimeout = setTimeout(() => {
-                    toast.classList.add('opacity-0', 'translate-y-10', 'pointer-events-none');
-                }, 3000);
-            }
-        }
-    </script>
+    toast.classList.add('show');
+    clearTimeout(_toastTimer);
+    _toastTimer = setTimeout(() => toast.classList.remove('show'), type === 'info' ? 8000 : 3000);
+}
+</script>
 </body>
 </html>
