@@ -180,6 +180,7 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-300 mb-1">รหัส PIN</label>
                     <input type="password" id="admin-pin" class="block w-full px-3 py-2.5 bg-black border border-dark-border rounded-lg text-white text-center tracking-widest text-lg focus:outline-none focus:ring-2 focus:ring-brand-500 transition" placeholder="••••">
+                    <p class="text-xs text-gray-600 mt-2 text-center">รหัสทดสอบ: 1234</p>
                 </div>
                 <button type="submit" class="w-full bg-gray-800 hover:bg-gray-700 text-white font-medium py-2.5 rounded-lg transition duration-200 border border-gray-700">
                     เข้าสู่ระบบ
@@ -197,10 +198,14 @@
                     <h2 class="text-2xl font-bold text-white"><i class="fa-solid fa-chart-line text-brand-500 mr-2"></i> ข้อมูลลงเวลาทำการ</h2>
                     <p class="text-sm text-gray-400 mt-1">ดูข้อมูลการเข้า-ออกงานของพนักงานทั้งหมด (ซิงค์กับ Google Sheets เรียลไทม์)</p>
                 </div>
-                <div class="flex gap-2">
+                <div class="flex flex-wrap gap-2">
                     <input type="date" id="filter-date" class="bg-black border border-dark-border rounded-lg text-white px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-brand-500" onchange="loadAdminData()">
                     <button onclick="loadAdminData()" class="bg-brand-600 hover:bg-brand-700 text-white px-4 py-2 rounded-lg text-sm transition shadow-lg shadow-brand-500/20">
                         <i class="fa-solid fa-rotate-right"></i> รีเฟรช
+                    </button>
+                    <!-- ปุ่ม Debug ช่วยหาข้อผิดพลาด -->
+                    <button onclick="runDebug()" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm transition shadow-lg shadow-purple-500/20" title="กดเพื่อหาว่าทำไมดึงข้อมูลไม่ได้">
+                        <i class="fa-solid fa-bug"></i> เช็คระบบ
                     </button>
                     <button onclick="checkAuthStatus()" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 text-white px-4 py-2 rounded-lg text-sm transition">
                         ปิด
@@ -274,7 +279,7 @@
 
     <script>
         // --- Configuration ---
-        // นำ URL จาก Google Apps Script (Web App) ของคุณมาใส่ที่นี่
+        // ใช้ URL ล่าสุดที่คุณให้มา
         const GOOGLE_APP_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxC1A0RVRD7qEUclxGlZ5CudI7lWyWEVYP-zP0BMRmfC18snr08kLljyngntOEjXkTr/exec"; 
         const COMPANY_QR_CODE = "COMPANY_QR_SECRET_2026"; 
         const LATE_TIME_LIMIT = "08:30:00"; // กำหนดเวลาสาย
@@ -341,7 +346,6 @@
             const modal = document.getElementById('reset-modal');
             document.getElementById('reset-pin').value = '';
             modal.classList.remove('hide');
-            // Allow display block to render before changing opacity for animation
             setTimeout(() => {
                 modal.classList.remove('opacity-0');
                 modal.querySelector('div').classList.remove('scale-95');
@@ -359,7 +363,7 @@
 
         function confirmReset() {
             const pin = document.getElementById('reset-pin').value;
-            if(pin === '1234') { // รหัส Admin
+            if(pin === '1234') { 
                 localStorage.removeItem('attendance_device_auth');
                 currentUser = null;
                 document.getElementById('form-register').reset();
@@ -446,18 +450,16 @@
             showToast('กำลังบันทึกข้อมูล...', 'info', true);
 
             const now = new Date();
-            // ปรับแก้โซนเวลาให้ดึงวันที่แบบ Local ของไทยเสมอ
             const dateStr = now.toLocaleDateString('en-CA'); // format: YYYY-MM-DD
             const timeStr = now.toLocaleTimeString('th-TH', { hour12: false });
             
-            // Fetch logs to determine IN or OUT
             let allLogs = [];
             try {
                 if(GOOGLE_APP_SCRIPT_URL) {
-                    const res = await fetch(GOOGLE_APP_SCRIPT_URL);
-                    allLogs = await res.json();
-                } else {
-                    allLogs = mockDB.getLogs();
+                    const res = await fetch(GOOGLE_APP_SCRIPT_URL + "?t=" + Date.now());
+                    const text = await res.text();
+                    allLogs = JSON.parse(text);
+                    if(!Array.isArray(allLogs)) allLogs = [];
                 }
             } catch(e) {
                 allLogs = mockDB.getLogs();
@@ -467,7 +469,6 @@
             const isLastActionIn = myLogsToday.length > 0 && myLogsToday[myLogsToday.length-1].type === 'IN';
             const actionType = isLastActionIn ? 'OUT' : 'IN';
 
-            // Calculate Late Status (Only when Check IN)
             let status = 'ปกติ';
             let lateMins = 0;
             
@@ -498,7 +499,7 @@
                         body: JSON.stringify(payload)
                     });
                 }
-                mockDB.saveLog(payload); // Backup to LocalStorage
+                mockDB.saveLog(payload); 
                 
                 let msg = `บันทึกเวลา${actionType === 'IN' ? 'เข้างาน' : 'ออกงาน'} สำเร็จ!`;
                 if(status === 'สาย') msg += ` (สาย ${lateMins} นาที)`;
@@ -518,7 +519,7 @@
             let allLogs = [];
             try {
                 if(GOOGLE_APP_SCRIPT_URL) {
-                    // เพิ่ม ?t=... เพื่อป้องกัน Browser Cache ข้อมูลเก่า
+                    // แนบ Date.now() ไปด้วยเพื่อป้องกัน Browser นำข้อมูลเก่ามาแสดง (Cache)
                     const res = await fetch(GOOGLE_APP_SCRIPT_URL + "?t=" + Date.now());
                     const text = await res.text();
                     try {
@@ -526,14 +527,13 @@
                         if (allLogs.error) throw new Error(allLogs.error);
                         if (!Array.isArray(allLogs)) allLogs = [];
                     } catch (e) {
-                        console.error("GAS Response Content:", text);
-                        throw new Error("รูปแบบข้อมูลผิด (ลืม Deploy New Version หรือสิทธิ์ไม่ใช่ Anyone)");
+                        throw new Error("ระบบตอบกลับมาไม่ใช่ JSON");
                     }
                 } else {
                     allLogs = mockDB.getLogs();
                 }
             } catch(e) {
-                console.error("Fetch Local/Network Error:", e);
+                console.warn("ดึงข้อมูลพนักงานล้มเหลว:", e);
                 allLogs = mockDB.getLogs();
             }
 
@@ -585,7 +585,31 @@
             }
         }
 
-        // [สำคัญ] ฟังก์ชันโหลดข้อมูลเข้าตาราง Admin ถูกอัปเดตให้ดึง (Pull) ผ่าน fetch แล้ว
+        // ระบบเชื่อมต่อเพื่อ Debug หาข้อผิดพลาดโดยตรง
+        async function runDebug() {
+            try {
+                showToast('กำลังทดสอบการเชื่อมต่อ...', 'info', true);
+                const res = await fetch(GOOGLE_APP_SCRIPT_URL + "?t=" + Date.now());
+                const text = await res.text();
+                
+                try {
+                    const json = JSON.parse(text);
+                    if(json.error) {
+                        alert("❌ สคริปต์แจ้งข้อผิดพลาด:\n" + json.error);
+                    } else {
+                        alert(`✅ เชื่อมต่อสำเร็จ! ดึงข้อมูลมาได้ ${json.length} รายการ\n\nตัวอย่างข้อมูล:\n${JSON.stringify(json[0] || 'ไม่มีข้อมูล')}`);
+                        loadAdminData();
+                    }
+                } catch(e) {
+                    alert("❌ เชื่อมต่อได้ แต่ข้อมูลที่ส่งกลับมาไม่ใช่ตาราง (น่าจะลืมเลือก 'เวอร์ชันใหม่' ตอน Deploy)\n\nข้อมูลที่ตอบกลับมาคือ:\n" + text.substring(0, 200));
+                }
+                showToast('ทดสอบเสร็จสิ้น', 'success');
+            } catch(e) {
+                alert("❌ การเชื่อมต่อถูกบล็อก (CORS Error) หรือ URL ผิด\n\nสาเหตุหลัก: ตอน Deploy คุณตั้งค่า 'ผู้มีสิทธิ์เข้าถึง' เป็น 'ทุกคนที่มีบัญชี Google' \n\nวิธีแก้: ต้องเลือกเป็น 'ทุกคน (Anyone)' เท่านั้นครับ!");
+                showToast('การเชื่อมต่อล้มเหลว', 'error');
+            }
+        }
+
         async function loadAdminData() {
             const dateInput = document.getElementById('filter-date').value;
             const tbody = document.getElementById('admin-table-body');
@@ -596,7 +620,6 @@
             
             try {
                 if(GOOGLE_APP_SCRIPT_URL) {
-                    // เพิ่ม ?t=... เพื่อป้องกัน Browser Cache
                     const response = await fetch(GOOGLE_APP_SCRIPT_URL + "?t=" + Date.now());
                     const text = await response.text();
                     try {
@@ -604,16 +627,15 @@
                         if (allLogs.error) throw new Error(allLogs.error);
                         if (!Array.isArray(allLogs)) allLogs = [];
                     } catch(e) {
-                        console.error("GAS Response Content:", text);
-                        throw new Error("ลืม Deploy เป็นเวอร์ชันใหม่ หรือตั้งสิทธิ์เข้าถึงผิด");
+                        throw new Error("ระบบตอบกลับมาไม่ใช่ตารางข้อมูล (กรุณากดปุ่ม 'เช็คระบบ' สีม่วงเพื่อดูสาเหตุ)");
                     }
                 } else {
                     allLogs = mockDB.getLogs();
                 }
             } catch (error) {
-                console.error("Fetch Error:", error);
-                showToast('ดึงข้อมูลล้มเหลว: ' + error.message, 'error');
-                allLogs = mockDB.getLogs();
+                showToast('ดึงข้อมูลล้มเหลว: ' + error.message, 'error', true);
+                allLogs = mockDB.getLogs(); // fallback
+                setTimeout(() => { document.getElementById('toast').classList.add('opacity-0'); }, 6000);
             }
 
             if (dateInput) {
@@ -632,7 +654,7 @@
 
             tbody.innerHTML = '';
             if(allLogs.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-8 text-center text-gray-600">ไม่มีข้อมูลในวันที่เลือก</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-8 text-center text-gray-600">ไม่มีข้อมูลในวันที่เลือก (หรือการเชื่อมต่อล้มเหลว)</td></tr>';
                 return;
             }
 
