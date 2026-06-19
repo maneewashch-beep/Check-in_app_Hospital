@@ -28,9 +28,9 @@
                             700: '#1d4ed8',
                         },
                         dark: {
-                            bg: '#0f172a',    // Slate 900
-                            card: '#1e293b',  // Slate 800
-                            border: '#334155' // Slate 700
+                            bg: '#000000',    // Pure Black
+                            card: '#111827',  // Gray 900
+                            border: '#374151' // Gray 700
                         }
                     }
                 }
@@ -143,9 +143,27 @@
             </div>
             
             <div class="mt-6 text-center">
-                <button onclick="resetDevice()" class="text-xs text-gray-500 hover:text-red-400 transition">
-                    <i class="fa-solid fa-triangle-exclamation mr-1"></i> ล้างข้อมูลอุปกรณ์นี้ (Reset)
+                <button onclick="promptResetDevice()" class="text-xs text-gray-500 hover:text-red-400 transition">
+                    <i class="fa-solid fa-lock mr-1"></i> ล้างข้อมูลอุปกรณ์นี้ (Admin Only)
                 </button>
+            </div>
+        </div>
+
+        <!-- View: Reset Device Admin Auth Modal -->
+        <div id="view-reset-auth" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+            <div class="bg-dark-card w-full max-w-sm rounded-2xl shadow-2xl border border-red-900/50 p-6">
+                <div class="text-center mb-4">
+                    <div class="w-12 h-12 bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-3 text-red-500 text-xl">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-white">ยืนยันการล้างข้อมูล</h3>
+                    <p class="text-sm text-gray-400 mt-1">กรุณากรอกรหัส Admin เพื่อล้างอุปกรณ์นี้</p>
+                </div>
+                <input type="password" id="reset-admin-pin" class="block w-full px-3 py-2.5 bg-gray-900 border border-dark-border rounded-lg text-white text-center tracking-widest text-lg focus:outline-none focus:ring-2 focus:ring-red-500 transition mb-4" placeholder="••••">
+                <div class="flex gap-2">
+                    <button onclick="closeResetPrompt()" class="w-1/2 bg-gray-800 hover:bg-gray-700 text-white py-2 rounded-lg transition">ยกเลิก</button>
+                    <button onclick="confirmResetDevice()" class="w-1/2 bg-red-600 hover:bg-red-700 text-white py-2 rounded-lg transition">ยืนยันการล้าง</button>
+                </div>
             </div>
         </div>
 
@@ -240,6 +258,7 @@
                             <th scope="col" class="px-6 py-4">รหัสพนักงาน</th>
                             <th scope="col" class="px-6 py-4">ชื่อ-นามสกุล</th>
                             <th scope="col" class="px-6 py-4">ประเภท</th>
+                            <th scope="col" class="px-6 py-4">สถานะ (สาย)</th>
                             <th scope="col" class="px-6 py-4">Device ID</th>
                         </tr>
                     </thead>
@@ -268,7 +287,7 @@
     <script>
         // --- Configuration ---
         // เมื่อคุณตั้งค่า Google Sheets + Apps Script เสร็จ ให้นำ URL มาใส่ที่นี่
-        const GOOGLE_APP_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzndx8OrNtvYM1lAefhwqr2_ZgkQ07-tMKq07xMLh8OYAd_Z3V62U3iBK-sXAFk5T9SuQ/exec"; 
+        const GOOGLE_APP_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxffuPG71iL5rPtgZykjXY5ip6kOVnc0wvX0maiFeqL5W_tle_G9MC6zwXnLmsTdT7xeQ/exec"; 
         const COMPANY_QR_CODE = "COMPANY_QR_SECRET_2026"; // ค่า QR ที่ถูกต้องสำหรับการสแกน
 
         // --- State Variables ---
@@ -309,6 +328,31 @@
                 showView('view-employee');
             } else {
                 showView('view-register');
+            }
+        }
+
+        // --- Reset Device Logic (Admin Lock) ---
+        function promptResetDevice() {
+            document.getElementById('view-reset-auth').classList.remove('hidden');
+            document.getElementById('reset-admin-pin').value = '';
+            document.getElementById('reset-admin-pin').focus();
+        }
+
+        function closeResetPrompt() {
+            document.getElementById('view-reset-auth').classList.add('hidden');
+        }
+
+        function confirmResetDevice() {
+            const pin = document.getElementById('reset-admin-pin').value;
+            if (pin === '1234') { // รหัส Admin สำหรับล้างข้อมูล
+                localStorage.removeItem('attendance_device_auth');
+                currentUser = null;
+                document.getElementById('form-register').reset();
+                closeResetPrompt();
+                showView('view-register');
+                showToast('ล้างข้อมูลอุปกรณ์สำเร็จ', 'success');
+            } else {
+                showToast('รหัส Admin ไม่ถูกต้อง', 'error');
             }
         }
 
@@ -413,9 +457,22 @@
             
             // Determine IN or OUT
             const logs = mockDB.getLogs().filter(l => l.empId === currentUser.empId && l.date === dateStr);
-            // Logic: Even count = IN, Odd count = OUT (or purely checking last record type)
             const isLastActionIn = logs.length > 0 && logs[logs.length-1].type === 'IN';
             const actionType = isLastActionIn ? 'OUT' : 'IN';
+
+            // --- Late Calculation Logic ---
+            let status = 'ปกติ';
+            let lateMinutes = 0;
+            
+            // ตั้งเวลาเข้างานสูงสุด 08:30:00
+            const checkInLimit = new Date();
+            checkInLimit.setHours(8, 30, 0, 0);
+
+            if (actionType === 'IN' && now > checkInLimit) {
+                status = 'สาย';
+                const diffMs = now - checkInLimit; // หาความต่างเป็นมิลลิวินาที
+                lateMinutes = Math.floor(diffMs / 60000); // แปลงเป็นนาที
+            }
 
             const payload = {
                 date: dateStr,
@@ -423,6 +480,8 @@
                 empId: currentUser.empId,
                 empName: currentUser.empName,
                 type: actionType,
+                status: status,
+                lateMinutes: lateMinutes,
                 deviceId: currentUser.deviceId
             };
 
@@ -470,11 +529,20 @@
                 const icon = log.type === 'IN' ? 'fa-arrow-right-to-bracket' : 'fa-arrow-right-from-bracket';
                 const label = log.type === 'IN' ? 'เข้างาน' : 'ออกงาน';
                 
+                // แจ้งเตือนสาย
+                let lateBadge = '';
+                if (log.type === 'IN' && log.status === 'สาย') {
+                    lateBadge = `<span class="ml-2 text-[10px] bg-red-900/60 text-red-300 px-2 py-0.5 rounded-full border border-red-800">สาย ${log.lateMinutes} นาที</span>`;
+                }
+                
                 container.innerHTML += `
                     <div class="flex justify-between items-center p-3 rounded-lg border ${colorClass}">
                         <div class="flex items-center gap-3">
                             <i class="fa-solid ${icon}"></i>
-                            <span class="font-medium">${label}</span>
+                            <div>
+                                <span class="font-medium">${label}</span>
+                                ${lateBadge}
+                            </div>
                         </div>
                         <span class="font-bold tracking-wider">${log.time}</span>
                     </div>
@@ -532,12 +600,17 @@
                     ? `<span class="bg-green-900/50 text-green-400 text-xs font-medium px-2.5 py-0.5 rounded border border-green-800">เข้างาน</span>`
                     : `<span class="bg-orange-900/50 text-orange-400 text-xs font-medium px-2.5 py-0.5 rounded border border-orange-800">ออกงาน</span>`;
 
+                const lateHtml = (log.type === 'IN' && log.status === 'สาย')
+                    ? `<span class="text-red-400 font-medium"><i class="fa-solid fa-clock-rotate-left mr-1"></i>สาย ${log.lateMinutes} นาที</span>`
+                    : `<span class="text-gray-500">-</span>`;
+
                 tbody.innerHTML += `
                     <tr class="border-b border-dark-border hover:bg-gray-800 transition">
                         <td class="px-6 py-4 whitespace-nowrap">${log.time}</td>
                         <td class="px-6 py-4 font-medium text-white">${log.empId}</td>
                         <td class="px-6 py-4">${log.empName}</td>
                         <td class="px-6 py-4">${typeHtml}</td>
+                        <td class="px-6 py-4">${lateHtml}</td>
                         <td class="px-6 py-4 text-xs text-gray-500 font-mono">${log.deviceId.substring(0,10)}...</td>
                     </tr>
                 `;
