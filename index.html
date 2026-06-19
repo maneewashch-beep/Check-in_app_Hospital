@@ -28,9 +28,9 @@
                             700: '#1d4ed8',
                         },
                         dark: {
-                            bg: '#000000',    // Pure Black
+                            bg: '#000000',    // Pure Black Background
                             card: '#111827',  // Gray 900
-                            border: '#374151' // Gray 700
+                            border: '#1f2937' // Gray 800
                         }
                     }
                 }
@@ -40,7 +40,6 @@
     <style>
         body { font-family: 'Noto Sans Thai', sans-serif; }
         .hide { display: none !important; }
-        /* Customize QR Reader UI */
         #reader { border: none !important; border-radius: 0.5rem; overflow: hidden; }
         #reader video { object-fit: cover; border-radius: 0.5rem; }
         #reader__dashboard_section_csr span { color: #f8fafc !important; }
@@ -66,13 +65,13 @@
     <main class="flex-grow flex items-center justify-center p-4">
         
         <!-- View 1: Device Registration -->
-        <div id="view-register" class="bg-dark-card w-full max-w-md rounded-2xl shadow-xl border border-dark-border p-8 hide">
+        <div id="view-register" class="bg-dark-card w-full max-w-md rounded-2xl shadow-2xl border border-dark-border p-8 hide">
             <div class="text-center mb-8">
-                <div class="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4 border border-dark-border text-brand-500 text-2xl">
+                <div class="w-16 h-16 bg-gray-900 rounded-full flex items-center justify-center mx-auto mb-4 border border-dark-border text-brand-500 text-2xl">
                     <i class="fa-solid fa-mobile-screen-button"></i>
                 </div>
                 <h2 class="text-2xl font-bold text-white mb-2">ลงทะเบียนอุปกรณ์</h2>
-                <p class="text-sm text-gray-400">กรุณายืนยันตัวตนเพื่อผูกอุปกรณ์นี้กับรหัสพนักงานของคุณ (ทำเพียงครั้งแรกเท่านั้น)</p>
+                <p class="text-sm text-gray-400">กรุณายืนยันตัวตนเพื่อผูกอุปกรณ์นี้กับรหัสพนักงานของคุณ</p>
             </div>
             
             <form id="form-register" onsubmit="handleRegister(event)" class="space-y-5">
@@ -82,7 +81,7 @@
                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                             <i class="fa-solid fa-id-badge text-gray-500"></i>
                         </div>
-                        <input type="text" id="reg-emp-id" required class="block w-full pl-10 pr-3 py-2.5 bg-gray-900 border border-dark-border rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition" placeholder="เช่น EMP001">
+                        <input type="text" id="reg-emp-id" required class="block w-full pl-10 pr-3 py-2.5 bg-black border border-dark-border rounded-lg text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition" placeholder="เช่น EMP001">
                     </div>
                 </div>
                 <div>
@@ -91,7 +90,7 @@
                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                             <i class="fa-solid fa-user text-gray-500"></i>
                         </div>
-                        <input type="text" id="reg-emp-name" required class="block w-full pl-10 pr-3 py-2.5 bg-gray-900 border border-dark-border rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition" placeholder="ระบุชื่อจริงของคุณ">
+                        <input type="text" id="reg-emp-name" required class="block w-full pl-10 pr-3 py-2.5 bg-black border border-dark-border rounded-lg text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition" placeholder="ระบุชื่อจริงของคุณ">
                     </div>
                 </div>
                 <button type="submit" class="w-full bg-brand-600 hover:bg-brand-700 text-white font-medium py-3 px-4 rounded-lg shadow-lg hover:shadow-brand-500/30 transition duration-200 mt-4">
@@ -100,8 +99,8 @@
             </form>
         </div>
 
-        <!-- View 2: Employee Dashboard (Scan Ready) -->
-        <div id="view-employee" class="bg-dark-card w-full max-w-md rounded-2xl shadow-xl border border-dark-border p-6 hide">
+        <!-- View 2: Employee Dashboard -->
+        <div id="view-employee" class="bg-dark-card w-full max-w-md rounded-2xl shadow-2xl border border-dark-border p-6 hide">
             <div class="flex justify-between items-start border-b border-dark-border pb-4 mb-6">
                 <div>
                     <p class="text-sm text-gray-400 mb-1">ยินดีต้อนรับ</p>
@@ -110,7 +109,7 @@
                 </div>
                 <div class="text-right">
                     <p class="text-xs text-gray-500 mb-1">สถานะอุปกรณ์</p>
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-900/50 text-green-400 border border-green-800">
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-900/30 text-green-400 border border-green-800">
                         <i class="fa-solid fa-circle text-[8px] mr-1.5"></i> ยืนยันแล้ว
                     </span>
                 </div>
@@ -124,7 +123,7 @@
             <div class="space-y-4">
                 <button onclick="openScanner()" class="w-full relative group overflow-hidden rounded-xl p-1">
                     <div class="absolute inset-0 bg-gradient-to-r from-brand-500 to-indigo-600 opacity-80 group-hover:opacity-100 transition duration-300"></div>
-                    <div class="relative bg-dark-card px-4 py-8 rounded-lg flex flex-col items-center justify-center transition duration-300 group-hover:bg-opacity-0">
+                    <div class="relative bg-black px-4 py-8 rounded-lg flex flex-col items-center justify-center transition duration-300 group-hover:bg-opacity-0">
                         <div class="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mb-3 backdrop-blur-sm">
                             <i class="fa-solid fa-qrcode text-3xl text-white"></i>
                         </div>
@@ -133,67 +132,46 @@
                     </div>
                 </button>
 
-                <div class="bg-gray-900 rounded-lg p-4 border border-dark-border">
+                <div class="bg-black rounded-lg p-4 border border-dark-border">
                     <h4 class="text-sm font-medium text-gray-300 border-b border-dark-border pb-2 mb-3">บันทึกของวันนี้</h4>
                     <div id="today-logs-container" class="space-y-2">
-                        <!-- Logs will be injected here -->
-                        <div class="text-center text-sm text-gray-500 py-2">ยังไม่มีบันทึกในวันนี้</div>
+                        <div class="text-center text-sm text-gray-600 py-2">กำลังโหลดข้อมูล...</div>
                     </div>
                 </div>
             </div>
             
             <div class="mt-6 text-center">
-                <button onclick="promptResetDevice()" class="text-xs text-gray-500 hover:text-red-400 transition">
-                    <i class="fa-solid fa-lock mr-1"></i> ล้างข้อมูลอุปกรณ์นี้ (Admin Only)
+                <button onclick="showResetPrompt()" class="text-xs text-gray-600 hover:text-red-400 transition">
+                    <i class="fa-solid fa-lock mr-1"></i> Admin: ล้างข้อมูลอุปกรณ์นี้
                 </button>
-            </div>
-        </div>
-
-        <!-- View: Reset Device Admin Auth Modal -->
-        <div id="view-reset-auth" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-            <div class="bg-dark-card w-full max-w-sm rounded-2xl shadow-2xl border border-red-900/50 p-6">
-                <div class="text-center mb-4">
-                    <div class="w-12 h-12 bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-3 text-red-500 text-xl">
-                        <i class="fa-solid fa-triangle-exclamation"></i>
-                    </div>
-                    <h3 class="text-lg font-bold text-white">ยืนยันการล้างข้อมูล</h3>
-                    <p class="text-sm text-gray-400 mt-1">กรุณากรอกรหัส Admin เพื่อล้างอุปกรณ์นี้</p>
-                </div>
-                <input type="password" id="reset-admin-pin" class="block w-full px-3 py-2.5 bg-gray-900 border border-dark-border rounded-lg text-white text-center tracking-widest text-lg focus:outline-none focus:ring-2 focus:ring-red-500 transition mb-4" placeholder="••••">
-                <div class="flex gap-2">
-                    <button onclick="closeResetPrompt()" class="w-1/2 bg-gray-800 hover:bg-gray-700 text-white py-2 rounded-lg transition">ยกเลิก</button>
-                    <button onclick="confirmResetDevice()" class="w-1/2 bg-red-600 hover:bg-red-700 text-white py-2 rounded-lg transition">ยืนยันการล้าง</button>
-                </div>
             </div>
         </div>
 
         <!-- View 3: Scanner View -->
-        <div id="view-scanner" class="bg-dark-card w-full max-w-md rounded-2xl shadow-xl border border-dark-border p-6 hide">
+        <div id="view-scanner" class="bg-dark-card w-full max-w-md rounded-2xl shadow-2xl border border-dark-border p-6 hide">
             <div class="flex justify-between items-center mb-4">
                 <h2 class="text-lg font-bold text-white">สแกนตอกบัตร</h2>
-                <button onclick="closeScanner()" class="text-gray-400 hover:text-white bg-gray-800 rounded-full w-8 h-8 flex items-center justify-center">
+                <button onclick="closeScanner()" class="text-gray-400 hover:text-white bg-gray-900 rounded-full w-8 h-8 flex items-center justify-center">
                     <i class="fa-solid fa-times"></i>
                 </button>
             </div>
             
-            <div class="bg-gray-900 rounded-xl overflow-hidden border border-dark-border mb-4 aspect-square flex items-center justify-center relative">
+            <div class="bg-black rounded-xl overflow-hidden border border-dark-border mb-4 aspect-square flex items-center justify-center relative">
                 <div id="reader" class="w-full"></div>
-                <!-- Scanning Overlay UI -->
                 <div class="absolute inset-0 border-2 border-brand-500/50 rounded-xl pointer-events-none"></div>
             </div>
             
             <p class="text-center text-sm text-gray-400 mb-4">หันกล้องไปที่ QR Code ของบริษัทเพื่อบันทึกเวลา</p>
             
-            <!-- Dev button to simulate scan without camera -->
-            <button onclick="handleScan('COMPANY_QR_SECRET_2026')" class="w-full py-2 bg-gray-800 border border-gray-700 text-gray-300 rounded-lg text-sm hover:bg-gray-700 transition">
-                <i class="fa-solid fa-flask text-brand-400 mr-2"></i> จำลองการสแกน (สำหรับทดสอบ)
+            <button onclick="handleScan('COMPANY_QR_SECRET_2026')" class="w-full py-2 bg-gray-900 border border-gray-800 text-gray-400 rounded-lg text-sm hover:bg-gray-800 transition">
+                <i class="fa-solid fa-flask text-brand-500 mr-2"></i> จำลองการสแกน (สำหรับทดสอบ)
             </button>
         </div>
 
         <!-- View 4: Admin Login -->
-        <div id="view-admin-login" class="bg-dark-card w-full max-w-md rounded-2xl shadow-xl border border-dark-border p-8 hide">
+        <div id="view-admin-login" class="bg-dark-card w-full max-w-md rounded-2xl shadow-2xl border border-dark-border p-8 hide">
             <div class="text-center mb-6">
-                <i class="fa-solid fa-shield-halved text-4xl text-gray-500 mb-3"></i>
+                <i class="fa-solid fa-shield-halved text-4xl text-gray-600 mb-3"></i>
                 <h2 class="text-xl font-bold text-white">Admin Access</h2>
                 <p class="text-sm text-gray-400">เข้าสู่ระบบสำหรับหัวหน้างาน</p>
             </div>
@@ -201,31 +179,31 @@
             <form onsubmit="handleAdminLogin(event)" class="space-y-4">
                 <div>
                     <label class="block text-sm font-medium text-gray-300 mb-1">รหัส PIN</label>
-                    <input type="password" id="admin-pin" class="block w-full px-3 py-2.5 bg-gray-900 border border-dark-border rounded-lg text-white text-center tracking-widest text-lg focus:outline-none focus:ring-2 focus:ring-brand-500 transition" placeholder="••••">
-                    <p class="text-xs text-gray-500 mt-2 text-center">รหัสทดสอบ: 1234</p>
+                    <input type="password" id="admin-pin" class="block w-full px-3 py-2.5 bg-black border border-dark-border rounded-lg text-white text-center tracking-widest text-lg focus:outline-none focus:ring-2 focus:ring-brand-500 transition" placeholder="••••">
+                    <p class="text-xs text-gray-600 mt-2 text-center">รหัสทดสอบ: 1234</p>
                 </div>
-                <button type="submit" class="w-full bg-gray-700 hover:bg-gray-600 text-white font-medium py-2.5 rounded-lg transition duration-200">
+                <button type="submit" class="w-full bg-gray-800 hover:bg-gray-700 text-white font-medium py-2.5 rounded-lg transition duration-200 border border-gray-700">
                     เข้าสู่ระบบ
                 </button>
-                <button type="button" onclick="checkAuthStatus()" class="w-full text-sm text-gray-400 hover:text-white mt-2">
+                <button type="button" onclick="checkAuthStatus()" class="w-full text-sm text-gray-500 hover:text-white mt-2">
                     กลับหน้าหลัก
                 </button>
             </form>
         </div>
 
         <!-- View 5: Admin Dashboard -->
-        <div id="view-admin-dashboard" class="bg-dark-card w-full max-w-4xl rounded-2xl shadow-xl border border-dark-border p-6 hide">
+        <div id="view-admin-dashboard" class="bg-dark-card w-full max-w-5xl rounded-2xl shadow-2xl border border-dark-border p-6 hide">
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 border-b border-dark-border pb-4">
                 <div>
                     <h2 class="text-2xl font-bold text-white"><i class="fa-solid fa-chart-line text-brand-500 mr-2"></i> ข้อมูลลงเวลาทำการ</h2>
-                    <p class="text-sm text-gray-400 mt-1">ดูข้อมูลการเข้า-ออกงานของพนักงานทั้งหมด (ซิงค์กับ Google Sheets)</p>
+                    <p class="text-sm text-gray-400 mt-1">ดูข้อมูลการเข้า-ออกงานของพนักงานทั้งหมด (ซิงค์กับ Google Sheets เรียลไทม์)</p>
                 </div>
                 <div class="flex gap-2">
-                    <input type="date" id="filter-date" class="bg-gray-900 border border-dark-border rounded-lg text-white px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-brand-500" onchange="loadAdminData()">
-                    <button onclick="loadAdminData()" class="bg-brand-600 hover:bg-brand-700 text-white px-4 py-2 rounded-lg text-sm transition">
-                        <i class="fa-solid fa-rotate-right"></i>
+                    <input type="date" id="filter-date" class="bg-black border border-dark-border rounded-lg text-white px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-brand-500" onchange="loadAdminData()">
+                    <button onclick="loadAdminData()" class="bg-brand-600 hover:bg-brand-700 text-white px-4 py-2 rounded-lg text-sm transition shadow-lg shadow-brand-500/20">
+                        <i class="fa-solid fa-rotate-right"></i> รีเฟรช
                     </button>
-                    <button onclick="checkAuthStatus()" class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg text-sm transition">
+                    <button onclick="checkAuthStatus()" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 text-white px-4 py-2 rounded-lg text-sm transition">
                         ปิด
                     </button>
                 </div>
@@ -233,26 +211,31 @@
 
             <!-- Stats -->
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                <div class="bg-gray-900 rounded-lg p-4 border border-dark-border text-center">
-                    <div class="text-gray-400 text-xs mb-1">พนักงานทั้งหมด</div>
+                <div class="bg-black rounded-lg p-4 border border-dark-border text-center">
+                    <div class="text-gray-400 text-xs mb-1">พนักงานทั้งหมด (วันนี้)</div>
                     <div id="stat-total" class="text-2xl font-bold text-white">0</div>
                 </div>
-                <div class="bg-gray-900 rounded-lg p-4 border border-green-900/50 text-center relative overflow-hidden">
-                    <div class="absolute top-0 right-0 p-2 text-green-500/20"><i class="fa-solid fa-arrow-right-to-bracket text-3xl"></i></div>
-                    <div class="text-green-400 text-xs mb-1 relative z-10">เข้างานแล้ว</div>
-                    <div id="stat-in" class="text-2xl font-bold text-green-400 relative z-10">0</div>
+                <div class="bg-black rounded-lg p-4 border border-green-900/30 text-center relative overflow-hidden">
+                    <div class="absolute top-0 right-0 p-2 text-green-500/10"><i class="fa-solid fa-arrow-right-to-bracket text-3xl"></i></div>
+                    <div class="text-green-500 text-xs mb-1 relative z-10">เข้างานแล้ว</div>
+                    <div id="stat-in" class="text-2xl font-bold text-green-500 relative z-10">0</div>
                 </div>
-                <div class="bg-gray-900 rounded-lg p-4 border border-orange-900/50 text-center relative overflow-hidden">
-                    <div class="absolute top-0 right-0 p-2 text-orange-500/20"><i class="fa-solid fa-arrow-right-from-bracket text-3xl"></i></div>
-                    <div class="text-orange-400 text-xs mb-1 relative z-10">ออกงานแล้ว</div>
-                    <div id="stat-out" class="text-2xl font-bold text-orange-400 relative z-10">0</div>
+                <div class="bg-black rounded-lg p-4 border border-orange-900/30 text-center relative overflow-hidden">
+                    <div class="absolute top-0 right-0 p-2 text-orange-500/10"><i class="fa-solid fa-arrow-right-from-bracket text-3xl"></i></div>
+                    <div class="text-orange-500 text-xs mb-1 relative z-10">ออกงานแล้ว</div>
+                    <div id="stat-out" class="text-2xl font-bold text-orange-500 relative z-10">0</div>
+                </div>
+                <div class="bg-black rounded-lg p-4 border border-red-900/30 text-center relative overflow-hidden">
+                    <div class="absolute top-0 right-0 p-2 text-red-500/10"><i class="fa-solid fa-clock-rotate-left text-3xl"></i></div>
+                    <div class="text-red-500 text-xs mb-1 relative z-10">มาสาย (คน)</div>
+                    <div id="stat-late" class="text-2xl font-bold text-red-500 relative z-10">0</div>
                 </div>
             </div>
 
             <!-- Table -->
-            <div class="overflow-x-auto bg-gray-900 rounded-xl border border-dark-border">
+            <div class="overflow-x-auto bg-black rounded-xl border border-dark-border">
                 <table class="w-full text-left text-sm text-gray-300">
-                    <thead class="text-xs text-gray-400 uppercase bg-gray-800 border-b border-dark-border">
+                    <thead class="text-xs text-gray-500 uppercase bg-gray-900 border-b border-dark-border">
                         <tr>
                             <th scope="col" class="px-6 py-4">เวลา</th>
                             <th scope="col" class="px-6 py-4">รหัสพนักงาน</th>
@@ -267,36 +250,42 @@
                     </tbody>
                 </table>
             </div>
-            
-            <div class="mt-4 bg-blue-900/20 border border-blue-800/50 rounded-lg p-4 flex gap-3 text-sm">
-                <i class="fa-solid fa-circle-info text-blue-400 mt-0.5"></i>
-                <div class="text-blue-200 font-light">
-                    <strong>การเชื่อมต่อ Google Sheets:</strong> ในหน้าพรีวิวนี้ ระบบใช้ Mock Database (LocalStorage) เพื่อให้คุณทดสอบ UI ได้ทันที หากต้องการนำไปใช้จริง โปรดดูสคริปต์ <code>.gs</code> ในไฟล์แนบเพื่อตั้งค่า Google Apps Script เป็น Web App URL แล้วนำมาใส่ในโค้ดส่วน <code>GOOGLE_APP_SCRIPT_URL</code>
-                </div>
-            </div>
         </div>
 
     </main>
 
+    <!-- Admin Reset Prompt Modal -->
+    <div id="reset-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center hide opacity-0 transition-opacity duration-300">
+        <div class="bg-dark-card border border-dark-border rounded-xl p-6 w-full max-w-sm shadow-2xl transform scale-95 transition-transform duration-300">
+            <h3 class="text-lg font-bold text-white mb-2"><i class="fa-solid fa-lock text-red-500 mr-2"></i>ยืนยันการล้างอุปกรณ์</h3>
+            <p class="text-sm text-gray-400 mb-4">การกระทำนี้ต้องใช้รหัสผ่าน Admin เพื่อความปลอดภัย</p>
+            <input type="password" id="reset-pin" class="w-full px-3 py-2 bg-black border border-dark-border rounded-lg text-white text-center tracking-widest focus:outline-none focus:border-red-500 mb-4" placeholder="PIN Admin">
+            <div class="flex gap-2">
+                <button onclick="closeResetPrompt()" class="flex-1 bg-gray-800 hover:bg-gray-700 text-white py-2 rounded-lg text-sm transition">ยกเลิก</button>
+                <button onclick="confirmReset()" class="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 rounded-lg text-sm transition">ยืนยันล้างข้อมูล</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Notification Toast -->
-    <div id="toast" class="fixed bottom-5 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-6 py-3 rounded-full shadow-2xl border border-gray-700 transition-all duration-300 opacity-0 translate-y-10 pointer-events-none z-50 flex items-center gap-3">
-        <i id="toast-icon" class="fa-solid fa-circle-check text-green-400"></i>
+    <div id="toast" class="fixed bottom-5 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white px-6 py-3 rounded-full shadow-2xl border border-gray-800 transition-all duration-300 opacity-0 translate-y-10 pointer-events-none z-50 flex items-center gap-3">
+        <i id="toast-icon" class="fa-solid fa-circle-check text-green-500"></i>
         <span id="toast-msg">แจ้งเตือน</span>
     </div>
 
     <script>
         // --- Configuration ---
-        // เมื่อคุณตั้งค่า Google Sheets + Apps Script เสร็จ ให้นำ URL มาใส่ที่นี่
-        const GOOGLE_APP_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxffuPG71iL5rPtgZykjXY5ip6kOVnc0wvX0maiFeqL5W_tle_G9MC6zwXnLmsTdT7xeQ/exec"; 
-        const COMPANY_QR_CODE = "COMPANY_QR_SECRET_2026"; // ค่า QR ที่ถูกต้องสำหรับการสแกน
+        // นำ URL จาก Google Apps Script (Web App) ของคุณมาใส่ที่นี่
+        const GOOGLE_APP_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxC1A0RVRD7qEUclxGlZ5CudI7lWyWEVYP-zP0BMRmfC18snr08kLljyngntOEjXkTr/exec"; 
+        const COMPANY_QR_CODE = "COMPANY_QR_SECRET_2026"; 
+        const LATE_TIME_LIMIT = "08:30:00"; // กำหนดเวลาสาย
 
         // --- State Variables ---
         let currentUser = null;
         let html5QrcodeScanner = null;
         let clockInterval = null;
 
-        // --- Utility: Simulate Backend Database using LocalStorage for UI Testing ---
-        // ฟังก์ชันนี้จำลองการเชื่อมต่อ Database หากมี GOOGLE_APP_SCRIPT_URL จะใช้ Fetch API
+        // --- Utility: Simulate Backend Database (Fallback) ---
         const mockDB = {
             getLogs: () => JSON.parse(localStorage.getItem('mock_gsheets_logs')) || [],
             saveLog: (log) => {
@@ -331,31 +320,6 @@
             }
         }
 
-        // --- Reset Device Logic (Admin Lock) ---
-        function promptResetDevice() {
-            document.getElementById('view-reset-auth').classList.remove('hidden');
-            document.getElementById('reset-admin-pin').value = '';
-            document.getElementById('reset-admin-pin').focus();
-        }
-
-        function closeResetPrompt() {
-            document.getElementById('view-reset-auth').classList.add('hidden');
-        }
-
-        function confirmResetDevice() {
-            const pin = document.getElementById('reset-admin-pin').value;
-            if (pin === '1234') { // รหัส Admin สำหรับล้างข้อมูล
-                localStorage.removeItem('attendance_device_auth');
-                currentUser = null;
-                document.getElementById('form-register').reset();
-                closeResetPrompt();
-                showView('view-register');
-                showToast('ล้างข้อมูลอุปกรณ์สำเร็จ', 'success');
-            } else {
-                showToast('รหัส Admin ไม่ถูกต้อง', 'error');
-            }
-        }
-
         function handleRegister(e) {
             e.preventDefault();
             const empId = document.getElementById('reg-emp-id').value.trim();
@@ -363,7 +327,6 @@
             
             if(!empId || !empName) return;
 
-            // Generate Unique Device ID
             const deviceId = 'dev_' + Math.random().toString(36).substr(2, 9) + Date.now().toString(36);
             
             currentUser = { empId, empName, deviceId };
@@ -374,12 +337,38 @@
             showView('view-employee');
         }
 
-        function resetDevice() {
-            if(confirm('คุณแน่ใจหรือไม่ที่จะล้างข้อมูลอุปกรณ์นี้? คุณจะต้องลงทะเบียนใหม่เพื่อเข้าใช้งาน')) {
+        // --- Admin Reset Flow ---
+        function showResetPrompt() {
+            const modal = document.getElementById('reset-modal');
+            document.getElementById('reset-pin').value = '';
+            modal.classList.remove('hide');
+            // Allow display block to render before changing opacity for animation
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                modal.querySelector('div').classList.remove('scale-95');
+            }, 10);
+        }
+
+        function closeResetPrompt() {
+            const modal = document.getElementById('reset-modal');
+            modal.classList.add('opacity-0');
+            modal.querySelector('div').classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hide');
+            }, 300);
+        }
+
+        function confirmReset() {
+            const pin = document.getElementById('reset-pin').value;
+            if(pin === '1234') { // รหัส Admin
                 localStorage.removeItem('attendance_device_auth');
                 currentUser = null;
                 document.getElementById('form-register').reset();
+                closeResetPrompt();
+                showToast('รีเซ็ตอุปกรณ์สำเร็จ', 'success');
                 showView('view-register');
+            } else {
+                showToast('รหัส PIN ไม่ถูกต้อง', 'error');
             }
         }
 
@@ -415,7 +404,7 @@
             html5QrcodeScanner.start({ facingMode: "environment" }, config, onScanSuccess, onScanFailure)
                 .catch(err => {
                     console.error("Camera access error:", err);
-                    showToast('ไม่สามารถเปิดกล้องได้ กรุณาให้สิทธิ์การเข้าถึง', 'error');
+                    showToast('ไม่สามารถเปิดกล้องได้ กรุณาให้สิทธิ์', 'error');
                 });
         }
 
@@ -423,28 +412,34 @@
             if (html5QrcodeScanner) {
                 html5QrcodeScanner.stop().then(() => {
                     html5QrcodeScanner.clear();
-                }).catch(err => console.error("Failed to stop scanner", err));
+                }).catch(err => console.error("Failed to stop", err));
             }
             showView('view-employee');
         }
 
-        function onScanSuccess(decodedText, decodedResult) {
+        function onScanSuccess(decodedText) {
             handleScan(decodedText);
         }
-        
-        function onScanFailure(error) {
-            // console.warn(`Code scan error = ${error}`);
+        function onScanFailure() {}
+
+        function calculateLateMinutes(currentTimeStr) {
+            const [h1, m1] = LATE_TIME_LIMIT.split(':').map(Number);
+            const [h2, m2] = currentTimeStr.split(':').map(Number);
+            
+            const limitMins = (h1 * 60) + m1;
+            const currentMins = (h2 * 60) + m2;
+            
+            if (currentMins > limitMins) {
+                return currentMins - limitMins;
+            }
+            return 0;
         }
 
         async function handleScan(qrData) {
-            // ถอดแท็ก HTML ออก เผื่อเครื่องสแกนอ่านมาติด <p></p> หรือแท็กอื่นๆ
             const cleanQrData = qrData.replace(/(<([^>]+)>)/gi, "").trim();
-
             if (cleanQrData !== COMPANY_QR_CODE) {
                 closeScanner();
-                // แสดงค่าที่สแกนได้ในคอนโซลเผื่อไว้ใช้ดีบั๊ก
-                console.log("สแกนได้:", cleanQrData, "แต่รหัสที่ต้องการคือ:", COMPANY_QR_CODE);
-                showToast('QR Code ไม่ถูกต้องหรือไม่ใช่ของบริษัท', 'error');
+                showToast('QR Code ไม่ถูกต้อง', 'error');
                 return;
             }
 
@@ -452,26 +447,36 @@
             showToast('กำลังบันทึกข้อมูล...', 'info', true);
 
             const now = new Date();
-            const dateStr = now.toISOString().split('T')[0];
+            // ปรับแก้โซนเวลาให้ดึงวันที่แบบ Local ของไทยเสมอ
+            const dateStr = now.toLocaleDateString('en-CA'); // format: YYYY-MM-DD
             const timeStr = now.toLocaleTimeString('th-TH', { hour12: false });
             
-            // Determine IN or OUT
-            const logs = mockDB.getLogs().filter(l => l.empId === currentUser.empId && l.date === dateStr);
-            const isLastActionIn = logs.length > 0 && logs[logs.length-1].type === 'IN';
+            // Fetch logs to determine IN or OUT
+            let allLogs = [];
+            try {
+                if(GOOGLE_APP_SCRIPT_URL) {
+                    const res = await fetch(GOOGLE_APP_SCRIPT_URL);
+                    allLogs = await res.json();
+                } else {
+                    allLogs = mockDB.getLogs();
+                }
+            } catch(e) {
+                allLogs = mockDB.getLogs();
+            }
+
+            const myLogsToday = allLogs.filter(l => l.empId === currentUser.empId && l.date === dateStr);
+            const isLastActionIn = myLogsToday.length > 0 && myLogsToday[myLogsToday.length-1].type === 'IN';
             const actionType = isLastActionIn ? 'OUT' : 'IN';
 
-            // --- Late Calculation Logic ---
+            // Calculate Late Status (Only when Check IN)
             let status = 'ปกติ';
-            let lateMinutes = 0;
+            let lateMins = 0;
             
-            // ตั้งเวลาเข้างานสูงสุด 08:30:00
-            const checkInLimit = new Date();
-            checkInLimit.setHours(8, 30, 0, 0);
-
-            if (actionType === 'IN' && now > checkInLimit) {
-                status = 'สาย';
-                const diffMs = now - checkInLimit; // หาความต่างเป็นมิลลิวินาที
-                lateMinutes = Math.floor(diffMs / 60000); // แปลงเป็นนาที
+            if (actionType === 'IN') {
+                lateMins = calculateLateMinutes(timeStr);
+                if (lateMins > 0) {
+                    status = 'สาย';
+                }
             }
 
             const payload = {
@@ -481,68 +486,72 @@
                 empName: currentUser.empName,
                 type: actionType,
                 status: status,
-                lateMinutes: lateMinutes,
+                lateMinutes: lateMins,
                 deviceId: currentUser.deviceId
             };
 
             try {
                 if (GOOGLE_APP_SCRIPT_URL) {
-                    // Actual Google Sheets Integration
-                    const response = await fetch(GOOGLE_APP_SCRIPT_URL, {
+                    await fetch(GOOGLE_APP_SCRIPT_URL, {
                         method: 'POST',
-                        mode: 'no-cors', // Needed for Google Forms/Scripts without explicit CORS setup
+                        mode: 'no-cors',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(payload)
                     });
-                    // Note: no-cors means we can't read response data easily, but we assume success if no throw
-                } else {
-                    // Mock Database save for UI Demo
-                    await new Promise(r => setTimeout(r, 600)); // simulate network delay
-                    mockDB.saveLog(payload);
                 }
-
-                showToast(`บันทึกเวลา${actionType === 'IN' ? 'เข้างาน' : 'ออกงาน'}สำเร็จ! เวลา ${timeStr}`, 'success');
+                mockDB.saveLog(payload); // Backup to LocalStorage
+                
+                let msg = `บันทึกเวลา${actionType === 'IN' ? 'เข้างาน' : 'ออกงาน'} สำเร็จ!`;
+                if(status === 'สาย') msg += ` (สาย ${lateMins} นาที)`;
+                
+                showToast(msg, status === 'สาย' ? 'error' : 'success');
                 loadTodayLogsForUser();
 
             } catch (error) {
-                console.error('Error saving:', error);
-                showToast('เกิดข้อผิดพลาดในการบันทึกข้อมูล', 'error');
+                showToast('เกิดข้อผิดพลาดในการบันทึก', 'error');
             }
         }
 
-        function loadTodayLogsForUser() {
+        async function loadTodayLogsForUser() {
             const container = document.getElementById('today-logs-container');
-            const dateStr = new Date().toISOString().split('T')[0];
+            const dateStr = new Date().toLocaleDateString('en-CA');
             
-            // In real app, fetch from GAS. Here we use mockDB.
-            const allLogs = mockDB.getLogs();
+            let allLogs = [];
+            try {
+                if(GOOGLE_APP_SCRIPT_URL) {
+                    const res = await fetch(GOOGLE_APP_SCRIPT_URL);
+                    allLogs = await res.json();
+                } else {
+                    allLogs = mockDB.getLogs();
+                }
+            } catch(e) {
+                allLogs = mockDB.getLogs();
+            }
+
             const myLogs = allLogs.filter(l => l.empId === currentUser.empId && l.date === dateStr);
             
             if (myLogs.length === 0) {
-                container.innerHTML = '<div class="text-center text-sm text-gray-500 py-2">ยังไม่มีบันทึกในวันนี้</div>';
+                container.innerHTML = '<div class="text-center text-sm text-gray-600 py-2">ยังไม่มีบันทึกในวันนี้</div>';
                 return;
             }
 
             container.innerHTML = '';
             myLogs.forEach(log => {
-                const colorClass = log.type === 'IN' ? 'text-green-400 border-green-900/50 bg-green-900/20' : 'text-orange-400 border-orange-900/50 bg-orange-900/20';
+                const colorClass = log.type === 'IN' ? 'text-green-500 border-green-900/30 bg-green-900/10' : 'text-orange-500 border-orange-900/30 bg-orange-900/10';
                 const icon = log.type === 'IN' ? 'fa-arrow-right-to-bracket' : 'fa-arrow-right-from-bracket';
                 const label = log.type === 'IN' ? 'เข้างาน' : 'ออกงาน';
                 
-                // แจ้งเตือนสาย
-                let lateBadge = '';
-                if (log.type === 'IN' && log.status === 'สาย') {
-                    lateBadge = `<span class="ml-2 text-[10px] bg-red-900/60 text-red-300 px-2 py-0.5 rounded-full border border-red-800">สาย ${log.lateMinutes} นาที</span>`;
+                let lateTag = '';
+                if(log.status === 'สาย') {
+                    lateTag = `<span class="text-xs bg-red-900/30 text-red-500 px-2 py-0.5 rounded border border-red-900/50 ml-2">สาย ${log.lateMinutes} นาที</span>`;
                 }
-                
+
                 container.innerHTML += `
                     <div class="flex justify-between items-center p-3 rounded-lg border ${colorClass}">
-                        <div class="flex items-center gap-3">
+                        <div class="flex items-center gap-2">
                             <i class="fa-solid ${icon}"></i>
-                            <div>
-                                <span class="font-medium">${label}</span>
-                                ${lateBadge}
-                            </div>
+                            <span class="font-medium">${label}</span>
+                            ${lateTag}
                         </div>
                         <span class="font-bold tracking-wider">${log.time}</span>
                     </div>
@@ -558,7 +567,7 @@
         function handleAdminLogin(e) {
             e.preventDefault();
             const pin = document.getElementById('admin-pin').value;
-            if(pin === '1234') { // Mock PIN
+            if(pin === '1234') { 
                 document.getElementById('admin-pin').value = '';
                 showView('view-admin-dashboard');
                 loadAdminData();
@@ -567,51 +576,65 @@
             }
         }
 
-        function loadAdminData() {
+        // [สำคัญ] ฟังก์ชันโหลดข้อมูลเข้าตาราง Admin ถูกอัปเดตให้ดึง (Pull) ผ่าน fetch แล้ว
+        async function loadAdminData() {
             const dateInput = document.getElementById('filter-date').value;
             const tbody = document.getElementById('admin-table-body');
             
-            // Simulate Fetch from Google Sheets
-            let allLogs = mockDB.getLogs();
+            tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-8 text-center text-gray-500"><i class="fa-solid fa-spinner fa-spin mr-2"></i> กำลังซิงค์ข้อมูลจาก Google Sheets...</td></tr>';
             
+            let allLogs = [];
+            
+            try {
+                if(GOOGLE_APP_SCRIPT_URL) {
+                    const response = await fetch(GOOGLE_APP_SCRIPT_URL);
+                    allLogs = await response.json();
+                } else {
+                    allLogs = mockDB.getLogs();
+                }
+            } catch (error) {
+                console.error("Fetch Error:", error);
+                showToast('ดึงข้อมูลจาก Google Sheets ไม่สำเร็จ แสดงข้อมูลในเครื่องแทน', 'error');
+                allLogs = mockDB.getLogs();
+            }
+
             if (dateInput) {
                 allLogs = allLogs.filter(l => l.date === dateInput);
             }
 
-            // Stats calculate
             const uniqueEmps = new Set(allLogs.map(l => l.empId)).size;
             const ins = allLogs.filter(l => l.type === 'IN').length;
             const outs = allLogs.filter(l => l.type === 'OUT').length;
+            const lates = allLogs.filter(l => l.status === 'สาย').length;
 
             document.getElementById('stat-total').innerText = uniqueEmps;
             document.getElementById('stat-in').innerText = ins;
             document.getElementById('stat-out').innerText = outs;
+            document.getElementById('stat-late').innerText = lates;
 
-            // Render Table
             tbody.innerHTML = '';
             if(allLogs.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-8 text-center text-gray-500">ไม่มีข้อมูลในวันที่เลือก</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-8 text-center text-gray-600">ไม่มีข้อมูลในวันที่เลือก</td></tr>';
                 return;
             }
 
-            // Reverse to show newest first
             [...allLogs].reverse().forEach(log => {
                 const typeHtml = log.type === 'IN' 
-                    ? `<span class="bg-green-900/50 text-green-400 text-xs font-medium px-2.5 py-0.5 rounded border border-green-800">เข้างาน</span>`
-                    : `<span class="bg-orange-900/50 text-orange-400 text-xs font-medium px-2.5 py-0.5 rounded border border-orange-800">ออกงาน</span>`;
-
-                const lateHtml = (log.type === 'IN' && log.status === 'สาย')
-                    ? `<span class="text-red-400 font-medium"><i class="fa-solid fa-clock-rotate-left mr-1"></i>สาย ${log.lateMinutes} นาที</span>`
+                    ? `<span class="bg-green-900/30 text-green-500 text-xs font-medium px-2.5 py-0.5 rounded border border-green-800">เข้างาน</span>`
+                    : `<span class="bg-orange-900/30 text-orange-500 text-xs font-medium px-2.5 py-0.5 rounded border border-orange-800">ออกงาน</span>`;
+                
+                const statusHtml = log.status === 'สาย'
+                    ? `<span class="text-red-500 font-medium">สาย ${log.lateMinutes} นาที</span>`
                     : `<span class="text-gray-500">-</span>`;
 
                 tbody.innerHTML += `
-                    <tr class="border-b border-dark-border hover:bg-gray-800 transition">
-                        <td class="px-6 py-4 whitespace-nowrap">${log.time}</td>
+                    <tr class="border-b border-dark-border hover:bg-gray-800/50 transition">
+                        <td class="px-6 py-4 whitespace-nowrap text-gray-300">${log.time}</td>
                         <td class="px-6 py-4 font-medium text-white">${log.empId}</td>
-                        <td class="px-6 py-4">${log.empName}</td>
+                        <td class="px-6 py-4 text-gray-300">${log.empName}</td>
                         <td class="px-6 py-4">${typeHtml}</td>
-                        <td class="px-6 py-4">${lateHtml}</td>
-                        <td class="px-6 py-4 text-xs text-gray-500 font-mono">${log.deviceId.substring(0,10)}...</td>
+                        <td class="px-6 py-4">${statusHtml}</td>
+                        <td class="px-6 py-4 text-xs text-gray-600 font-mono">${(log.deviceId||'').substring(0,10)}...</td>
                     </tr>
                 `;
             });
@@ -627,17 +650,16 @@
             toast.className = 'fixed bottom-5 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-full shadow-2xl border transition-all duration-300 z-50 flex items-center gap-3';
             
             if(type === 'success') {
-                toast.classList.add('bg-gray-800', 'border-gray-700', 'text-white');
-                icon.className = 'fa-solid fa-circle-check text-green-400 text-lg';
+                toast.classList.add('bg-gray-900', 'border-gray-800', 'text-white');
+                icon.className = 'fa-solid fa-circle-check text-green-500 text-lg';
             } else if (type === 'error') {
-                toast.classList.add('bg-red-900', 'border-red-800', 'text-red-100');
-                icon.className = 'fa-solid fa-circle-xmark text-red-400 text-lg';
+                toast.classList.add('bg-red-950', 'border-red-900', 'text-red-200');
+                icon.className = 'fa-solid fa-circle-xmark text-red-500 text-lg';
             } else {
-                toast.classList.add('bg-blue-900', 'border-blue-800', 'text-blue-100');
-                icon.className = 'fa-solid fa-spinner fa-spin text-blue-400 text-lg';
+                toast.classList.add('bg-blue-950', 'border-blue-900', 'text-blue-200');
+                icon.className = 'fa-solid fa-spinner fa-spin text-blue-500 text-lg';
             }
 
-            // Show
             toast.classList.remove('opacity-0', 'translate-y-10', 'pointer-events-none');
 
             clearTimeout(toastTimeout);
