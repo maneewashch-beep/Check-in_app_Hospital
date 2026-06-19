@@ -638,8 +638,20 @@
                 setTimeout(() => { document.getElementById('toast').classList.add('opacity-0'); }, 6000);
             }
 
+            // --- ส่วนที่แก้ไข: แปลงรูปแบบวันที่ที่มาจาก Google ให้เป็น YYYY-MM-DD เพื่อให้เปรียบเทียบได้ ---
             if (dateInput) {
-                allLogs = allLogs.filter(l => String(l.date || '').trim() === String(dateInput).trim());
+                allLogs = allLogs.filter(l => {
+                    let logDateStr = String(l.date || '').trim();
+                    // ตรวจสอบว่าถ้ามาจาก Google Sheets เป็นรูปแบบยาวๆ "Fri Jun 19 2026..." ให้แปลงก่อน
+                    if (logDateStr.includes('GMT')) {
+                        try {
+                            const d = new Date(logDateStr);
+                            // แปลงเป็น YYYY-MM-DD ให้ตรงกับช่อง input type="date"
+                            logDateStr = d.toLocaleDateString('en-CA'); 
+                        } catch(e) { /* ละเว้นถ้าแปลงไม่ได้ */ }
+                    }
+                    return logDateStr === String(dateInput).trim();
+                });
             }
 
             const uniqueEmps = new Set(allLogs.map(l => l.empId)).size;
