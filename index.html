@@ -52,12 +52,12 @@
     <!-- Header -->
     <header class="bg-dark-card border-b border-dark-border shadow-md py-4 px-6 flex justify-between items-center sticky top-0 z-50">
         <div class="flex items-center gap-3">
-            <div class="bg-brand-600 p-2 rounded-lg text-white">
+            <div class="bg-brand-600 p-2 rounded-lg text-white shadow-lg shadow-brand-500/30">
                 <i class="fa-solid fa-clock"></i>
             </div>
             <h1 class="text-xl font-semibold tracking-wide text-white">ATTENDANCE<span class="font-light text-brand-500">SYS</span></h1>
         </div>
-        <button onclick="showAdminLogin()" class="text-gray-400 hover:text-white transition" title="สำหรับผู้ดูแลระบบ">
+        <button onclick="showAdminLogin()" class="text-gray-400 hover:text-white transition p-2 rounded-lg hover:bg-gray-800" title="สำหรับผู้ดูแลระบบ">
             <i class="fa-solid fa-user-shield"></i>
         </button>
     </header>
@@ -65,190 +65,228 @@
     <main class="flex-grow flex items-center justify-center p-4">
         
         <!-- View 1: Device Registration -->
-        <div id="view-register" class="bg-dark-card w-full max-w-md rounded-2xl shadow-2xl border border-dark-border p-8 hide">
-            <div class="text-center mb-8">
-                <div class="w-16 h-16 bg-gray-900 rounded-full flex items-center justify-center mx-auto mb-4 border border-dark-border text-brand-500 text-2xl">
+        <!-- Desktop: Split layout (Icon left, Form right). Mobile: Stacked -->
+        <div id="view-register" class="bg-dark-card w-full max-w-md md:max-w-3xl rounded-2xl shadow-2xl border border-dark-border hide flex-col md:flex-row overflow-hidden">
+            <!-- Left Side (Desktop) / Top Side (Mobile) -->
+            <div class="p-8 md:w-2/5 bg-gray-900/50 flex flex-col justify-center items-center border-b md:border-b-0 md:border-r border-dark-border relative overflow-hidden">
+                <div class="absolute -top-10 -left-10 w-40 h-40 bg-brand-500/10 rounded-full blur-3xl"></div>
+                <div class="w-20 h-20 bg-gray-900 rounded-full flex items-center justify-center mb-6 border border-dark-border text-brand-500 text-3xl shadow-xl relative z-10">
                     <i class="fa-solid fa-mobile-screen-button"></i>
                 </div>
-                <h2 class="text-2xl font-bold text-white mb-2">ลงทะเบียนอุปกรณ์</h2>
-                <p class="text-sm text-gray-400">กรุณายืนยันตัวตนเพื่อผูกอุปกรณ์นี้กับรหัสพนักงานของคุณ</p>
+                <h2 class="text-2xl font-bold text-white mb-2 text-center relative z-10">ลงทะเบียนอุปกรณ์</h2>
+                <p class="text-sm text-gray-400 text-center relative z-10">ยืนยันตัวตนเพียงครั้งแรก เพื่อผูกมือถือหรือแท็บเล็ตนี้เข้ากับระบบ</p>
             </div>
             
-            <form id="form-register" onsubmit="handleRegister(event)" class="space-y-5">
-                <div>
-                    <label class="block text-sm font-medium text-gray-300 mb-1">รหัสพนักงาน (Employee ID)</label>
-                    <div class="relative">
-                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <i class="fa-solid fa-id-badge text-gray-500"></i>
+            <!-- Right Side (Desktop) / Bottom Side (Mobile) -->
+            <div class="p-8 md:w-3/5 flex flex-col justify-center">
+                <form id="form-register" onsubmit="handleRegister(event)" class="space-y-5">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-1">รหัสพนักงาน (Employee ID)</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fa-solid fa-id-badge text-gray-500"></i>
+                            </div>
+                            <input type="text" id="reg-emp-id" required class="block w-full pl-10 pr-3 py-3 bg-black border border-dark-border rounded-lg text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition" placeholder="เช่น EMP001">
                         </div>
-                        <input type="text" id="reg-emp-id" required class="block w-full pl-10 pr-3 py-2.5 bg-black border border-dark-border rounded-lg text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition" placeholder="เช่น EMP001">
                     </div>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-300 mb-1">ชื่อ - นามสกุล</label>
-                    <div class="relative">
-                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <i class="fa-solid fa-user text-gray-500"></i>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-1">ชื่อ - นามสกุล</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fa-solid fa-user text-gray-500"></i>
+                            </div>
+                            <input type="text" id="reg-emp-name" required class="block w-full pl-10 pr-3 py-3 bg-black border border-dark-border rounded-lg text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition" placeholder="ระบุชื่อจริงของคุณ">
                         </div>
-                        <input type="text" id="reg-emp-name" required class="block w-full pl-10 pr-3 py-2.5 bg-black border border-dark-border rounded-lg text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition" placeholder="ระบุชื่อจริงของคุณ">
                     </div>
-                </div>
-                <button type="submit" class="w-full bg-brand-600 hover:bg-brand-700 text-white font-medium py-3 px-4 rounded-lg shadow-lg hover:shadow-brand-500/30 transition duration-200 mt-4">
-                    <i class="fa-solid fa-check-circle mr-2"></i> ยืนยันการลงทะเบียน
-                </button>
-            </form>
+                    <button type="submit" class="w-full bg-brand-600 hover:bg-brand-700 text-white font-medium py-3.5 px-4 rounded-lg shadow-lg hover:shadow-brand-500/30 transition duration-200 mt-6">
+                        <i class="fa-solid fa-check-circle mr-2"></i> ยืนยันการลงทะเบียน
+                    </button>
+                </form>
+            </div>
         </div>
 
         <!-- View 2: Employee Dashboard -->
-        <div id="view-employee" class="bg-dark-card w-full max-w-md rounded-2xl shadow-2xl border border-dark-border p-6 hide">
-            <div class="flex justify-between items-start border-b border-dark-border pb-4 mb-6">
-                <div>
-                    <p class="text-sm text-gray-400 mb-1">ยินดีต้อนรับ</p>
-                    <h2 id="display-emp-name" class="text-xl font-bold text-white">ชื่อพนักงาน</h2>
-                    <p id="display-emp-id" class="text-sm text-brand-400 mt-1">EMP000</p>
-                </div>
-                <div class="text-right">
-                    <p class="text-xs text-gray-500 mb-1">สถานะอุปกรณ์</p>
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-900/30 text-green-400 border border-green-800">
-                        <i class="fa-solid fa-circle text-[8px] mr-1.5"></i> ยืนยันแล้ว
-                    </span>
-                </div>
-            </div>
-
-            <div class="text-center mb-6">
-                <div id="current-time" class="text-4xl font-light text-white tracking-widest mb-1">00:00:00</div>
-                <div id="current-date" class="text-sm text-gray-400">วัน จันทร์ ที่ 1 มกราคม 2026</div>
-            </div>
-
-            <div class="space-y-4">
-                <button onclick="openScanner()" class="w-full relative group overflow-hidden rounded-xl p-1">
-                    <div class="absolute inset-0 bg-gradient-to-r from-brand-500 to-indigo-600 opacity-80 group-hover:opacity-100 transition duration-300"></div>
-                    <div class="relative bg-black px-4 py-8 rounded-lg flex flex-col items-center justify-center transition duration-300 group-hover:bg-opacity-0">
-                        <div class="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mb-3 backdrop-blur-sm">
-                            <i class="fa-solid fa-qrcode text-3xl text-white"></i>
-                        </div>
-                        <h3 class="text-lg font-bold text-white mb-1">สแกน QR Code</h3>
-                        <p class="text-sm text-gray-300">แตะเพื่อเปิดกล้องตอกบัตรเข้า-ออก</p>
-                    </div>
-                </button>
-
-                <div class="bg-black rounded-lg p-4 border border-dark-border">
-                    <h4 class="text-sm font-medium text-gray-300 border-b border-dark-border pb-2 mb-3">บันทึกของวันนี้</h4>
-                    <div id="today-logs-container" class="space-y-2">
-                        <!-- ถูกแก้ไขให้แสดงผลข้อมูลได้ทันที -->
-                    </div>
-                </div>
-            </div>
+        <!-- Desktop: 2 Columns (Info Left, Scanner/Logs Right). Mobile: Stacked -->
+        <div id="view-employee" class="bg-dark-card w-full max-w-md md:max-w-4xl rounded-2xl shadow-2xl border border-dark-border p-6 md:p-8 hide">
             
-            <div class="mt-6 text-center">
-                <button onclick="showResetPrompt()" class="text-xs text-gray-600 hover:text-red-400 transition">
-                    <i class="fa-solid fa-lock mr-1"></i> Admin: ล้างข้อมูลอุปกรณ์นี้
-                </button>
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-10">
+                
+                <!-- Left Column (Profile & Time) -->
+                <div class="md:col-span-5 flex flex-col justify-between space-y-8">
+                    <div>
+                        <div class="flex justify-between items-start border-b border-dark-border pb-4 mb-6">
+                            <div>
+                                <p class="text-sm text-gray-400 mb-1">ยินดีต้อนรับ</p>
+                                <h2 id="display-emp-name" class="text-2xl md:text-xl font-bold text-white">ชื่อพนักงาน</h2>
+                                <p id="display-emp-id" class="text-sm text-brand-400 mt-1">EMP000</p>
+                            </div>
+                            <div class="text-right">
+                                <span class="inline-flex items-center px-2.5 py-1 md:py-0.5 rounded-full text-xs font-medium bg-green-900/30 text-green-400 border border-green-800">
+                                    <i class="fa-solid fa-circle text-[8px] mr-1.5"></i> ยืนยันแล้ว
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="text-center md:text-left bg-black md:bg-transparent p-6 md:p-0 rounded-xl border border-dark-border md:border-none">
+                            <p class="text-xs text-gray-500 mb-2 uppercase tracking-wider hidden md:block">เวลาปัจจุบัน</p>
+                            <div id="current-time" class="text-5xl md:text-4xl font-light text-white tracking-widest mb-2 font-mono">00:00:00</div>
+                            <div id="current-date" class="text-sm text-gray-400">วัน จันทร์ ที่ 1 มกราคม 2026</div>
+                        </div>
+                    </div>
+                    
+                    <div class="hidden md:block">
+                        <button onclick="showResetPrompt()" class="text-xs text-gray-600 hover:text-red-400 transition flex items-center">
+                            <i class="fa-solid fa-lock mr-2"></i> Admin: ล้างข้อมูลอุปกรณ์นี้
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Right Column (Action & Logs) -->
+                <div class="md:col-span-7 flex flex-col space-y-6">
+                    <!-- Scanner Button -->
+                    <button onclick="openScanner()" class="w-full relative group overflow-hidden rounded-xl p-1 shrink-0">
+                        <div class="absolute inset-0 bg-gradient-to-r from-brand-500 to-indigo-600 opacity-80 group-hover:opacity-100 transition duration-300"></div>
+                        <div class="relative bg-black px-4 py-8 md:py-10 rounded-lg flex flex-col items-center justify-center transition duration-300 group-hover:bg-opacity-0">
+                            <div class="w-16 h-16 md:w-20 md:h-20 bg-white/10 rounded-full flex items-center justify-center mb-4 backdrop-blur-sm">
+                                <i class="fa-solid fa-qrcode text-3xl md:text-4xl text-white"></i>
+                            </div>
+                            <h3 class="text-xl md:text-2xl font-bold text-white mb-2 shadow-sm">สแกน QR Code</h3>
+                            <p class="text-sm text-gray-200 font-medium">แตะเพื่อเปิดกล้องตอกบัตรเข้า-ออกงาน</p>
+                        </div>
+                    </button>
+
+                    <!-- Today's Logs -->
+                    <div class="bg-black rounded-xl p-5 border border-dark-border flex-grow">
+                        <div class="flex items-center justify-between border-b border-dark-border pb-3 mb-4">
+                            <h4 class="text-sm font-medium text-gray-300"><i class="fa-solid fa-list-check text-brand-500 mr-2"></i>บันทึกของวันนี้</h4>
+                            <span class="text-xs bg-gray-800 text-gray-400 px-2 py-1 rounded">ล่าสุด</span>
+                        </div>
+                        <div id="today-logs-container" class="space-y-3 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                            <!-- ถูกแก้ไขให้แสดงผลข้อมูลได้ทันที -->
+                        </div>
+                    </div>
+                    
+                    <div class="md:hidden text-center mt-4">
+                        <button onclick="showResetPrompt()" class="text-xs text-gray-600 hover:text-red-400 transition">
+                            <i class="fa-solid fa-lock mr-1"></i> Admin: ล้างข้อมูลอุปกรณ์นี้
+                        </button>
+                    </div>
+                </div>
+
             </div>
         </div>
 
         <!-- View 3: Scanner View -->
-        <div id="view-scanner" class="bg-dark-card w-full max-w-md rounded-2xl shadow-2xl border border-dark-border p-6 hide">
-            <div class="flex justify-between items-center mb-4">
-                <h2 class="text-lg font-bold text-white">สแกนตอกบัตร</h2>
-                <button onclick="closeScanner()" class="text-gray-400 hover:text-white bg-gray-900 rounded-full w-8 h-8 flex items-center justify-center">
-                    <i class="fa-solid fa-times"></i>
+        <div id="view-scanner" class="bg-dark-card w-full max-w-md md:max-w-lg rounded-2xl shadow-2xl border border-dark-border p-6 hide">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-bold text-white"><i class="fa-solid fa-camera text-brand-500 mr-2"></i>สแกนตอกบัตร</h2>
+                <button onclick="closeScanner()" class="text-gray-400 hover:text-white bg-gray-900 hover:bg-red-900/50 rounded-full w-10 h-10 flex items-center justify-center transition">
+                    <i class="fa-solid fa-times text-lg"></i>
                 </button>
             </div>
             
-            <div class="bg-black rounded-xl overflow-hidden border border-dark-border mb-4 aspect-square flex items-center justify-center relative">
-                <div id="reader" class="w-full"></div>
+            <div class="bg-black rounded-xl overflow-hidden border border-dark-border mb-6 aspect-square flex items-center justify-center relative shadow-inner">
+                <div id="reader" class="w-full h-full"></div>
                 <div class="absolute inset-0 border-2 border-brand-500/50 rounded-xl pointer-events-none"></div>
+                <!-- Scanning Frame Overlay -->
+                <div class="absolute inset-10 border-2 border-dashed border-white/30 rounded-3xl pointer-events-none"></div>
             </div>
             
-            <p class="text-center text-sm text-gray-400 mb-4">หันกล้องไปที่ QR Code ของบริษัทเพื่อบันทึกเวลา</p>
+            <p class="text-center text-sm text-gray-400 mb-6 bg-gray-900 p-3 rounded-lg border border-dark-border">หันกล้องไปที่ QR Code ของบริษัทเพื่อบันทึกเวลา</p>
             
-            <button onclick="handleScan('COMPANY_QR_SECRET_2026')" class="w-full py-2 bg-gray-900 border border-gray-800 text-gray-400 rounded-lg text-sm hover:bg-gray-800 transition">
+            <button onclick="handleScan('COMPANY_QR_SECRET_2026')" class="w-full py-3 bg-gray-900 border border-gray-800 text-gray-400 rounded-lg text-sm hover:bg-gray-800 transition">
                 <i class="fa-solid fa-flask text-brand-500 mr-2"></i> จำลองการสแกน (สำหรับทดสอบ)
             </button>
         </div>
 
         <!-- View 4: Admin Login -->
-        <div id="view-admin-login" class="bg-dark-card w-full max-w-md rounded-2xl shadow-2xl border border-dark-border p-8 hide">
-            <div class="text-center mb-6">
-                <i class="fa-solid fa-shield-halved text-4xl text-gray-600 mb-3"></i>
-                <h2 class="text-xl font-bold text-white">Admin Access</h2>
-                <p class="text-sm text-gray-400">เข้าสู่ระบบสำหรับหัวหน้างาน</p>
+        <div id="view-admin-login" class="bg-dark-card w-full max-w-md md:max-w-3xl rounded-2xl shadow-2xl border border-dark-border hide flex-col md:flex-row overflow-hidden">
+            <div class="p-8 md:w-2/5 bg-gray-900/50 flex flex-col justify-center items-center border-b md:border-b-0 md:border-r border-dark-border relative">
+                <i class="fa-solid fa-shield-halved text-6xl text-brand-600 mb-4 drop-shadow-[0_0_15px_rgba(37,99,235,0.5)]"></i>
+                <h2 class="text-2xl font-bold text-white mb-2">Admin Access</h2>
+                <p class="text-sm text-gray-400 text-center">ระบบสำหรับผู้ดูแลและหัวหน้างาน</p>
             </div>
             
-            <form onsubmit="handleAdminLogin(event)" class="space-y-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-300 mb-1">รหัส PIN</label>
-                    <input type="password" id="admin-pin" class="block w-full px-3 py-2.5 bg-black border border-dark-border rounded-lg text-white text-center tracking-widest text-lg focus:outline-none focus:ring-2 focus:ring-brand-500 transition" placeholder="••••">
-                    <p class="text-xs text-gray-600 mt-2 text-center">รหัสทดสอบ: 1234</p>
-                </div>
-                <button type="submit" class="w-full bg-gray-800 hover:bg-gray-700 text-white font-medium py-2.5 rounded-lg transition duration-200 border border-gray-700">
-                    เข้าสู่ระบบ
-                </button>
-                <button type="button" onclick="checkAuthStatus()" class="w-full text-sm text-gray-500 hover:text-white mt-2">
-                    กลับหน้าหลัก
-                </button>
-            </form>
+            <div class="p-8 md:w-3/5 flex flex-col justify-center">
+                <form onsubmit="handleAdminLogin(event)" class="space-y-5">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">กรุณาใส่รหัส PIN 4 หลัก</label>
+                        <input type="password" id="admin-pin" class="block w-full px-3 py-4 bg-black border border-dark-border rounded-lg text-white text-center tracking-[1em] text-2xl font-mono focus:outline-none focus:ring-2 focus:ring-brand-500 transition" placeholder="••••" maxlength="4">
+                        <p class="text-xs text-gray-600 mt-3 text-center"><i class="fa-solid fa-circle-info mr-1"></i>รหัสทดสอบ: 1234</p>
+                    </div>
+                    <button type="submit" class="w-full bg-brand-600 hover:bg-brand-700 text-white font-medium py-3.5 rounded-lg transition duration-200 border border-brand-500 shadow-lg shadow-brand-500/20">
+                        <i class="fa-solid fa-right-to-bracket mr-2"></i>เข้าสู่ระบบ
+                    </button>
+                    <button type="button" onclick="checkAuthStatus()" class="w-full text-sm text-gray-500 hover:text-white mt-4 py-2">
+                        <i class="fa-solid fa-arrow-left mr-2"></i>กลับหน้าหลักพนักงาน
+                    </button>
+                </form>
+            </div>
         </div>
 
         <!-- View 5: Admin Dashboard -->
-        <div id="view-admin-dashboard" class="bg-dark-card w-full max-w-5xl rounded-2xl shadow-2xl border border-dark-border p-6 hide">
-            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 border-b border-dark-border pb-4">
+        <div id="view-admin-dashboard" class="bg-dark-card w-full max-w-6xl rounded-2xl shadow-2xl border border-dark-border p-6 md:p-8 hide">
+            <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8 gap-4 border-b border-dark-border pb-6">
                 <div>
-                    <h2 class="text-2xl font-bold text-white"><i class="fa-solid fa-chart-line text-brand-500 mr-2"></i> ข้อมูลลงเวลาทำการ</h2>
-                    <p class="text-sm text-gray-400 mt-1">ดูข้อมูลการเข้า-ออกงานของพนักงานทั้งหมด (ซิงค์กับ Google Sheets เรียลไทม์)</p>
+                    <h2 class="text-2xl font-bold text-white"><i class="fa-solid fa-chart-line text-brand-500 mr-3"></i>ข้อมูลลงเวลาทำการ</h2>
+                    <p class="text-sm text-gray-400 mt-2">ดูข้อมูลการเข้า-ออกงานของพนักงานทั้งหมด (ซิงค์กับ Google Sheets เรียลไทม์)</p>
                 </div>
-                <div class="flex flex-wrap gap-2">
-                    <input type="date" id="filter-date" class="bg-black border border-dark-border rounded-lg text-white px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-brand-500" onchange="loadAdminData()">
-                    <button onclick="loadAdminData()" class="bg-brand-600 hover:bg-brand-700 text-white px-4 py-2 rounded-lg text-sm transition shadow-lg shadow-brand-500/20">
-                        <i class="fa-solid fa-rotate-right"></i> รีเฟรช
+                <div class="flex flex-wrap gap-3 w-full lg:w-auto">
+                    <div class="relative flex-grow lg:flex-grow-0">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fa-solid fa-calendar-day text-gray-500"></i>
+                        </div>
+                        <input type="date" id="filter-date" class="w-full lg:w-auto bg-black border border-dark-border rounded-lg text-white pl-10 pr-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-brand-500" onchange="loadAdminData()">
+                    </div>
+                    <button onclick="loadAdminData()" class="flex-1 lg:flex-none bg-brand-600 hover:bg-brand-700 text-white px-5 py-2.5 rounded-lg text-sm font-medium transition shadow-lg shadow-brand-500/20">
+                        <i class="fa-solid fa-rotate-right mr-2"></i> รีเฟรช
                     </button>
-                    <button onclick="runDebug()" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm transition shadow-lg shadow-purple-500/20" title="เช็คสถานะการเชื่อมต่อ">
-                        <i class="fa-solid fa-bug"></i> เช็คระบบ
+                    <button onclick="runDebug()" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2.5 rounded-lg text-sm font-medium transition shadow-lg shadow-purple-500/20" title="เช็คสถานะการเชื่อมต่อ">
+                        <i class="fa-solid fa-bug"></i>
                     </button>
-                    <button onclick="checkAuthStatus()" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 text-white px-4 py-2 rounded-lg text-sm transition">
-                        ปิด
+                    <button onclick="checkAuthStatus()" class="bg-gray-800 hover:bg-red-900/80 border border-gray-700 text-white px-5 py-2.5 rounded-lg text-sm font-medium transition">
+                        <i class="fa-solid fa-power-off mr-2"></i>ปิด
                     </button>
                 </div>
             </div>
 
             <!-- Stats -->
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                <div class="bg-black rounded-lg p-4 border border-dark-border text-center">
-                    <div class="text-gray-400 text-xs mb-1">พนักงานทั้งหมด (วันนี้)</div>
-                    <div id="stat-total" class="text-2xl font-bold text-white">0</div>
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8">
+                <div class="bg-black rounded-xl p-5 md:p-6 border border-dark-border text-center hover:border-gray-600 transition">
+                    <div class="text-gray-400 text-xs md:text-sm mb-2 font-medium">พนักงานทั้งหมด (วันนี้)</div>
+                    <div id="stat-total" class="text-3xl md:text-4xl font-bold text-white">0</div>
                 </div>
-                <div class="bg-black rounded-lg p-4 border border-green-900/30 text-center relative overflow-hidden">
-                    <div class="absolute top-0 right-0 p-2 text-green-500/10"><i class="fa-solid fa-arrow-right-to-bracket text-3xl"></i></div>
-                    <div class="text-green-500 text-xs mb-1 relative z-10">เข้างานแล้ว</div>
-                    <div id="stat-in" class="text-2xl font-bold text-green-500 relative z-10">0</div>
+                <div class="bg-black rounded-xl p-5 md:p-6 border border-green-900/50 text-center relative overflow-hidden hover:border-green-700 transition">
+                    <div class="absolute top-0 right-0 p-3 md:p-4 text-green-500/10"><i class="fa-solid fa-arrow-right-to-bracket text-4xl md:text-5xl"></i></div>
+                    <div class="text-green-500 text-xs md:text-sm mb-2 font-medium relative z-10">เข้างานแล้ว</div>
+                    <div id="stat-in" class="text-3xl md:text-4xl font-bold text-green-500 relative z-10">0</div>
                 </div>
-                <div class="bg-black rounded-lg p-4 border border-orange-900/30 text-center relative overflow-hidden">
-                    <div class="absolute top-0 right-0 p-2 text-orange-500/10"><i class="fa-solid fa-arrow-right-from-bracket text-3xl"></i></div>
-                    <div class="text-orange-500 text-xs mb-1 relative z-10">ออกงานแล้ว</div>
-                    <div id="stat-out" class="text-2xl font-bold text-orange-500 relative z-10">0</div>
+                <div class="bg-black rounded-xl p-5 md:p-6 border border-orange-900/50 text-center relative overflow-hidden hover:border-orange-700 transition">
+                    <div class="absolute top-0 right-0 p-3 md:p-4 text-orange-500/10"><i class="fa-solid fa-arrow-right-from-bracket text-4xl md:text-5xl"></i></div>
+                    <div class="text-orange-500 text-xs md:text-sm mb-2 font-medium relative z-10">ออกงานแล้ว</div>
+                    <div id="stat-out" class="text-3xl md:text-4xl font-bold text-orange-500 relative z-10">0</div>
                 </div>
-                <div class="bg-black rounded-lg p-4 border border-red-900/30 text-center relative overflow-hidden">
-                    <div class="absolute top-0 right-0 p-2 text-red-500/10"><i class="fa-solid fa-clock-rotate-left text-3xl"></i></div>
-                    <div class="text-red-500 text-xs mb-1 relative z-10">มาสาย (คน)</div>
-                    <div id="stat-late" class="text-2xl font-bold text-red-500 relative z-10">0</div>
+                <div class="bg-black rounded-xl p-5 md:p-6 border border-red-900/50 text-center relative overflow-hidden hover:border-red-700 transition">
+                    <div class="absolute top-0 right-0 p-3 md:p-4 text-red-500/10"><i class="fa-solid fa-clock-rotate-left text-4xl md:text-5xl"></i></div>
+                    <div class="text-red-500 text-xs md:text-sm mb-2 font-medium relative z-10">มาสาย (คน)</div>
+                    <div id="stat-late" class="text-3xl md:text-4xl font-bold text-red-500 relative z-10">0</div>
                 </div>
             </div>
 
             <!-- Table -->
-            <div class="overflow-x-auto bg-black rounded-xl border border-dark-border">
+            <div class="overflow-x-auto bg-black rounded-xl border border-dark-border shadow-inner custom-scrollbar">
                 <table class="w-full text-left text-sm text-gray-300">
-                    <thead class="text-xs text-gray-500 uppercase bg-gray-900 border-b border-dark-border">
+                    <thead class="text-xs text-gray-400 uppercase bg-gray-900/80 border-b border-dark-border tracking-wider">
                         <tr>
-                            <th scope="col" class="px-6 py-4">เวลา</th>
-                            <th scope="col" class="px-6 py-4">รหัสพนักงาน</th>
-                            <th scope="col" class="px-6 py-4">ชื่อ-นามสกุล</th>
-                            <th scope="col" class="px-6 py-4">ประเภท</th>
-                            <th scope="col" class="px-6 py-4">สถานะ (สาย)</th>
-                            <th scope="col" class="px-6 py-4">Device ID</th>
+                            <th scope="col" class="px-6 py-5 font-semibold">เวลา</th>
+                            <th scope="col" class="px-6 py-5 font-semibold">รหัสพนักงาน</th>
+                            <th scope="col" class="px-6 py-5 font-semibold">ชื่อ-นามสกุล</th>
+                            <th scope="col" class="px-6 py-5 font-semibold">ประเภท</th>
+                            <th scope="col" class="px-6 py-5 font-semibold">สถานะ (สาย)</th>
+                            <th scope="col" class="px-6 py-5 font-semibold hidden md:table-cell">Device ID</th>
                         </tr>
                     </thead>
-                    <tbody id="admin-table-body">
+                    <tbody id="admin-table-body" class="divide-y divide-dark-border">
                         <!-- Rows injected by JS -->
                     </tbody>
                 </table>
@@ -258,23 +296,34 @@
     </main>
 
     <!-- Admin Reset Prompt Modal -->
-    <div id="reset-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center hide opacity-0 transition-opacity duration-300">
-        <div class="bg-dark-card border border-dark-border rounded-xl p-6 w-full max-w-sm shadow-2xl transform scale-95 transition-transform duration-300">
-            <h3 class="text-lg font-bold text-white mb-2"><i class="fa-solid fa-lock text-red-500 mr-2"></i>ยืนยันการล้างอุปกรณ์</h3>
-            <p class="text-sm text-gray-400 mb-4">การกระทำนี้ต้องใช้รหัสผ่าน Admin เพื่อความปลอดภัย</p>
-            <input type="password" id="reset-pin" class="w-full px-3 py-2 bg-black border border-dark-border rounded-lg text-white text-center tracking-widest focus:outline-none focus:border-red-500 mb-4" placeholder="PIN Admin">
-            <div class="flex gap-2">
-                <button onclick="closeResetPrompt()" class="flex-1 bg-gray-800 hover:bg-gray-700 text-white py-2 rounded-lg text-sm transition">ยกเลิก</button>
-                <button onclick="confirmReset()" class="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 rounded-lg text-sm transition">ยืนยันล้างข้อมูล</button>
+    <div id="reset-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center hide opacity-0 transition-opacity duration-300 p-4">
+        <div class="bg-dark-card border border-dark-border rounded-2xl p-8 w-full max-w-sm shadow-2xl transform scale-95 transition-transform duration-300">
+            <div class="w-14 h-14 bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-900/50">
+                <i class="fa-solid fa-lock text-red-500 text-xl"></i>
+            </div>
+            <h3 class="text-xl font-bold text-white mb-2 text-center">ยืนยันการล้างอุปกรณ์</h3>
+            <p class="text-sm text-gray-400 mb-6 text-center">การล้างอุปกรณ์จะต้องใช้รหัสผ่าน Admin เพื่อความปลอดภัย</p>
+            <input type="password" id="reset-pin" class="w-full px-4 py-3 bg-black border border-dark-border rounded-xl text-white text-center tracking-widest focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 mb-6 font-mono text-lg" placeholder="PIN Admin">
+            <div class="flex gap-3">
+                <button onclick="closeResetPrompt()" class="flex-1 bg-gray-800 hover:bg-gray-700 text-white py-3 rounded-xl font-medium transition">ยกเลิก</button>
+                <button onclick="confirmReset()" class="flex-1 bg-red-600 hover:bg-red-700 text-white py-3 rounded-xl font-medium transition shadow-lg shadow-red-500/20">ยืนยัน</button>
             </div>
         </div>
     </div>
 
     <!-- Notification Toast -->
-    <div id="toast" class="fixed bottom-5 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white px-6 py-3 rounded-full shadow-2xl border border-gray-800 transition-all duration-300 opacity-0 translate-y-10 pointer-events-none z-50 flex items-center gap-3">
-        <i id="toast-icon" class="fa-solid fa-circle-check text-green-500"></i>
-        <span id="toast-msg">แจ้งเตือน</span>
+    <div id="toast" class="fixed bottom-5 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white px-6 py-4 rounded-full shadow-2xl border border-gray-800 transition-all duration-300 opacity-0 translate-y-10 pointer-events-none z-50 flex items-center gap-4 min-w-[280px] max-w-sm justify-center">
+        <i id="toast-icon" class="fa-solid fa-circle-check text-green-500 text-xl"></i>
+        <span id="toast-msg" class="font-medium text-sm">แจ้งเตือน</span>
     </div>
+
+    <!-- Add Custom Scrollbar for better UI on Desktop -->
+    <style>
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #000; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #475569; }
+    </style>
 
     <script>
         // --- Configuration ---
@@ -306,9 +355,23 @@
 
         function showView(viewId) {
             ['view-register', 'view-employee', 'view-scanner', 'view-admin-login', 'view-admin-dashboard'].forEach(id => {
-                document.getElementById(id).classList.add('hide');
+                const el = document.getElementById(id);
+                // Handle split layouts cleanly by combining tailwind flex classes with hide logic
+                if(el.id === 'view-register' || el.id === 'view-admin-login') {
+                    el.classList.add('hide');
+                    el.classList.remove('flex');
+                } else {
+                    el.classList.add('hide');
+                }
             });
-            document.getElementById(viewId).classList.remove('hide');
+            
+            const targetEl = document.getElementById(viewId);
+            if(viewId === 'view-register' || viewId === 'view-admin-login') {
+                targetEl.classList.remove('hide');
+                targetEl.classList.add('flex'); // necessary for md:flex-row to work after removing hide
+            } else {
+                targetEl.classList.remove('hide');
+            }
         }
 
         function checkAuthStatus() {
@@ -508,29 +571,32 @@
             const myLogs = allLogs.filter(l => l.empId === currentUser.empId && String(l.date || '').trim() === dateStr);
             
             if (myLogs.length === 0) {
-                container.innerHTML = '<div class="text-center text-sm text-gray-600 py-2">ยังไม่มีบันทึกในวันนี้</div>';
+                container.innerHTML = '<div class="text-center text-sm text-gray-600 py-6"><i class="fa-regular fa-calendar-xmark text-2xl mb-2 block text-gray-700"></i>ยังไม่มีบันทึกในวันนี้</div>';
                 return;
             }
 
             container.innerHTML = '';
-            myLogs.forEach(log => {
+            // โชว์รายการใหม่ล่าสุดไว้บนสุด
+            [...myLogs].reverse().forEach(log => {
                 const colorClass = log.type === 'IN' ? 'text-green-500 border-green-900/30 bg-green-900/10' : 'text-orange-500 border-orange-900/30 bg-orange-900/10';
                 const icon = log.type === 'IN' ? 'fa-arrow-right-to-bracket' : 'fa-arrow-right-from-bracket';
                 const label = log.type === 'IN' ? 'เข้างาน' : 'ออกงาน';
                 
                 let lateTag = '';
                 if(log.status === 'สาย') {
-                    lateTag = `<span class="text-xs bg-red-900/30 text-red-500 px-2 py-0.5 rounded border border-red-900/50 ml-2">สาย ${log.lateMinutes} นาที</span>`;
+                    lateTag = `<span class="text-[10px] md:text-xs bg-red-900/30 text-red-500 px-2 py-0.5 rounded border border-red-900/50 ml-2 whitespace-nowrap">สาย ${log.lateMinutes} นาที</span>`;
                 }
 
                 container.innerHTML += `
-                    <div class="flex justify-between items-center p-3 rounded-lg border ${colorClass}">
-                        <div class="flex items-center gap-2">
-                            <i class="fa-solid ${icon}"></i>
+                    <div class="flex justify-between items-center p-4 rounded-xl border ${colorClass} hover:brightness-110 transition">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-full flex items-center justify-center ${log.type === 'IN' ? 'bg-green-500/20' : 'bg-orange-500/20'}">
+                                <i class="fa-solid ${icon}"></i>
+                            </div>
                             <span class="font-medium">${label}</span>
                             ${lateTag}
                         </div>
-                        <span class="font-bold tracking-wider">${log.time}</span>
+                        <span class="font-bold tracking-wider text-lg">${log.time}</span>
                     </div>
                 `;
             });
@@ -582,7 +648,7 @@
             const dateInput = document.getElementById('filter-date').value;
             const tbody = document.getElementById('admin-table-body');
             
-            tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-8 text-center text-gray-500"><i class="fa-solid fa-spinner fa-spin mr-2"></i> กำลังซิงค์ข้อมูลจาก Google Sheets...</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-10 text-center text-gray-500"><i class="fa-solid fa-spinner fa-spin text-2xl mb-3 block"></i> กำลังซิงค์ข้อมูลจาก Google Sheets...</td></tr>';
             
             let allLogs = [];
             
@@ -629,27 +695,27 @@
 
             tbody.innerHTML = '';
             if(allLogs.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-8 text-center text-gray-600">ไม่มีข้อมูลในวันที่เลือก (หรือการเชื่อมต่อล้มเหลว)</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-10 text-center text-gray-600"><i class="fa-regular fa-folder-open text-3xl mb-3 block text-gray-700"></i>ไม่มีข้อมูลในวันที่เลือก</td></tr>';
                 return;
             }
 
             [...allLogs].reverse().forEach(log => {
                 const typeHtml = log.type === 'IN' 
-                    ? `<span class="bg-green-900/30 text-green-500 text-xs font-medium px-2.5 py-0.5 rounded border border-green-800">เข้างาน</span>`
-                    : `<span class="bg-orange-900/30 text-orange-500 text-xs font-medium px-2.5 py-0.5 rounded border border-orange-800">ออกงาน</span>`;
+                    ? `<span class="bg-green-900/30 text-green-500 text-xs font-medium px-3 py-1 rounded-full border border-green-800">เข้างาน</span>`
+                    : `<span class="bg-orange-900/30 text-orange-500 text-xs font-medium px-3 py-1 rounded-full border border-orange-800">ออกงาน</span>`;
                 
                 const statusHtml = log.status === 'สาย'
-                    ? `<span class="text-red-500 font-medium">สาย ${log.lateMinutes} นาที</span>`
+                    ? `<span class="text-red-500 font-medium bg-red-900/10 px-2 py-1 rounded">สาย ${log.lateMinutes} นาที</span>`
                     : `<span class="text-gray-500">-</span>`;
 
                 tbody.innerHTML += `
-                    <tr class="border-b border-dark-border hover:bg-gray-800/50 transition">
-                        <td class="px-6 py-4 whitespace-nowrap text-gray-300">${log.time}</td>
-                        <td class="px-6 py-4 font-medium text-white">${log.empId}</td>
-                        <td class="px-6 py-4 text-gray-300">${log.empName}</td>
-                        <td class="px-6 py-4">${typeHtml}</td>
-                        <td class="px-6 py-4">${statusHtml}</td>
-                        <td class="px-6 py-4 text-xs text-gray-600 font-mono">${(log.deviceId||'').substring(0,10)}...</td>
+                    <tr class="border-b border-dark-border hover:bg-gray-800/60 transition duration-150">
+                        <td class="px-6 py-5 whitespace-nowrap text-gray-200 font-medium">${log.time}</td>
+                        <td class="px-6 py-5 font-semibold text-brand-400">${log.empId}</td>
+                        <td class="px-6 py-5 text-gray-300">${log.empName}</td>
+                        <td class="px-6 py-5">${typeHtml}</td>
+                        <td class="px-6 py-5">${statusHtml}</td>
+                        <td class="px-6 py-5 text-xs text-gray-500 font-mono hidden md:table-cell">${(log.deviceId||'').substring(0,10)}...</td>
                     </tr>
                 `;
             });
@@ -662,17 +728,17 @@
             const icon = document.getElementById('toast-icon');
             document.getElementById('toast-msg').innerText = msg;
             
-            toast.className = 'fixed bottom-5 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-full shadow-2xl border transition-all duration-300 z-50 flex items-center gap-3';
+            toast.className = 'fixed bottom-5 left-1/2 transform -translate-x-1/2 px-6 py-4 rounded-full shadow-2xl border transition-all duration-300 z-50 flex items-center gap-4 min-w-[280px] max-w-sm justify-center';
             
             if(type === 'success') {
-                toast.classList.add('bg-gray-900', 'border-gray-800', 'text-white');
-                icon.className = 'fa-solid fa-circle-check text-green-500 text-lg';
+                toast.classList.add('bg-gray-900', 'border-gray-700', 'text-white');
+                icon.className = 'fa-solid fa-circle-check text-green-500 text-xl';
             } else if (type === 'error') {
                 toast.classList.add('bg-red-950', 'border-red-900', 'text-red-200');
-                icon.className = 'fa-solid fa-circle-xmark text-red-500 text-lg';
+                icon.className = 'fa-solid fa-circle-xmark text-red-500 text-xl';
             } else {
                 toast.classList.add('bg-blue-950', 'border-blue-900', 'text-blue-200');
-                icon.className = 'fa-solid fa-spinner fa-spin text-blue-500 text-lg';
+                icon.className = 'fa-solid fa-spinner fa-spin text-blue-500 text-xl';
             }
 
             toast.classList.remove('opacity-0', 'translate-y-10', 'pointer-events-none');
