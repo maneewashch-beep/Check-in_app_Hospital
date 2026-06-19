@@ -518,16 +518,26 @@
             let allLogs = [];
             try {
                 if(GOOGLE_APP_SCRIPT_URL) {
-                    const res = await fetch(GOOGLE_APP_SCRIPT_URL);
-                    allLogs = await res.json();
+                    // เพิ่ม ?t=... เพื่อป้องกัน Browser Cache ข้อมูลเก่า
+                    const res = await fetch(GOOGLE_APP_SCRIPT_URL + "?t=" + Date.now());
+                    const text = await res.text();
+                    try {
+                        allLogs = JSON.parse(text);
+                        if (allLogs.error) throw new Error(allLogs.error);
+                        if (!Array.isArray(allLogs)) allLogs = [];
+                    } catch (e) {
+                        console.error("GAS Response Content:", text);
+                        throw new Error("รูปแบบข้อมูลผิด (ลืม Deploy New Version หรือสิทธิ์ไม่ใช่ Anyone)");
+                    }
                 } else {
                     allLogs = mockDB.getLogs();
                 }
             } catch(e) {
+                console.error("Fetch Local/Network Error:", e);
                 allLogs = mockDB.getLogs();
             }
 
-            const myLogs = allLogs.filter(l => l.empId === currentUser.empId && l.date === dateStr);
+            const myLogs = allLogs.filter(l => l.empId === currentUser.empId && String(l.date || '').trim() === dateStr);
             
             if (myLogs.length === 0) {
                 container.innerHTML = '<div class="text-center text-sm text-gray-600 py-2">ยังไม่มีบันทึกในวันนี้</div>';
@@ -586,19 +596,28 @@
             
             try {
                 if(GOOGLE_APP_SCRIPT_URL) {
-                    const response = await fetch(GOOGLE_APP_SCRIPT_URL);
-                    allLogs = await response.json();
+                    // เพิ่ม ?t=... เพื่อป้องกัน Browser Cache
+                    const response = await fetch(GOOGLE_APP_SCRIPT_URL + "?t=" + Date.now());
+                    const text = await response.text();
+                    try {
+                        allLogs = JSON.parse(text);
+                        if (allLogs.error) throw new Error(allLogs.error);
+                        if (!Array.isArray(allLogs)) allLogs = [];
+                    } catch(e) {
+                        console.error("GAS Response Content:", text);
+                        throw new Error("ลืม Deploy เป็นเวอร์ชันใหม่ หรือตั้งสิทธิ์เข้าถึงผิด");
+                    }
                 } else {
                     allLogs = mockDB.getLogs();
                 }
             } catch (error) {
                 console.error("Fetch Error:", error);
-                showToast('ดึงข้อมูลจาก Google Sheets ไม่สำเร็จ แสดงข้อมูลในเครื่องแทน', 'error');
+                showToast('ดึงข้อมูลล้มเหลว: ' + error.message, 'error');
                 allLogs = mockDB.getLogs();
             }
 
             if (dateInput) {
-                allLogs = allLogs.filter(l => l.date === dateInput);
+                allLogs = allLogs.filter(l => String(l.date || '').trim() === String(dateInput).trim());
             }
 
             const uniqueEmps = new Set(allLogs.map(l => l.empId)).size;
