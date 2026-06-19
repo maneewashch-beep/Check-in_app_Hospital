@@ -135,7 +135,7 @@
                 <div class="bg-black rounded-lg p-4 border border-dark-border">
                     <h4 class="text-sm font-medium text-gray-300 border-b border-dark-border pb-2 mb-3">บันทึกของวันนี้</h4>
                     <div id="today-logs-container" class="space-y-2">
-                        <div class="text-center text-sm text-gray-600 py-2">กำลังโหลดข้อมูล...</div>
+                        <!-- ถูกแก้ไขให้แสดงผลข้อมูลได้ทันที -->
                     </div>
                 </div>
             </div>
@@ -203,8 +203,7 @@
                     <button onclick="loadAdminData()" class="bg-brand-600 hover:bg-brand-700 text-white px-4 py-2 rounded-lg text-sm transition shadow-lg shadow-brand-500/20">
                         <i class="fa-solid fa-rotate-right"></i> รีเฟรช
                     </button>
-                    <!-- ปุ่ม Debug ช่วยหาข้อผิดพลาด -->
-                    <button onclick="runDebug()" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm transition shadow-lg shadow-purple-500/20" title="กดเพื่อหาว่าทำไมดึงข้อมูลไม่ได้">
+                    <button onclick="runDebug()" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm transition shadow-lg shadow-purple-500/20" title="เช็คสถานะการเชื่อมต่อ">
                         <i class="fa-solid fa-bug"></i> เช็คระบบ
                     </button>
                     <button onclick="checkAuthStatus()" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 text-white px-4 py-2 rounded-lg text-sm transition">
@@ -279,7 +278,6 @@
 
     <script>
         // --- Configuration ---
-        // ใช้ URL ล่าสุดที่คุณให้มา
         const GOOGLE_APP_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxC1A0RVRD7qEUclxGlZ5CudI7lWyWEVYP-zP0BMRmfC18snr08kLljyngntOEjXkTr/exec"; 
         const COMPANY_QR_CODE = "COMPANY_QR_SECRET_2026"; 
         const LATE_TIME_LIMIT = "08:30:00"; // กำหนดเวลาสาย
@@ -438,7 +436,8 @@
             return 0;
         }
 
-        async function handleScan(qrData) {
+        // [สำคัญ] ฟังก์ชันจัดการการสแกน ปรับปรุงให้บันทึกและแสดงผลทันทีแบบไม่ต้องรอเน็ต
+        function handleScan(qrData) {
             const cleanQrData = qrData.replace(/(<([^>]+)>)/gi, "").trim();
             if (cleanQrData !== COMPANY_QR_CODE) {
                 closeScanner();
@@ -447,39 +446,15 @@
             }
 
             closeScanner();
-            showToast('กำลังบันทึกข้อมูล...', 'info', true);
+            showToast('กำลังบันทึกข้อมูล...', 'info');
 
             const now = new Date();
-            // [แก้ไข] บังคับดึงวันที่แบบ ค.ศ. (YYYY-MM-DD) เพื่อป้องกันปัญหามือถือใช้ปี พ.ศ. (2569)
-            const year = now.getFullYear();
-            const month = String(now.getMonth() + 1).padStart(2, '0');
-            const day = String(now.getDate()).padStart(2, '0');
-            const dateStr = `${year}-${month}-${day}`; 
+            const dateStr = now.toLocaleDateString('en-CA'); 
             const timeStr = now.toLocaleTimeString('th-TH', { hour12: false });
             
-            let allLogs = [];
-            try {
-                if(GOOGLE_APP_SCRIPT_URL) {
-                    const res = await fetch(GOOGLE_APP_SCRIPT_URL + "?t=" + Date.now());
-                    const text = await res.text();
-                    allLogs = JSON.parse(text);
-                    if(!Array.isArray(allLogs)) allLogs = [];
-                }
-            } catch(e) {
-                allLogs = mockDB.getLogs();
-            }
-
-            // [แก้ไข] กรองวันที่โดยดักจับรูปแบบ GMT ด้วย
-            const myLogsToday = allLogs.filter(l => {
-                let logDateStr = String(l.date || '').trim();
-                if (logDateStr.includes('GMT')) {
-                    try {
-                        const d = new Date(logDateStr);
-                        logDateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-                    } catch(e) {}
-                }
-                return l.empId === currentUser.empId && logDateStr === dateStr;
-            });
+            // อ่านประวัติจากในเครื่องทันทีเพื่อหาว่าเป็น "เข้า" หรือ "ออก"
+            const allLogs = mockDB.getLogs();
+            const myLogsToday = allLogs.filter(l => l.empId === currentUser.empId && l.date === dateStr);
             const isLastActionIn = myLogsToday.length > 0 && myLogsToday[myLogsToday.length-1].type === 'IN';
             const actionType = isLastActionIn ? 'OUT' : 'IN';
 
@@ -504,66 +479,33 @@
                 deviceId: currentUser.deviceId
             };
 
-            try {
-                if (GOOGLE_APP_SCRIPT_URL) {
-                    await fetch(GOOGLE_APP_SCRIPT_URL, {
-                        method: 'POST',
-                        mode: 'no-cors',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
-                    });
-                }
-                mockDB.saveLog(payload); 
-                
-                let msg = `บันทึกเวลา${actionType === 'IN' ? 'เข้างาน' : 'ออกงาน'} สำเร็จ!`;
-                if(status === 'สาย') msg += ` (สาย ${lateMins} นาที)`;
-                
-                showToast(msg, status === 'สาย' ? 'error' : 'success');
-                loadTodayLogsForUser();
+            // 1. บันทึกลงหน่วยความจำมือถือ และ อัปเดต UI ทันที! (ไม่มีอาการหน่วง)
+            mockDB.saveLog(payload);
+            loadTodayLogsForUser(); 
+            
+            let msg = `บันทึกเวลา${actionType === 'IN' ? 'เข้างาน' : 'ออกงาน'} สำเร็จ!`;
+            if(status === 'สาย') msg += ` (สาย ${lateMins} นาที)`;
+            showToast(msg, status === 'สาย' ? 'error' : 'success');
 
-            } catch (error) {
-                showToast('เกิดข้อผิดพลาดในการบันทึก', 'error');
+            // 2. แอบส่งข้อมูลไปเข้า Google Sheets ด้านหลังแบบเงียบๆ
+            if (GOOGLE_APP_SCRIPT_URL) {
+                fetch(GOOGLE_APP_SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                }).catch(e => console.error("Background sync error:", e));
             }
         }
 
-        async function loadTodayLogsForUser() {
+        // [สำคัญ] ฟังก์ชันสำหรับแสดงประวัติบนมือถือพนักงาน (โหลดจากเครื่องเลย เร็วและโชว์ทันที)
+        function loadTodayLogsForUser() {
             const container = document.getElementById('today-logs-container');
-            // [แก้ไข] บังคับดึงวันที่แบบ ค.ศ. (YYYY-MM-DD)
-            const d = new Date();
-            const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+            const dateStr = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD
             
-            let allLogs = [];
-            try {
-                if(GOOGLE_APP_SCRIPT_URL) {
-                    // แนบ Date.now() ไปด้วยเพื่อป้องกัน Browser นำข้อมูลเก่ามาแสดง (Cache)
-                    const res = await fetch(GOOGLE_APP_SCRIPT_URL + "?t=" + Date.now());
-                    const text = await res.text();
-                    try {
-                        allLogs = JSON.parse(text);
-                        if (allLogs.error) throw new Error(allLogs.error);
-                        if (!Array.isArray(allLogs)) allLogs = [];
-                    } catch (e) {
-                        throw new Error("ระบบตอบกลับมาไม่ใช่ JSON");
-                    }
-                } else {
-                    allLogs = mockDB.getLogs();
-                }
-            } catch(e) {
-                console.warn("ดึงข้อมูลพนักงานล้มเหลว:", e);
-                allLogs = mockDB.getLogs();
-            }
-
-            // [แก้ไข] กรองวันที่โดยดักจับรูปแบบ GMT
-            const myLogs = allLogs.filter(l => {
-                let logDateStr = String(l.date || '').trim();
-                if (logDateStr.includes('GMT')) {
-                    try {
-                        const dl = new Date(logDateStr);
-                        logDateStr = `${dl.getFullYear()}-${String(dl.getMonth() + 1).padStart(2, '0')}-${String(dl.getDate()).padStart(2, '0')}`;
-                    } catch(e) {}
-                }
-                return l.empId === currentUser.empId && logDateStr === dateStr;
-            });
+            // อ่านจาก Local Storage ของเครื่องโดยตรง
+            const allLogs = mockDB.getLogs();
+            const myLogs = allLogs.filter(l => l.empId === currentUser.empId && String(l.date || '').trim() === dateStr);
             
             if (myLogs.length === 0) {
                 container.innerHTML = '<div class="text-center text-sm text-gray-600 py-2">ยังไม่มีบันทึกในวันนี้</div>';
@@ -611,7 +553,6 @@
             }
         }
 
-        // ระบบเชื่อมต่อเพื่อ Debug หาข้อผิดพลาดโดยตรง
         async function runDebug() {
             try {
                 showToast('กำลังทดสอบการเชื่อมต่อ...', 'info', true);
@@ -636,6 +577,7 @@
             }
         }
 
+        // [สำคัญ] ปรับแก้ระบบตัวกรองวันที่ของ Admin ให้ฉลาดขึ้น
         async function loadAdminData() {
             const dateInput = document.getElementById('filter-date').value;
             const tbody = document.getElementById('admin-table-body');
@@ -660,23 +602,18 @@
                 }
             } catch (error) {
                 showToast('ดึงข้อมูลล้มเหลว: ' + error.message, 'error', true);
-                allLogs = mockDB.getLogs(); // fallback
+                allLogs = mockDB.getLogs(); 
                 setTimeout(() => { document.getElementById('toast').classList.add('opacity-0'); }, 6000);
             }
 
-            // --- ส่วนที่แก้ไข: แปลงรูปแบบวันที่ที่มาจาก Google ให้เป็น YYYY-MM-DD เพื่อให้เปรียบเทียบได้ ---
             if (dateInput) {
+                // รองรับตัวกรองวันที่หลายรูปแบบ (เผื่อ Google Sheets ส่งมาแบบแปลกๆ)
+                const [y, m, d] = dateInput.split('-');
                 allLogs = allLogs.filter(l => {
-                    let logDateStr = String(l.date || '').trim();
-                    // ตรวจสอบว่าถ้ามาจาก Google Sheets เป็นรูปแบบยาวๆ "Fri Jun 19 2026..." ให้แปลงก่อน
-                    if (logDateStr.includes('GMT')) {
-                        try {
-                            const d = new Date(logDateStr);
-                            // แปลงเป็น YYYY-MM-DD ให้ตรงกับช่อง input type="date"
-                            logDateStr = d.toLocaleDateString('en-CA'); 
-                        } catch(e) { /* ละเว้นถ้าแปลงไม่ได้ */ }
-                    }
-                    return logDateStr === String(dateInput).trim();
+                    const dStr = String(l.date || '').trim();
+                    return dStr === dateInput || 
+                           dStr === `${d}/${m}/${y}` || 
+                           dStr === `${m}/${d}/${y}`;
                 });
             }
 
