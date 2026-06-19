@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enterprise Time Attendance System</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- HTML5 QR Code Scanner -->
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <!-- Google Fonts: Noto Sans Thai -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Noto Sans Thai"', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            500: '#3b82f6', // Corporate Blue
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                        },
+                        dark: {
+                            bg: '#0f172a',    // Slate 900
+                            card: '#1e293b',  // Slate 800
+                            border: '#334155' // Slate 700
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Noto Sans Thai', sans-serif; }
+        .hide { display: none !important; }
+        /* Customize QR Reader UI */
+        #reader { border: none !important; border-radius: 0.5rem; overflow: hidden; }
+        #reader video { object-fit: cover; border-radius: 0.5rem; }
+        #reader__dashboard_section_csr span { color: #f8fafc !important; }
+        #reader__dashboard_section_swaplink { color: #3b82f6 !important; text-decoration: none; }
+        #reader button { background-color: #2563eb; color: white; padding: 0.5rem 1rem; border-radius: 0.25rem; border: none; cursor: pointer; margin-top: 0.5rem; }
+    </style>
+</head>
+<body class="bg-dark-bg text-gray-200 min-h-screen flex flex-col antialiased selection:bg-brand-500 selection:text-white">
+
+    <!-- Header -->
+    <header class="bg-dark-card border-b border-dark-border shadow-md py-4 px-6 flex justify-between items-center sticky top-0 z-50">
+        <div class="flex items-center gap-3">
+            <div class="bg-brand-600 p-2 rounded-lg text-white">
+                <i class="fa-solid fa-clock"></i>
+            </div>
+            <h1 class="text-xl font-semibold tracking-wide text-white">ATTENDANCE<span class="font-light text-brand-500">SYS</span></h1>
+        </div>
+        <button onclick="showAdminLogin()" class="text-gray-400 hover:text-white transition" title="สำหรับผู้ดูแลระบบ">
+            <i class="fa-solid fa-user-shield"></i>
+        </button>
+    </header>
+
+    <main class="flex-grow flex items-center justify-center p-4">
+        
+        <!-- View 1: Device Registration -->
+        <div id="view-register" class="bg-dark-card w-full max-w-md rounded-2xl shadow-xl border border-dark-border p-8 hide">
+            <div class="text-center mb-8">
+                <div class="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4 border border-dark-border text-brand-500 text-2xl">
+                    <i class="fa-solid fa-mobile-screen-button"></i>
+                </div>
+                <h2 class="text-2xl font-bold text-white mb-2">ลงทะเบียนอุปกรณ์</h2>
+                <p class="text-sm text-gray-400">กรุณายืนยันตัวตนเพื่อผูกอุปกรณ์นี้กับรหัสพนักงานของคุณ (ทำเพียงครั้งแรกเท่านั้น)</p>
+            </div>
+            
+            <form id="form-register" onsubmit="handleRegister(event)" class="space-y-5">
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-1">รหัสพนักงาน (Employee ID)</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fa-solid fa-id-badge text-gray-500"></i>
+                        </div>
+                        <input type="text" id="reg-emp-id" required class="block w-full pl-10 pr-3 py-2.5 bg-gray-900 border border-dark-border rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition" placeholder="เช่น EMP001">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-1">ชื่อ - นามสกุล</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fa-solid fa-user text-gray-500"></i>
+                        </div>
+                        <input type="text" id="reg-emp-name" required class="block w-full pl-10 pr-3 py-2.5 bg-gray-900 border border-dark-border rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition" placeholder="ระบุชื่อจริงของคุณ">
+                    </div>
+                </div>
+                <button type="submit" class="w-full bg-brand-600 hover:bg-brand-700 text-white font-medium py-3 px-4 rounded-lg shadow-lg hover:shadow-brand-500/30 transition duration-200 mt-4">
+                    <i class="fa-solid fa-check-circle mr-2"></i> ยืนยันการลงทะเบียน
+                </button>
+            </form>
+        </div>
+
+        <!-- View 2: Employee Dashboard (Scan Ready) -->
+        <div id="view-employee" class="bg-dark-card w-full max-w-md rounded-2xl shadow-xl border border-dark-border p-6 hide">
+            <div class="flex justify-between items-start border-b border-dark-border pb-4 mb-6">
+                <div>
+                    <p class="text-sm text-gray-400 mb-1">ยินดีต้อนรับ</p>
+                    <h2 id="display-emp-name" class="text-xl font-bold text-white">ชื่อพนักงาน</h2>
+                    <p id="display-emp-id" class="text-sm text-brand-400 mt-1">EMP000</p>
+                </div>
+                <div class="text-right">
+                    <p class="text-xs text-gray-500 mb-1">สถานะอุปกรณ์</p>
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-900/50 text-green-400 border border-green-800">
+                        <i class="fa-solid fa-circle text-[8px] mr-1.5"></i> ยืนยันแล้ว
+                    </span>
+                </div>
+            </div>
+
+            <div class="text-center mb-6">
+                <div id="current-time" class="text-4xl font-light text-white tracking-widest mb-1">00:00:00</div>
+                <div id="current-date" class="text-sm text-gray-400">วัน จันทร์ ที่ 1 มกราคม 2026</div>
+            </div>
+
+            <div class="space-y-4">
+                <button onclick="openScanner()" class="w-full relative group overflow-hidden rounded-xl p-1">
+                    <div class="absolute inset-0 bg-gradient-to-r from-brand-500 to-indigo-600 opacity-80 group-hover:opacity-100 transition duration-300"></div>
+                    <div class="relative bg-dark-card px-4 py-8 rounded-lg flex flex-col items-center justify-center transition duration-300 group-hover:bg-opacity-0">
+                        <div class="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mb-3 backdrop-blur-sm">
+                            <i class="fa-solid fa-qrcode text-3xl text-white"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-white mb-1">สแกน QR Code</h3>
+                        <p class="text-sm text-gray-300">แตะเพื่อเปิดกล้องตอกบัตรเข้า-ออก</p>
+                    </div>
+                </button>
+
+                <div class="bg-gray-900 rounded-lg p-4 border border-dark-border">
+                    <h4 class="text-sm font-medium text-gray-300 border-b border-dark-border pb-2 mb-3">บันทึกของวันนี้</h4>
+                    <div id="today-logs-container" class="space-y-2">
+                        <!-- Logs will be injected here -->
+                        <div class="text-center text-sm text-gray-500 py-2">ยังไม่มีบันทึกในวันนี้</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-6 text-center">
+                <button onclick="resetDevice()" class="text-xs text-gray-500 hover:text-red-400 transition">
+                    <i class="fa-solid fa-triangle-exclamation mr-1"></i> ล้างข้อมูลอุปกรณ์นี้ (Reset)
+                </button>
+            </div>
+        </div>
+
+        <!-- View 3: Scanner View -->
+        <div id="view-scanner" class="bg-dark-card w-full max-w-md rounded-2xl shadow-xl border border-dark-border p-6 hide">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-lg font-bold text-white">สแกนตอกบัตร</h2>
+                <button onclick="closeScanner()" class="text-gray-400 hover:text-white bg-gray-800 rounded-full w-8 h-8 flex items-center justify-center">
+                    <i class="fa-solid fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="bg-gray-900 rounded-xl overflow-hidden border border-dark-border mb-4 aspect-square flex items-center justify-center relative">
+                <div id="reader" class="w-full"></div>
+                <!-- Scanning Overlay UI -->
+                <div class="absolute inset-0 border-2 border-brand-500/50 rounded-xl pointer-events-none"></div>
+            </div>
+            
+            <p class="text-center text-sm text-gray-400 mb-4">หันกล้องไปที่ QR Code ของบริษัทเพื่อบันทึกเวลา</p>
+            
+            <!-- Dev button to simulate scan without camera -->
+            <button onclick="handleScan('COMPANY_QR_SECRET_2026')" class="w-full py-2 bg-gray-800 border border-gray-700 text-gray-300 rounded-lg text-sm hover:bg-gray-700 transition">
+                <i class="fa-solid fa-flask text-brand-400 mr-2"></i> จำลองการสแกน (สำหรับทดสอบ)
+            </button>
+        </div>
+
+        <!-- View 4: Admin Login -->
+        <div id="view-admin-login" class="bg-dark-card w-full max-w-md rounded-2xl shadow-xl border border-dark-border p-8 hide">
+            <div class="text-center mb-6">
+                <i class="fa-solid fa-shield-halved text-4xl text-gray-500 mb-3"></i>
+                <h2 class="text-xl font-bold text-white">Admin Access</h2>
+                <p class="text-sm text-gray-400">เข้าสู่ระบบสำหรับหัวหน้างาน</p>
+            </div>
+            
+            <form onsubmit="handleAdminLogin(event)" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-1">รหัส PIN</label>
+                    <input type="password" id="admin-pin" class="block w-full px-3 py-2.5 bg-gray-900 border border-dark-border rounded-lg text-white text-center tracking-widest text-lg focus:outline-none focus:ring-2 focus:ring-brand-500 transition" placeholder="••••">
+                </div>
+                <button type="submit" class="w-full bg-gray-700 hover:bg-gray-600 text-white font-medium py-2.5 rounded-lg transition duration-200">
+                    เข้าสู่ระบบ
+                </button>
+                <button type="button" onclick="checkAuthStatus()" class="w-full text-sm text-gray-400 hover:text-white mt-2">
+                    กลับหน้าหลัก
+                </button>
+            </form>
+        </div>
+
+        <!-- View 5: Admin Dashboard -->
+        <div id="view-admin-dashboard" class="bg-dark-card w-full max-w-4xl rounded-2xl shadow-xl border border-dark-border p-6 hide">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 border-b border-dark-border pb-4">
+                <div>
+                    <h2 class="text-2xl font-bold text-white"><i class="fa-solid fa-chart-line text-brand-500 mr-2"></i> ข้อมูลลงเวลาทำการ</h2>
+                    <p class="text-sm text-gray-400 mt-1">ดูข้อมูลการเข้า-ออกงานของพนักงานทั้งหมด (ซิงค์กับ Google Sheets)</p>
+                </div>
+                <div class="flex gap-2">
+                    <input type="date" id="filter-date" class="bg-gray-900 border border-dark-border rounded-lg text-white px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-brand-500" onchange="loadAdminData()">
+                    <button onclick="loadAdminData()" class="bg-brand-600 hover:bg-brand-700 text-white px-4 py-2 rounded-lg text-sm transition">
+                        <i class="fa-solid fa-rotate-right"></i>
+                    </button>
+                    <button onclick="checkAuthStatus()" class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg text-sm transition">
+                        ปิด
+                    </button>
+                </div>
+            </div>
+
+            <!-- Stats -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                <div class="bg-gray-900 rounded-lg p-4 border border-dark-border text-center">
+                    <div class="text-gray-400 text-xs mb-1">พนักงานทั้งหมด</div>
+                    <div id="stat-total" class="text-2xl font-bold text-white">0</div>
+                </div>
+                <div class="bg-gray-900 rounded-lg p-4 border border-green-900/50 text-center relative overflow-hidden">
+                    <div class="absolute top-0 right-0 p-2 text-green-500/20"><i class="fa-solid fa-arrow-right-to-bracket text-3xl"></i></div>
+                    <div class="text-green-400 text-xs mb-1 relative z-10">เข้างานแล้ว</div>
+                    <div id="stat-in" class="text-2xl font-bold text-green-400 relative z-10">0</div>
+                </div>
+                <div class="bg-gray-900 rounded-lg p-4 border border-orange-900/50 text-center relative overflow-hidden">
+                    <div class="absolute top-0 right-0 p-2 text-orange-500/20"><i class="fa-solid fa-arrow-right-from-bracket text-3xl"></i></div>
+                    <div class="text-orange-400 text-xs mb-1 relative z-10">ออกงานแล้ว</div>
+                    <div id="stat-out" class="text-2xl font-bold text-orange-400 relative z-10">0</div>
+                </div>
+            </div>
+
+            <!-- Table -->
+            <div class="overflow-x-auto bg-gray-900 rounded-xl border border-dark-border">
+                <table class="w-full text-left text-sm text-gray-300">
+                    <thead class="text-xs text-gray-400 uppercase bg-gray-800 border-b border-dark-border">
+                        <tr>
+                            <th scope="col" class="px-6 py-4">เวลา</th>
+                            <th scope="col" class="px-6 py-4">รหัสพนักงาน</th>
+                            <th scope="col" class="px-6 py-4">ชื่อ-นามสกุล</th>
+                            <th scope="col" class="px-6 py-4">ประเภท</th>
+                            <th scope="col" class="px-6 py-4">Device ID</th>
+                        </tr>
+                    </thead>
+                    <tbody id="admin-table-body">
+                        <!-- Rows injected by JS -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="mt-4 bg-blue-900/20 border border-blue-800/50 rounded-lg p-4 flex gap-3 text-sm">
+                <i class="fa-solid fa-circle-info text-blue-400 mt-0.5"></i>
+                <div class="text-blue-200 font-light">
+                    <strong>การเชื่อมต่อ Google Sheets:</strong> ในหน้าพรีวิวนี้ ระบบใช้ Mock Database (LocalStorage) เพื่อให้คุณทดสอบ UI ได้ทันที หากต้องการนำไปใช้จริง โปรดดูสคริปต์ <code>.gs</code> ในไฟล์แนบเพื่อตั้งค่า Google Apps Script เป็น Web App URL แล้วนำมาใส่ในโค้ดส่วน <code>GOOGLE_APP_SCRIPT_URL</code>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="fixed bottom-5 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-6 py-3 rounded-full shadow-2xl border border-gray-700 transition-all duration-300 opacity-0 translate-y-10 pointer-events-none z-50 flex items-center gap-3">
+        <i id="toast-icon" class="fa-solid fa-circle-check text-green-400"></i>
+        <span id="toast-msg">แจ้งเตือน</span>
+    </div>
+
+    <script>
+        // --- Configuration ---
+        // เมื่อคุณตั้งค่า Google Sheets + Apps Script เสร็จ ให้นำ URL มาใส่ที่นี่
+        const GOOGLE_APP_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzndx8OrNtvYM1lAefhwqr2_ZgkQ07-tMKq07xMLh8OYAd_Z3V62U3iBK-sXAFk5T9SuQ/exec"; 
+        const COMPANY_QR_CODE = "COMPANY_QR_SECRET_2026"; // ค่า QR ที่ถูกต้องสำหรับการสแกน
+
+        // --- State Variables ---
+        let currentUser = null;
+        let html5QrcodeScanner = null;
+        let clockInterval = null;
+
+        // --- Utility: Simulate Backend Database using LocalStorage for UI Testing ---
+        // ฟังก์ชันนี้จำลองการเชื่อมต่อ Database หากมี GOOGLE_APP_SCRIPT_URL จะใช้ Fetch API
+        const mockDB = {
+            getLogs: () => JSON.parse(localStorage.getItem('mock_gsheets_logs')) || [],
+            saveLog: (log) => {
+                const logs = mockDB.getLogs();
+                logs.push(log);
+                localStorage.setItem('mock_gsheets_logs', JSON.stringify(logs));
+            }
+        };
+
+        // --- Core Application Logic ---
+        document.addEventListener("DOMContentLoaded", () => {
+            initClock();
+            document.getElementById('filter-date').valueAsDate = new Date();
+            checkAuthStatus();
+        });
+
+        function showView(viewId) {
+            ['view-register', 'view-employee', 'view-scanner', 'view-admin-login', 'view-admin-dashboard'].forEach(id => {
+                document.getElementById(id).classList.add('hide');
+            });
+            document.getElementById(viewId).classList.remove('hide');
+        }
+
+        function checkAuthStatus() {
+            const savedData = localStorage.getItem('attendance_device_auth');
+            if (savedData) {
+                currentUser = JSON.parse(savedData);
+                setupEmployeeDashboard();
+                showView('view-employee');
+            } else {
+                showView('view-register');
+            }
+        }
+
+        function handleRegister(e) {
+            e.preventDefault();
+            const empId = document.getElementById('reg-emp-id').value.trim();
+            const empName = document.getElementById('reg-emp-name').value.trim();
+            
+            if(!empId || !empName) return;
+
+            // Generate Unique Device ID
+            const deviceId = 'dev_' + Math.random().toString(36).substr(2, 9) + Date.now().toString(36);
+            
+            currentUser = { empId, empName, deviceId };
+            localStorage.setItem('attendance_device_auth', JSON.stringify(currentUser));
+            
+            showToast('ลงทะเบียนอุปกรณ์สำเร็จ', 'success');
+            setupEmployeeDashboard();
+            showView('view-employee');
+        }
+
+        function resetDevice() {
+            if(confirm('คุณแน่ใจหรือไม่ที่จะล้างข้อมูลอุปกรณ์นี้? คุณจะต้องลงทะเบียนใหม่เพื่อเข้าใช้งาน')) {
+                localStorage.removeItem('attendance_device_auth');
+                currentUser = null;
+                document.getElementById('form-register').reset();
+                showView('view-register');
+            }
+        }
+
+        function setupEmployeeDashboard() {
+            document.getElementById('display-emp-name').innerText = currentUser.empName;
+            document.getElementById('display-emp-id').innerText = currentUser.empId;
+            loadTodayLogsForUser();
+        }
+
+        function initClock() {
+            const timeEl = document.getElementById('current-time');
+            const dateEl = document.getElementById('current-date');
+            
+            const updateTime = () => {
+                const now = new Date();
+                timeEl.innerText = now.toLocaleTimeString('th-TH', { hour12: false });
+                dateEl.innerText = now.toLocaleDateString('th-TH', { 
+                    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' 
+                });
+            };
+            
+            updateTime();
+            if(clockInterval) clearInterval(clockInterval);
+            clockInterval = setInterval(updateTime, 1000);
+        }
+
+        // --- Scanner Logic ---
+        function openScanner() {
+            showView('view-scanner');
+            html5QrcodeScanner = new Html5Qrcode("reader");
+            const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+
+            html5QrcodeScanner.start({ facingMode: "environment" }, config, onScanSuccess, onScanFailure)
+                .catch(err => {
+                    console.error("Camera access error:", err);
+                    showToast('ไม่สามารถเปิดกล้องได้ กรุณาให้สิทธิ์การเข้าถึง', 'error');
+                });
+        }
+
+        function closeScanner() {
+            if (html5QrcodeScanner) {
+                html5QrcodeScanner.stop().then(() => {
+                    html5QrcodeScanner.clear();
+                }).catch(err => console.error("Failed to stop scanner", err));
+            }
+            showView('view-employee');
+        }
+
+        function onScanSuccess(decodedText, decodedResult) {
+            handleScan(decodedText);
+        }
+        
+        function onScanFailure(error) {
+            // console.warn(`Code scan error = ${error}`);
+        }
+
+        async function handleScan(qrData) {
+            if (qrData !== COMPANY_QR_CODE) {
+                closeScanner();
+                showToast('QR Code ไม่ถูกต้องหรือไม่ใช่ของบริษัท', 'error');
+                return;
+            }
+
+            closeScanner();
+            showToast('กำลังบันทึกข้อมูล...', 'info', true);
+
+            const now = new Date();
+            const dateStr = now.toISOString().split('T')[0];
+            const timeStr = now.toLocaleTimeString('th-TH', { hour12: false });
+            
+            // Determine IN or OUT
+            const logs = mockDB.getLogs().filter(l => l.empId === currentUser.empId && l.date === dateStr);
+            // Logic: Even count = IN, Odd count = OUT (or purely checking last record type)
+            const isLastActionIn = logs.length > 0 && logs[logs.length-1].type === 'IN';
+            const actionType = isLastActionIn ? 'OUT' : 'IN';
+
+            const payload = {
+                date: dateStr,
+                time: timeStr,
+                empId: currentUser.empId,
+                empName: currentUser.empName,
+                type: actionType,
+                deviceId: currentUser.deviceId
+            };
+
+            try {
+                if (GOOGLE_APP_SCRIPT_URL) {
+                    // Actual Google Sheets Integration
+                    const response = await fetch(GOOGLE_APP_SCRIPT_URL, {
+                        method: 'POST',
+                        mode: 'no-cors', // Needed for Google Forms/Scripts without explicit CORS setup
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    // Note: no-cors means we can't read response data easily, but we assume success if no throw
+                } else {
+                    // Mock Database save for UI Demo
+                    await new Promise(r => setTimeout(r, 600)); // simulate network delay
+                    mockDB.saveLog(payload);
+                }
+
+                showToast(`บันทึกเวลา${actionType === 'IN' ? 'เข้างาน' : 'ออกงาน'}สำเร็จ! เวลา ${timeStr}`, 'success');
+                loadTodayLogsForUser();
+
+            } catch (error) {
+                console.error('Error saving:', error);
+                showToast('เกิดข้อผิดพลาดในการบันทึกข้อมูล', 'error');
+            }
+        }
+
+        function loadTodayLogsForUser() {
+            const container = document.getElementById('today-logs-container');
+            const dateStr = new Date().toISOString().split('T')[0];
+            
+            // In real app, fetch from GAS. Here we use mockDB.
+            const allLogs = mockDB.getLogs();
+            const myLogs = allLogs.filter(l => l.empId === currentUser.empId && l.date === dateStr);
+            
+            if (myLogs.length === 0) {
+                container.innerHTML = '<div class="text-center text-sm text-gray-500 py-2">ยังไม่มีบันทึกในวันนี้</div>';
+                return;
+            }
+
+            container.innerHTML = '';
+            myLogs.forEach(log => {
+                const colorClass = log.type === 'IN' ? 'text-green-400 border-green-900/50 bg-green-900/20' : 'text-orange-400 border-orange-900/50 bg-orange-900/20';
+                const icon = log.type === 'IN' ? 'fa-arrow-right-to-bracket' : 'fa-arrow-right-from-bracket';
+                const label = log.type === 'IN' ? 'เข้างาน' : 'ออกงาน';
+                
+                container.innerHTML += `
+                    <div class="flex justify-between items-center p-3 rounded-lg border ${colorClass}">
+                        <div class="flex items-center gap-3">
+                            <i class="fa-solid ${icon}"></i>
+                            <span class="font-medium">${label}</span>
+                        </div>
+                        <span class="font-bold tracking-wider">${log.time}</span>
+                    </div>
+                `;
+            });
+        }
+
+        // --- Admin Logic ---
+        function showAdminLogin() {
+            showView('view-admin-login');
+        }
+
+        function handleAdminLogin(e) {
+            e.preventDefault();
+            const pin = document.getElementById('admin-pin').value;
+            if(pin === '1234') { // Mock PIN
+                document.getElementById('admin-pin').value = '';
+                showView('view-admin-dashboard');
+                loadAdminData();
+            } else {
+                showToast('รหัส PIN ไม่ถูกต้อง', 'error');
+            }
+        }
+
+        function loadAdminData() {
+            const dateInput = document.getElementById('filter-date').value;
+            const tbody = document.getElementById('admin-table-body');
+            
+            // Simulate Fetch from Google Sheets
+            let allLogs = mockDB.getLogs();
+            
+            if (dateInput) {
+                allLogs = allLogs.filter(l => l.date === dateInput);
+            }
+
+            // Stats calculate
+            const uniqueEmps = new Set(allLogs.map(l => l.empId)).size;
+            const ins = allLogs.filter(l => l.type === 'IN').length;
+            const outs = allLogs.filter(l => l.type === 'OUT').length;
+
+            document.getElementById('stat-total').innerText = uniqueEmps;
+            document.getElementById('stat-in').innerText = ins;
+            document.getElementById('stat-out').innerText = outs;
+
+            // Render Table
+            tbody.innerHTML = '';
+            if(allLogs.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-8 text-center text-gray-500">ไม่มีข้อมูลในวันที่เลือก</td></tr>';
+                return;
+            }
+
+            // Reverse to show newest first
+            [...allLogs].reverse().forEach(log => {
+                const typeHtml = log.type === 'IN' 
+                    ? `<span class="bg-green-900/50 text-green-400 text-xs font-medium px-2.5 py-0.5 rounded border border-green-800">เข้างาน</span>`
+                    : `<span class="bg-orange-900/50 text-orange-400 text-xs font-medium px-2.5 py-0.5 rounded border border-orange-800">ออกงาน</span>`;
+
+                tbody.innerHTML += `
+                    <tr class="border-b border-dark-border hover:bg-gray-800 transition">
+                        <td class="px-6 py-4 whitespace-nowrap">${log.time}</td>
+                        <td class="px-6 py-4 font-medium text-white">${log.empId}</td>
+                        <td class="px-6 py-4">${log.empName}</td>
+                        <td class="px-6 py-4">${typeHtml}</td>
+                        <td class="px-6 py-4 text-xs text-gray-500 font-mono">${log.deviceId.substring(0,10)}...</td>
+                    </tr>
+                `;
+            });
+        }
+
+        // --- UI Utilities ---
+        let toastTimeout;
+        function showToast(msg, type = 'success', keepAlive = false) {
+            const toast = document.getElementById('toast');
+            const icon = document.getElementById('toast-icon');
+            document.getElementById('toast-msg').innerText = msg;
+            
+            toast.className = 'fixed bottom-5 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-full shadow-2xl border transition-all duration-300 z-50 flex items-center gap-3';
+            
+            if(type === 'success') {
+                toast.classList.add('bg-gray-800', 'border-gray-700', 'text-white');
+                icon.className = 'fa-solid fa-circle-check text-green-400 text-lg';
+            } else if (type === 'error') {
+                toast.classList.add('bg-red-900', 'border-red-800', 'text-red-100');
+                icon.className = 'fa-solid fa-circle-xmark text-red-400 text-lg';
+            } else {
+                toast.classList.add('bg-blue-900', 'border-blue-800', 'text-blue-100');
+                icon.className = 'fa-solid fa-spinner fa-spin text-blue-400 text-lg';
+            }
+
+            // Show
+            toast.classList.remove('opacity-0', 'translate-y-10', 'pointer-events-none');
+
+            clearTimeout(toastTimeout);
+            if(!keepAlive) {
+                toastTimeout = setTimeout(() => {
+                    toast.classList.add('opacity-0', 'translate-y-10', 'pointer-events-none');
+                }, 3000);
+            }
+        }
+    </script>
+</body>
+</html>
