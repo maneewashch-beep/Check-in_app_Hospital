@@ -498,7 +498,6 @@
                 <!-- Admin reset (subtle) -->
                 <div style="text-align:center;">
                     <button onclick="showResetPrompt()" style="background:none;border:none;font-size:.75rem;color:var(--muted2);cursor:pointer;transition:color .15s;font-family:inherit;" onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--muted2)'">
-                        <i class="fa-solid fa-lock" style="margin-right:5px;"></i>Admin: ล้างข้อมูลอุปกรณ์
                     </button>
                 </div>
             </div>
@@ -717,11 +716,13 @@ const COMPANY_QR_CODE  = "COMPANY_QR_SECRET_2026";
 const LATE_TIME_LIMIT  = "08:30:00";
 const SESSION_KEY      = 'attendance_device_auth';
 const STORAGE_KEY      = 'attendance_logs_v2';
+const ADMIN_SESSION_KEY= 'attendance_admin_auth'; // เพิ่ม Key สำหรับ Admin
+const VIEW_SESSION_KEY = 'attendance_last_view';  // เพิ่ม Key สำหรับจำหน้าล่าสุด
 
 // 📍 การตั้งค่าพิกัด GPS ของโรงพยาบาล/บริษัท
 const REQUIRE_GPS           = true;       // เปลี่ยนเป็น false หากต้องการปิดระบบตรวจ GPS
-const COMPANY_LAT           = 8.449098;  // ละติจูดของสถานที่ (เปลี่ยนเป็นพิกัดจริง)
-const COMPANY_LNG           = 98.526203; // ลองจิจูดของสถานที่ (เปลี่ยนเป็นพิกัดจริง)
+const COMPANY_LAT           = 8.449098;  // ละติจูดของสถานที่
+const COMPANY_LNG           = 98.526203; // ลองจิจูดของสถานที่
 const ALLOWED_RADIUS_METERS = 150;        // รัศมีที่อนุญาตให้ตอกบัตรได้ (เมตร)
 
 // ─── State ────────────────────────────────────────────────
@@ -753,32 +754,67 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ─── Session (persists across page refresh) ───────────────
-function restoreSession() {
+function loadCurrentUserSilently() {
     try {
         const saved = localStorage.getItem(SESSION_KEY);
         if (saved) {
             const parsed = JSON.parse(saved);
-            // Validate saved data has required fields
             if (parsed && parsed.empId && parsed.empName && parsed.deviceId) {
                 currentUser = parsed;
-                setupEmployeeDashboard();
-                showView('view-employee');
-                return;
+                return true;
             }
         }
     } catch(e) {
-        console.warn('Session restore failed:', e);
+        console.warn('User restore failed:', e);
         localStorage.removeItem(SESSION_KEY);
     }
     currentUser = null;
-    showView('view-register');
+    return false;
+}
+
+function restoreSession() {
+    // โหลดข้อมูล User มาเก็บไว้แบบเงียบๆ ก่อน
+    loadCurrentUserSilently();
+
+    // ตรวจสอบว่าก่อนหน้านี้ค้างอยู่หน้าไหน
+    const lastView = sessionStorage.getItem(VIEW_SESSION_KEY);
+
+    // 1. ถ้าค้างอยู่หน้า Admin Dashboard และเคยเข้าสู่ระบบ Admin ไว้แล้ว
+    if (lastView === 'view-admin-dashboard' && sessionStorage.getItem(ADMIN_SESSION_KEY) === 'true') {
+        showView('view-admin-dashboard');
+        loadAdminData();
+        return;
+    }
+
+    // 2. ถ้าค้างอยู่หน้า Admin Login
+    if (lastView === 'view-admin-login') {
+        showView('view-admin-login');
+        return;
+    }
+
+    // 3. เส้นทางปกติ (ฝั่งพนักงาน)
+    if (currentUser) {
+        setupEmployeeDashboard();
+        showView('view-employee');
+    } else {
+        showView('view-register');
+    }
 }
 
 function checkAuthStatus() {
-    // Re-init date filter in case admin view was open
+    // เมื่อกดปิดหรือถอยกลับ ให้ล้าง Session การจำหน้าจอของ Admin
+    sessionStorage.removeItem(ADMIN_SESSION_KEY);
+    sessionStorage.removeItem(VIEW_SESSION_KEY);
+
     const filterDate = document.getElementById('filter-date');
     if (filterDate && !filterDate.value) filterDate.valueAsDate = new Date();
-    restoreSession();
+    
+    if (currentUser || loadCurrentUserSilently()) {
+        setupEmployeeDashboard();
+        showView('view-employee');
+    } else {
+        showView('view-register');
+    }
 }
 
 // ─── View Controller ──────────────────────────────────────
@@ -786,6 +822,12 @@ function showView(id) {
     ['view-register','view-employee','view-scanner','view-admin-login','view-admin-dashboard']
         .forEach(v => document.getElementById(v).classList.remove('active', 'active-flex'));
     document.getElementById(id).classList.add('active');
+    
+    // บันทึกหน้าปัจจุบันไว้ (ยกเว้นหน้าสแกนกล้อง เพื่อความปลอดภัยเวลาโหลดใหม่จะได้ไม่ติดบัคกล้อง)
+    if (id !== 'view-scanner') {
+        sessionStorage.setItem(VIEW_SESSION_KEY, id);
+    }
+
     // Scroll to top on view change
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
@@ -1115,6 +1157,7 @@ function handleAdminLogin(e) {
     const pin = document.getElementById('admin-pin').value;
     if (pin === '2026') {
         document.getElementById('admin-pin').value = '';
+        sessionStorage.setItem(ADMIN_SESSION_KEY, 'true'); // บันทึกว่า Admin ได้ล็อกอินแล้ว
         showView('view-admin-dashboard');
         loadAdminData();
     } else {
