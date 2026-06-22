@@ -2,885 +2,921 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>AttendanceSys — ระบบลงเวลาทำการ</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://unpkg.com/html5-qrcode"></script>
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-
     <script>
         tailwind.config = {
             darkMode: 'class',
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['"IBM Plex Sans Thai"', 'sans-serif'],
-                        mono: ['"IBM Plex Mono"', 'monospace'],
-                    },
-                }
-            }
+            theme: { extend: { fontFamily: { sans: ['"IBM Plex Sans Thai"', 'sans-serif'], mono: ['"IBM Plex Mono"', 'monospace'] } } }
         }
     </script>
-
     <style>
         :root {
-            --bg:       #0a0a0a;
-            --surface:  #111111;
-            --surface2: #1a1a1a;
-            --border:   #242424;
-            --border2:  #2e2e2e;
-            --text:     #e8e8e8;
-            --muted:    #888888;
-            --muted2:   #555555;
-            --accent:   #4f7fff;
-            --accent-h: #3a6eee;
-            --green:    #3ecf8e;
-            --orange:   #f97316;
-            --red:      #ef4444;
+            --bg: #0a0a0a; --surface: #111111; --surface2: #1a1a1a;
+            --border: #242424; --border2: #2e2e2e;
+            --text: #e8e8e8; --muted: #888888; --muted2: #555555;
+            --accent: #4f7fff; --accent-h: #3a6eee;
+            --green: #3ecf8e; --orange: #f97316; --red: #ef4444; --purple: #a855f7;
         }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'IBM Plex Sans Thai', sans-serif; background: var(--bg); color: var(--text); min-height: 100dvh; min-height: 100vh; }
 
-        * { box-sizing: border-box; }
-
-        body {
-            font-family: 'IBM Plex Sans Thai', sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            min-height: 100dvh;
-            min-height: 100vh;
-        }
-
-        /* ─── Layout ─── */
-        .card {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-        }
-        .card-inner {
-            background: var(--surface2);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-        }
-
-        /* ─── Inputs ─── */
-        .field {
-            width: 100%;
-            background: #000;
-            border: 1px solid var(--border2);
-            border-radius: 10px;
-            color: var(--text);
-            padding: 14px 14px 14px 44px;
-            font-family: inherit;
-            font-size: 0.95rem;
-            transition: border-color .15s, box-shadow .15s;
-            outline: none;
-        }
-        .field:focus {
-            border-color: var(--accent);
-            box-shadow: 0 0 0 3px rgba(79,127,255,.15);
-        }
+        .card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; }
+        
+        .field { width: 100%; background: #000; border: 1px solid var(--border2); border-radius: 10px; color: var(--text); padding: 14px 14px 14px 44px; font-family: inherit; font-size: 0.95rem; transition: border-color .15s, box-shadow .15s; outline: none; }
+        .field:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(79,127,255,.15); }
         .field::placeholder { color: var(--muted2); }
-        .field-icon {
-            position: absolute;
-            left: 14px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--muted2);
-            font-size: .85rem;
-            pointer-events: none;
-        }
+        .field-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--muted2); font-size: .85rem; pointer-events: none; }
+        .field-no-icon { padding-left: 14px; }
+        .field-inline { padding: 8px 10px; font-size: .85rem; border-radius: 6px; border: 1px solid var(--border2); background: #000; color: #fff; width: 100%; }
+        .field-inline:focus { border-color: var(--accent); outline: none; }
 
-        /* ─── Buttons ─── */
-        .btn-primary {
-            width: 100%;
-            background: var(--accent);
-            color: #fff;
-            border: none;
-            border-radius: 10px;
-            padding: 15px;
-            font-family: inherit;
-            font-size: .95rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background .15s, transform .1s, box-shadow .15s;
-            letter-spacing: .01em;
-        }
-        .btn-primary:hover { background: var(--accent-h); box-shadow: 0 4px 18px rgba(79,127,255,.3); }
-        .btn-primary:active { transform: scale(.99); }
+        .btn-primary { width: 100%; background: var(--accent); color: #fff; border: none; border-radius: 10px; padding: 15px; font-family: inherit; font-size: .95rem; font-weight: 600; cursor: pointer; transition: background .15s, transform .1s, box-shadow .15s; letter-spacing: .01em; }
+        .btn-primary:hover:not(:disabled) { background: var(--accent-h); box-shadow: 0 4px 18px rgba(79,127,255,.3); }
+        .btn-primary:active:not(:disabled) { transform: scale(.99); }
+        .btn-primary:disabled { opacity: 0.7; cursor: not-allowed; }
+        .btn-outline { background: transparent; color: var(--text); border: 1px solid var(--border2); border-radius: 10px; padding: 15px; font-family: inherit; font-size: .95rem; font-weight: 600; cursor: pointer; transition: all .15s; }
+        .btn-outline:hover:not(:disabled) { background: var(--surface2); border-color: var(--muted); }
+        .btn-ghost { background: var(--surface2); color: var(--muted); border: 1px solid var(--border2); border-radius: 10px; padding: 11px 18px; font-family: inherit; font-size: .85rem; font-weight: 500; cursor: pointer; transition: background .15s, color .15s, border-color .15s; }
+        .btn-ghost:hover { background: var(--border); color: var(--text); }
+        .btn-danger { background: rgba(239,68,68,.12); color: var(--red); border: 1px solid rgba(239,68,68,.3); border-radius: 10px; padding: 11px 18px; font-family: inherit; font-size: .85rem; font-weight: 500; cursor: pointer; transition: background .15s; }
+        .btn-danger:hover { background: rgba(239,68,68,.22); }
+        .btn-success { background: rgba(62,207,142,.12); color: var(--green); border: 1px solid rgba(62,207,142,.3); border-radius: 10px; padding: 11px 18px; font-family: inherit; font-size: .85rem; font-weight: 500; cursor: pointer; transition: background .15s; }
+        .btn-success:hover { background: rgba(62,207,142,.22); }
+        .btn-sm { padding: 8px 14px; font-size: .8rem; border-radius: 8px; }
 
-        .btn-ghost {
-            background: var(--surface2);
-            color: var(--muted);
-            border: 1px solid var(--border2);
-            border-radius: 10px;
-            padding: 11px 18px;
-            font-family: inherit;
-            font-size: .85rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: background .15s, color .15s, border-color .15s;
-        }
-        .btn-ghost:hover { background: var(--border); color: var(--text); border-color: var(--border2); }
-
-        /* ─── Scanner Button ─── */
-        .scan-btn {
-            width: 100%;
-            background: var(--surface2);
-            border: 1px solid var(--border2);
-            border-radius: 14px;
-            padding: 36px 24px;
-            cursor: pointer;
-            transition: background .2s, border-color .2s, transform .15s;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 12px;
-            position: relative;
-            overflow: hidden;
-        }
-        .scan-btn::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(135deg, rgba(79,127,255,.08) 0%, transparent 60%);
-            opacity: 0;
-            transition: opacity .2s;
-        }
+        .scan-btn { width: 100%; background: var(--surface2); border: 1px solid var(--border2); border-radius: 14px; padding: 30px 24px; cursor: pointer; transition: background .2s, border-color .2s, transform .15s; display: flex; flex-direction: column; align-items: center; gap: 12px; position: relative; overflow: hidden; }
+        .scan-btn::before { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(79,127,255,.08) 0%, transparent 60%); opacity: 0; transition: opacity .2s; }
         .scan-btn:hover { border-color: var(--accent); background: #161622; transform: translateY(-1px); }
         .scan-btn:hover::before { opacity: 1; }
-        .scan-btn:active { transform: translateY(0); }
-        .scan-icon-ring {
-            width: 72px;
-            height: 72px;
-            border-radius: 50%;
-            background: rgba(79,127,255,.12);
-            border: 1px solid rgba(79,127,255,.25);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.75rem;
-            color: var(--accent);
-        }
+        .scan-icon-ring { width: 64px; height: 64px; border-radius: 50%; background: rgba(79,127,255,.12); border: 1px solid rgba(79,127,255,.25); display: flex; align-items: center; justify-content: center; font-size: 1.6rem; color: var(--accent); }
 
-        /* ─── Log Items ─── */
-        .log-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 14px 16px;
-            border-radius: 10px;
-            border: 1px solid;
-        }
-        .log-in  { background: rgba(62,207,142,.06); border-color: rgba(62,207,142,.2); color: var(--green); }
-        .log-out { background: rgba(249,115,22,.06);  border-color: rgba(249,115,22,.2);  color: var(--orange); }
+        .log-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; border-radius: 10px; border: 1px solid; }
+        .log-in { background: rgba(62,207,142,.06); border-color: rgba(62,207,142,.2); color: var(--green); }
+        .log-out { background: rgba(249,115,22,.06); border-color: rgba(249,115,22,.2); color: var(--orange); }
+        .log-leave { background: rgba(168,85,247,.06); border-color: rgba(168,85,247,.2); color: var(--purple); }
 
-        /* ─── Stat Cards ─── */
-        .stat-card {
-            background: #000;
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 20px;
-            text-align: center;
-            transition: border-color .15s;
-        }
+        .stat-card { background: #000; border: 1px solid var(--border); border-radius: 12px; padding: 16px; text-align: center; transition: border-color .15s; }
         .stat-card:hover { border-color: var(--border2); }
 
-        /* ─── Table ─── */
+        .tab-btn { background: none; border: none; border-bottom: 2px solid transparent; color: var(--muted); padding: 10px 4px; font-weight: 500; font-family: inherit; cursor: pointer; font-size: .9rem; transition: all .2s; white-space: nowrap; }
+        .tab-btn.active { border-bottom-color: var(--accent); color: var(--accent); font-weight: 600; }
+        .tab-btn:hover:not(.active) { color: var(--text); border-bottom-color: var(--border2); }
+
         .data-table { width: 100%; border-collapse: collapse; font-size: .875rem; }
-        .data-table th {
-            background: #0e0e0e;
-            color: var(--muted);
-            font-weight: 500;
-            font-size: .75rem;
-            letter-spacing: .08em;
-            text-transform: uppercase;
-            padding: 14px 20px;
-            text-align: left;
-            border-bottom: 1px solid var(--border);
-            white-space: nowrap;
-        }
-        .data-table td {
-            padding: 16px 20px;
-            border-bottom: 1px solid var(--border);
-            vertical-align: middle;
-            white-space: nowrap;
-        }
+        .data-table th { background: #0e0e0e; color: var(--muted); font-weight: 500; font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--border); white-space: nowrap; cursor: pointer; user-select: none; }
+        .data-table th:hover { color: var(--text); }
+        .data-table th .sort-icon { margin-left: 4px; opacity: .4; font-size: .6rem; }
+        .data-table th.sort-asc .sort-icon::after { content: '▲'; opacity: 1; color: var(--accent); }
+        .data-table th.sort-desc .sort-icon::after { content: '▼'; opacity: 1; color: var(--accent); }
+        .data-table th .sort-icon::after { content: '⇅'; }
+        .data-table td { padding: 14px 16px; border-bottom: 1px solid var(--border); vertical-align: middle; white-space: nowrap; }
         .data-table tr:last-child td { border-bottom: none; }
         .data-table tr:hover td { background: rgba(255,255,255,.02); }
 
-        /* ─── Badge ─── */
-        .badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            padding: 4px 10px;
-            border-radius: 6px;
-            font-size: .78rem;
-            font-weight: 500;
-        }
-        .badge-green  { background: rgba(62,207,142,.1);  color: var(--green);  border: 1px solid rgba(62,207,142,.2); }
-        .badge-orange { background: rgba(249,115,22,.1);  color: var(--orange); border: 1px solid rgba(249,115,22,.2); }
-        .badge-red    { background: rgba(239,68,68,.1);   color: var(--red);    border: 1px solid rgba(239,68,68,.2); }
-        .badge-blue   { background: rgba(79,127,255,.1);  color: var(--accent); border: 1px solid rgba(79,127,255,.2); }
+        .badge { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 6px; font-size: .75rem; font-weight: 500; white-space: nowrap; }
+        .badge-green { background: rgba(62,207,142,.1); color: var(--green); border: 1px solid rgba(62,207,142,.2); }
+        .badge-orange { background: rgba(249,115,22,.1); color: var(--orange); border: 1px solid rgba(249,115,22,.2); }
+        .badge-red { background: rgba(239,68,68,.1); color: var(--red); border: 1px solid rgba(239,68,68,.2); }
+        .badge-blue { background: rgba(79,127,255,.1); color: var(--accent); border: 1px solid rgba(79,127,255,.2); }
+        .badge-purple { background: rgba(168,85,247,.1); color: var(--purple); border: 1px solid rgba(168,85,247,.2); }
+        .badge-yellow { background: rgba(234,179,8,.1); color: #ca8a04; border: 1px solid rgba(234,179,8,.2); }
 
-        /* ─── Scrollbar ─── */
         ::-webkit-scrollbar { width: 5px; height: 5px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #3a3a3a; }
 
-        /* ─── Scanner reader override ─── */
         #reader { border: none !important; border-radius: 10px; overflow: hidden; }
         #reader video { object-fit: cover; border-radius: 10px; }
-        #reader__dashboard_section_csr span { color: var(--text) !important; font-family: inherit !important; }
-        #reader__dashboard_section_swaplink { color: var(--accent) !important; }
-        #reader button {
-            background: var(--accent) !important;
-            color: #fff !important;
-            padding: 8px 18px !important;
-            border-radius: 8px !important;
-            border: none !important;
-            cursor: pointer !important;
-            margin-top: 8px !important;
-            font-family: inherit !important;
-        }
+        #reader button { background: var(--accent) !important; color: #fff !important; padding: 8px 18px !important; border-radius: 8px !important; border: none !important; cursor: pointer !important; margin-top: 8px !important; font-family: inherit !important; }
 
-        /* ─── Modal backdrop ─── */
-        .modal-backdrop {
-            position: fixed; inset: 0;
-            background: rgba(0,0,0,.85);
-            backdrop-filter: blur(4px);
-            z-index: 100;
-            display: flex; align-items: center; justify-content: center;
-            padding: 16px;
-            opacity: 0;
-            transition: opacity .2s;
-        }
-        .modal-backdrop.open { opacity: 1; }
-        .modal-box {
-            background: var(--surface);
-            border: 1px solid var(--border2);
-            border-radius: 20px;
-            padding: 32px;
-            width: 100%; max-width: 380px;
-            transform: scale(.96) translateY(6px);
-            transition: transform .2s;
-        }
+        .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.85); backdrop-filter: blur(4px); z-index: 100; display: flex; align-items: center; justify-content: center; padding: 16px; opacity: 0; transition: opacity .2s; overflow-y: auto; }
+        .modal-backdrop.open { opacity: 1; pointer-events: auto; }
+        .modal-backdrop:not(.open) { pointer-events: none; }
+        .modal-box { background: var(--surface); border: 1px solid var(--border2); border-radius: 20px; padding: 28px; width: 100%; max-width: 420px; transform: scale(.96) translateY(6px); transition: transform .2s; margin: auto; }
         .modal-backdrop.open .modal-box { transform: scale(1) translateY(0); }
 
-        /* ─── Toast ─── */
-        #toast {
-            position: fixed;
-            bottom: calc(20px + env(safe-area-inset-bottom));
-            left: 50%;
-            transform: translateX(-50%) translateY(12px);
-            background: var(--surface2);
-            border: 1px solid var(--border2);
-            color: var(--text);
-            padding: 12px 22px;
-            border-radius: 100px;
-            font-size: .875rem;
-            font-weight: 500;
-            white-space: nowrap;
-            display: flex; align-items: center; gap: 10px;
-            z-index: 200;
-            opacity: 0;
-            transition: opacity .25s, transform .25s;
-            pointer-events: none;
-            box-shadow: 0 8px 32px rgba(0,0,0,.5);
-        }
+        #toast { position: fixed; bottom: calc(20px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%) translateY(12px); background: var(--surface2); border: 1px solid var(--border2); color: var(--text); padding: 12px 22px; border-radius: 100px; font-size: .875rem; font-weight: 500; white-space: nowrap; display: flex; align-items: center; gap: 10px; z-index: 200; opacity: 0; transition: opacity .25s, transform .25s; pointer-events: none; box-shadow: 0 8px 32px rgba(0,0,0,.5); max-width: calc(100vw - 32px); }
         #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-        /* ─── Header ─── */
-        header {
-            position: sticky; top: 0; z-index: 50;
-            background: rgba(10,10,10,.92);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border-bottom: 1px solid var(--border);
-            padding: 0 20px;
-            height: 58px;
-            display: flex; align-items: center; justify-content: space-between;
-        }
+        header { position: sticky; top: 0; z-index: 50; background: rgba(10,10,10,.92); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-bottom: 1px solid var(--border); padding: 0 16px; height: 56px; display: flex; align-items: center; justify-content: space-between; }
         .logo { display: flex; align-items: center; gap: 10px; }
-        .logo-icon {
-            width: 34px; height: 34px;
-            background: var(--accent);
-            border-radius: 9px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: .85rem; color: #fff;
-        }
-        .logo-text { font-size: 1rem; font-weight: 700; color: var(--text); letter-spacing: -.01em; }
+        .logo-icon { width: 32px; height: 32px; background: var(--accent); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: .8rem; color: #fff; }
+        .logo-text { font-size: .95rem; font-weight: 700; color: var(--text); letter-spacing: -.01em; }
         .logo-text span { color: var(--accent); font-weight: 300; }
 
-        /* ─── Main layout ─── */
-        main {
-            min-height: calc(100dvh - 58px);
-            min-height: calc(100vh - 58px);
-            display: flex; align-items: flex-start; justify-content: center;
-            padding: 24px 16px;
-            padding-bottom: calc(24px + env(safe-area-inset-bottom));
-        }
+        main { min-height: calc(100dvh - 56px); display: flex; align-items: flex-start; justify-content: center; padding: 20px 12px; padding-bottom: calc(20px + env(safe-area-inset-bottom)); }
 
-        /* ─── Views ─── */
         .view { display: none; width: 100%; max-width: 100%; }
-        .view.active { display: block; }
-        .view.active-flex { display: block; } /* split layout uses inner .split flex */
+        .view.active { display: block; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* ─── Clock ─── */
-        #current-time {
-            font-family: 'IBM Plex Mono', monospace;
-            font-size: clamp(2.5rem, 8vw, 3.5rem);
-            font-weight: 400;
-            color: var(--text);
-            letter-spacing: .04em;
-            line-height: 1;
-        }
+        #current-time { font-family: 'IBM Plex Mono', monospace; font-size: clamp(2rem, 7vw, 3.2rem); font-weight: 400; color: var(--text); letter-spacing: .04em; line-height: 1; }
+        .divider { height: 1px; background: var(--border); margin: 16px 0; }
+        .section-label { font-size: .7rem; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--muted2); }
 
-        /* ─── Divider ─── */
-        .divider { height: 1px; background: var(--border); margin: 0; }
-
-        /* ─── Split layout for register/admin views ─── */
         .split { display: flex; flex-direction: column; width: 100%; }
-        @media (min-width: 768px) {
+        @media (min-width: 640px) {
             .split { flex-direction: row; }
-            .split-left { width: 40%; border-right: 1px solid var(--border); border-bottom: none; }
-            .split-right { width: 60%; }
+            .split-left { width: 38%; border-right: 1px solid var(--border); border-bottom: none; border-radius: 16px 0 0 16px !important; }
+            .split-right { width: 62%; border-radius: 0 16px 16px 0 !important; }
         }
-        .split-left {
-            padding: 40px 32px;
-            background: #0d0d0d;
-            border-bottom: 1px solid var(--border);
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            gap: 12px;
-            border-radius: 16px 16px 0 0;
-            text-align: center;
-        }
-        @media (min-width: 768px) {
-            .split-left { border-radius: 16px 0 0 16px; }
-            .split-right { border-radius: 0 16px 16px 0; }
-        }
-        .split-right { padding: 32px; }
+        .split-left { padding: 36px 28px; background: #0d0d0d; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; border-radius: 16px 16px 0 0; text-align: center; }
+        .split-right { padding: 28px; }
 
-        /* ─── Employee 2-col layout ─── */
-        .emp-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 24px;
-        }
-        @media (min-width: 900px) {
-            .emp-grid { grid-template-columns: 5fr 7fr; gap: 32px; }
-        }
+        .emp-grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
+        @media (min-width: 800px) { .emp-grid { grid-template-columns: 4fr 8fr; gap: 20px; } }
+        .report-grid { display: grid; grid-template-columns: 1fr; gap: 16px; width: 100%; }
+        @media (min-width: 800px) { .report-grid { grid-template-columns: 1fr 1fr; gap: 20px; } }
+        .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+        @media (min-width: 600px) { .stats-grid { grid-template-columns: repeat(4, 1fr); } }
 
-        /* ─── Admin table responsive ─── */
-        @media (max-width: 640px) {
-            .data-table .hide-mobile { display: none; }
-            .data-table td, .data-table th { padding: 12px 14px; }
-        }
+        .total-bar { display: flex; flex-wrap: wrap; gap: 8px; padding: 14px 16px; background: #000; border-radius: 10px; border: 1px solid var(--border); margin-bottom: 16px; align-items: center; }
+        .total-chip { display: flex; align-items: center; gap: 6px; font-size: .8rem; padding: 4px 10px; border-radius: 6px; }
 
-        /* ─── Scrollable table wrapper ─── */
-        .table-wrap { overflow-x: auto; border-radius: 12px; background: #000; border: 1px solid var(--border); }
+        .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
+        .cal-day-header { text-align: center; font-size: .65rem; font-weight: 600; color: var(--muted2); padding: 4px 0; letter-spacing: .04em; }
+        .cal-day { aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 6px; font-size: .75rem; cursor: default; position: relative; transition: background .15s; min-height: 32px; background: var(--surface2); border: 1px solid var(--border); }
+        .cal-day.empty { background: transparent; border: none; pointer-events: none; }
+        .cal-day.has-data { cursor: pointer; }
+        .cal-day.has-data:hover { background: #262626; transform: scale(1.05); z-index: 10; border-color: var(--muted); }
+        .cal-day.today { border: 1px solid var(--accent); color: var(--accent); font-weight: 700; }
+        .cal-day-dot { width: 5px; height: 5px; border-radius: 50%; margin-top: 1px; }
+        .cal-dot-row { display: flex; gap: 2px; margin-top: 2px; flex-wrap: wrap; justify-content: center; max-width: 24px; }
 
-        /* ─── Section label ─── */
-        .section-label {
-            font-size: .7rem;
-            font-weight: 600;
-            letter-spacing: .1em;
-            text-transform: uppercase;
-            color: var(--muted2);
-            margin-bottom: 12px;
-        }
+        .table-wrap { overflow-x: auto; width: 100%; border-radius: 12px; background: #000; border: 1px solid var(--border); -webkit-overflow-scrolling: touch; }
+        
+        .empty-state { text-align: center; padding: 32px 20px; color: var(--muted2); font-size: .875rem; }
+        .empty-state i { font-size: 1.75rem; margin-bottom: 10px; display: block; }
 
-        /* ─── Input PIN center ─── */
-        .pin-field {
-            width: 100%;
-            background: #000;
-            border: 1px solid var(--border2);
+        .form-row { display: grid; grid-template-columns: 1fr; gap: 14px; }
+        @media (min-width: 480px) { .form-row-2 { grid-template-columns: 1fr 1fr; } }
+        .form-label { display: block; font-size: .78rem; font-weight: 500; color: var(--muted); margin-bottom: 6px; }
+        .form-select { width: 100%; background: #000; border: 1px solid var(--border2); border-radius: 10px; color: var(--text); padding: 13px 14px; font-family: inherit; font-size: .9rem; outline: none; cursor: pointer; transition: border-color .15s; }
+        .form-select:focus { border-color: var(--accent); }
+        .form-textarea { width: 100%; background: #000; border: 1px solid var(--border2); border-radius: 10px; color: var(--text); padding: 13px 14px; font-family: inherit; font-size: .875rem; outline: none; resize: vertical; min-height: 80px; transition: border-color .15s; }
+        .form-textarea:focus { border-color: var(--accent); }
+        .field-date { padding-left: 14px; }
+
+        .leave-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; border-radius: 10px; border: 1px solid rgba(168,85,247,.2); background: rgba(168,85,247,.05); gap: 8px; }
+        .leave-status-badge { font-size: .72rem; padding: 3px 8px; border-radius: 5px; font-weight: 600; }
+        .leave-pending { background: rgba(234,179,8,.12); color: #ca8a04; border: 1px solid rgba(234,179,8,.25); }
+        .leave-approved { background: rgba(62,207,142,.12); color: var(--green); border: 1px solid rgba(62,207,142,.25); }
+        .leave-rejected { background: rgba(239,68,68,.12); color: var(--red); border: 1px solid rgba(239,68,68,.25); }
+
+        .cal-tooltip { position: fixed; background: var(--surface); border: 1px solid var(--border2); border-radius: 10px; padding: 12px 14px; font-size: .8rem; z-index: 150; min-width: 180px; box-shadow: 0 8px 24px rgba(0,0,0,.6); pointer-events: none; }
+
+        .admin-header { display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px; }
+        @media (min-width: 768px) { .admin-header { flex-direction: row; align-items: center; justify-content: space-between; } }
+        .admin-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+        .tab-row { display: flex; gap: 16px; border-bottom: 1px solid var(--border); margin-bottom: 20px; overflow-x: auto; padding-bottom: 1px; }
+
+        .inline-edit-input { width: 100%; background: #000; border: 1px solid var(--border2); color: var(--text); padding: 6px 8px; font-family: inherit; font-size: .85rem; border-radius: 6px; outline: none; }
+        .inline-edit-input:focus { border-color: var(--accent); }
+
+        /* ── ADDED: emp-lookup box inside leave modal ── */
+        .emp-lookup-box {
+            background: rgba(79,127,255,.06);
+            border: 1px solid rgba(79,127,255,.2);
             border-radius: 10px;
-            color: var(--text);
-            padding: 16px;
-            font-family: 'IBM Plex Mono', monospace;
-            font-size: 1.5rem;
-            text-align: center;
-            letter-spacing: .5em;
-            outline: none;
-            transition: border-color .15s, box-shadow .15s;
+            padding: 10px 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all .2s;
         }
-        .pin-field:focus {
-            border-color: var(--accent);
-            box-shadow: 0 0 0 3px rgba(79,127,255,.15);
+        .emp-lookup-box.found {
+            background: rgba(62,207,142,.06);
+            border-color: rgba(62,207,142,.25);
         }
-        .pin-field::placeholder { letter-spacing: .3em; color: var(--muted2); }
-
-        /* ─── Empty state ─── */
-        .empty-state {
-            text-align: center;
-            padding: 40px 20px;
-            color: var(--muted2);
+        .emp-lookup-box.not-found {
+            background: rgba(239,68,68,.06);
+            border-color: rgba(239,68,68,.25);
         }
-        .empty-state i { font-size: 2rem; margin-bottom: 12px; display: block; }
     </style>
 </head>
 <body>
 
-<!-- ══════════════ HEADER ══════════════ -->
-<header>
+<!-- ══════════ GLOBAL HEADER (NAVBAR) ══════════ -->
+<header id="main-header">
     <div class="logo">
         <div class="logo-icon"><i class="fa-solid fa-fingerprint"></i></div>
         <span class="logo-text">ATTEND<span>SYS</span></span>
     </div>
-    <button onclick="showAdminLogin()" style="background:none;border:none;cursor:pointer;color:var(--muted);padding:8px;border-radius:8px;transition:color .15s,background .15s;" onmouseover="this.style.color='var(--text)';this.style.background='var(--surface2)'" onmouseout="this.style.color='var(--muted)';this.style.background='none'" title="เข้าสู่ระบบผู้ดูแล">
-        <i class="fa-solid fa-user-shield"></i>
-    </button>
+    <div id="nav-actions"></div>
 </header>
 
 <main>
 
-    <!-- ══ VIEW 1: Device Registration ══ -->
-    <div id="view-register" class="view" style="max-width:680px;">
+    <!-- ══ VIEW 1: Login (User) ══ -->
+    <div id="view-login" class="view" style="max-width:640px;">
         <div class="card split">
             <div class="split-left">
-                <div style="width:64px;height:64px;background:var(--surface2);border:1px solid var(--border2);border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:1.75rem;color:var(--accent);margin-bottom:4px;">
-                    <i class="fa-solid fa-mobile-screen-button"></i>
+                <div style="width:60px;height:60px;background:var(--surface2);border:1px solid var(--border2);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.6rem;color:var(--accent);margin-bottom:4px;">
+                    <i class="fa-solid fa-user-check"></i>
                 </div>
-                <h2 style="font-size:1.25rem;font-weight:700;color:var(--text);margin:0;">ลงทะเบียนอุปกรณ์</h2>
-                <p style="font-size:.85rem;color:var(--muted);max-width:220px;line-height:1.6;margin:0;">ยืนยันตัวตนครั้งเดียว เพื่อผูกอุปกรณ์นี้เข้าระบบบันทึกเวลา</p>
+                <h2 style="font-size:1.15rem;font-weight:700;color:var(--text);">เข้าสู่ระบบพนักงาน</h2>
+                <p style="font-size:.825rem;color:var(--muted);max-width:200px;line-height:1.6;">กรุณากรอกรหัสและรหัสผ่านเพื่อเข้าสู่ระบบลงเวลา</p>
             </div>
             <div class="split-right">
-                <form id="form-register" onsubmit="handleRegister(event)" style="display:flex;flex-direction:column;gap:20px;">
+                <form id="form-login" onsubmit="handleLogin(event)" style="display:flex;flex-direction:column;gap:18px;">
                     <div>
-                        <label style="display:block;font-size:.8rem;font-weight:500;color:var(--muted);margin-bottom:8px;">รหัสพนักงาน</label>
-                        <div style="position:relative;">
-                            <span class="field-icon"><i class="fa-solid fa-id-badge"></i></span>
-                            <input type="text" id="reg-emp-id" required class="field" placeholder="เช่น EMP001" autocomplete="off">
-                        </div>
+                        <label class="form-label">รหัสพนักงาน</label>
+                        <div style="position:relative;"><span class="field-icon"><i class="fa-solid fa-id-badge"></i></span><input type="text" id="login-emp-id" required class="field" placeholder="เช่น 1 หรือ 2" autocomplete="off"></div>
                     </div>
                     <div>
-                        <label style="display:block;font-size:.8rem;font-weight:500;color:var(--muted);margin-bottom:8px;">ชื่อ – นามสกุล</label>
-                        <div style="position:relative;">
-                            <span class="field-icon"><i class="fa-solid fa-user"></i></span>
-                            <input type="text" id="reg-emp-name" required class="field" placeholder="ระบุชื่อจริงของคุณ" autocomplete="off">
-                        </div>
+                        <label class="form-label">รหัสผ่าน</label>
+                        <div style="position:relative;"><span class="field-icon"><i class="fa-solid fa-lock"></i></span><input type="password" id="login-emp-pass" required class="field" placeholder="••••••••"></div>
                     </div>
-                    <button type="submit" class="btn-primary" style="margin-top:4px;">
-                        <i class="fa-solid fa-check-circle" style="margin-right:8px;"></i>ยืนยันการลงทะเบียน
-                    </button>
+                    <button type="submit" id="btn-login-submit" class="btn-primary" style="margin-top:4px;"><i class="fa-solid fa-right-to-bracket" style="margin-right:8px;"></i>เข้าสู่ระบบ</button>
                 </form>
             </div>
         </div>
     </div>
 
     <!-- ══ VIEW 2: Employee Dashboard ══ -->
-    <div id="view-employee" class="view" style="max-width:900px;">
+    <div id="view-employee" class="view" style="max-width:960px;">
         <div class="emp-grid">
-
-            <!-- Left: Profile & Clock -->
-            <div style="display:flex;flex-direction:column;gap:20px;">
-
-                <!-- Profile card -->
-                <div class="card" style="padding:24px;">
-                    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;">
+            <!-- Left Column -->
+            <div style="display:flex;flex-direction:column;gap:16px;">
+                <div class="card" style="padding:20px;">
+                    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;">
                         <div>
-                            <p style="font-size:.75rem;color:var(--muted);margin:0 0 4px;">ยินดีต้อนรับกลับ</p>
-                            <h2 id="display-emp-name" style="font-size:1.25rem;font-weight:700;color:var(--text);margin:0 0 4px;"></h2>
-                            <p id="display-emp-id" style="font-size:.8rem;color:var(--accent);margin:0;font-family:'IBM Plex Mono',monospace;"></p>
+                            <p style="font-size:.72rem;color:var(--muted);margin-bottom:3px;">ยินดีต้อนรับกลับ</p>
+                            <h2 id="display-emp-name" style="font-size:1.15rem;font-weight:700;color:var(--text);margin-bottom:3px;"></h2>
+                            <p id="display-emp-id" style="font-size:.78rem;color:var(--accent);font-family:'IBM Plex Mono',monospace;"></p>
                         </div>
-                        <span class="badge badge-green"><i class="fa-solid fa-circle" style="font-size:.5rem;"></i>พร้อมใช้งาน</span>
+                        <span class="badge badge-green"><i class="fa-solid fa-circle" style="font-size:.45rem;"></i>พร้อมใช้งาน</span>
                     </div>
                     <div class="divider"></div>
-                    <!-- Clock -->
-                    <div style="padding-top:20px;text-align:center;">
+                    <div style="padding-top:10px;text-align:center;">
                         <div id="current-time">00:00:00</div>
-                        <p id="current-date" style="font-size:.825rem;color:var(--muted);margin-top:6px;"></p>
+                        <p id="current-date" style="font-size:.78rem;color:var(--muted);margin-top:5px;"></p>
                     </div>
-                </div>
-
-                <!-- Admin reset (subtle) -->
-                <div style="text-align:center;">
-                    <button onclick="showResetPrompt()" style="background:none;border:none;font-size:.75rem;color:var(--muted2);cursor:pointer;transition:color .15s;font-family:inherit;" onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--muted2)'">
-                    </button>
                 </div>
             </div>
 
-            <!-- Right: Scan + Logs -->
-            <div style="display:flex;flex-direction:column;gap:20px;">
-
-                <!-- Scan button -->
-                <button class="scan-btn" onclick="openScanner()">
-                    <div class="scan-icon-ring">
-                        <i class="fa-solid fa-qrcode"></i>
-                    </div>
-                    <div>
-                        <div style="font-size:1.15rem;font-weight:700;color:var(--text);margin-bottom:4px;">สแกน QR Code</div>
-                        <div style="font-size:.825rem;color:var(--muted);">แตะเพื่อบันทึกเวลาเข้า-ออกงาน</div>
-                    </div>
-                </button>
-
-                <!-- Today Status Summary -->
-                <div class="card" style="padding:20px;">
-                    <div class="section-label">สรุปการลงเวลาวันนี้</div>
-                    <div id="today-summary" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;">
-                        <!-- IN slot -->
-                        <div id="summary-in" style="background:#000;border:1px solid var(--border);border-radius:10px;padding:14px 16px;">
-                            <div style="display:flex;align-items:center;gap:7px;margin-bottom:8px;">
-                                <i class="fa-solid fa-arrow-right-to-bracket" style="color:var(--green);font-size:.8rem;"></i>
-                                <span style="font-size:.7rem;font-weight:600;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;">เข้างาน</span>
-                            </div>
-                            <div id="summary-in-time" style="font-family:'IBM Plex Mono',monospace;font-size:1.35rem;font-weight:500;color:var(--muted2);">—</div>
-                            <div id="summary-in-status" style="margin-top:4px;font-size:.72rem;color:var(--muted2);"></div>
-                        </div>
-                        <!-- OUT slot -->
-                        <div id="summary-out" style="background:#000;border:1px solid var(--border);border-radius:10px;padding:14px 16px;">
-                            <div style="display:flex;align-items:center;gap:7px;margin-bottom:8px;">
-                                <i class="fa-solid fa-arrow-right-from-bracket" style="color:var(--orange);font-size:.8rem;"></i>
-                                <span style="font-size:.7rem;font-weight:600;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;">ออกงาน</span>
-                            </div>
-                            <div id="summary-out-time" style="font-family:'IBM Plex Mono',monospace;font-size:1.35rem;font-weight:500;color:var(--muted2);">—</div>
-                            <div id="summary-out-status" style="margin-top:4px;font-size:.72rem;color:var(--muted2);"></div>
-                        </div>
-                    </div>
-
-                    <!-- Error banner (hidden by default) -->
-                    <div id="error-banner" style="display:none;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.25);border-radius:10px;padding:14px 16px;margin-bottom:16px;">
-                        <div style="display:flex;align-items:flex-start;gap:10px;">
-                            <i class="fa-solid fa-triangle-exclamation" style="color:var(--red);margin-top:2px;flex-shrink:0;"></i>
-                            <div>
-                                <div style="font-size:.875rem;font-weight:600;color:var(--red);margin-bottom:4px;">ไม่สามารถบันทึกข้อมูลได้</div>
-                                <div id="error-detail" style="font-size:.8rem;color:rgba(239,68,68,.75);line-height:1.6;"></div>
-                                <div style="margin-top:8px;font-size:.775rem;color:var(--muted);line-height:1.6;">
-                                    กรุณาแจ้ง<strong style="color:var(--text);">ผู้ดูแลระบบ</strong>หรือ<strong style="color:var(--text);">เจ้าหน้าที่ HR</strong> และจดเวลาของคุณไว้เป็นหลักฐาน
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Log history -->
-                    <div class="section-label" style="margin-top:4px;">ประวัติทั้งหมดวันนี้</div>
-                    <div id="today-logs-container" style="display:flex;flex-direction:column;gap:8px;max-height:220px;overflow-y:auto;padding-right:2px;">
-                    </div>
+            <!-- Right Column -->
+            <div style="display:flex;flex-direction:column;gap:16px;">
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    <button class="scan-btn" onclick="openScanner()" style="padding: 24px 16px;">
+                        <div class="scan-icon-ring" style="width:50px;height:50px;font-size:1.2rem;"><i class="fa-solid fa-qrcode"></i></div>
+                        <div style="text-align:center;"><div style="font-size:1rem;font-weight:700;color:var(--text);margin-bottom:2px;">สแกนตอกบัตร</div></div>
+                    </button>
+                    <button class="scan-btn" onclick="openLeaveModal()" style="padding: 24px 16px; border-color:rgba(168,85,247,.2);">
+                        <div class="scan-icon-ring" style="width:50px;height:50px;font-size:1.2rem; color:var(--purple); background:rgba(168,85,247,.12); border-color:rgba(168,85,247,.25);"><i class="fa-solid fa-calendar-plus"></i></div>
+                        <div style="text-align:center;"><div style="font-size:1rem;font-weight:700;color:var(--text);margin-bottom:2px;">แจ้งวันลา</div></div>
+                    </button>
                 </div>
 
+                <div class="card" style="padding:18px;">
+                    <div class="section-label" style="margin-bottom:12px;">สรุปการลงเวลาวันนี้</div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;">
+                        <div style="background:#000;border:1px solid var(--border);border-radius:10px;padding:12px 14px;">
+                            <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;"><i class="fa-solid fa-arrow-right-to-bracket" style="color:var(--green);font-size:.75rem;"></i><span style="font-size:.66rem;font-weight:600;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;">เข้างาน</span></div>
+                            <div id="summary-in-time" style="font-family:'IBM Plex Mono',monospace;font-size:1.2rem;font-weight:500;color:var(--muted2);">—</div>
+                            <div id="summary-in-status" style="margin-top:3px;font-size:.7rem;color:var(--muted2);"></div>
+                        </div>
+                        <div style="background:#000;border:1px solid var(--border);border-radius:10px;padding:12px 14px;">
+                            <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;"><i class="fa-solid fa-arrow-right-from-bracket" style="color:var(--orange);font-size:.75rem;"></i><span style="font-size:.66rem;font-weight:600;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;">ออกงาน</span></div>
+                            <div id="summary-out-time" style="font-family:'IBM Plex Mono',monospace;font-size:1.2rem;font-weight:500;color:var(--muted2);">—</div>
+                            <div id="summary-out-status" style="margin-top:3px;font-size:.7rem;color:var(--muted2);"></div>
+                        </div>
+                    </div>
+
+                    <div id="today-leave-banner" style="display:none;background:rgba(168,85,247,.08);border:1px solid rgba(168,85,247,.25);border-radius:10px;padding:10px 14px;margin-bottom:14px;">
+                        <div style="display:flex;align-items:center;gap:8px;"><i class="fa-solid fa-calendar-minus" style="color:var(--purple);flex-shrink:0;"></i><div id="today-leave-text" style="font-size:.82rem;color:var(--purple);"></div></div>
+                    </div>
+
+                    <div class="section-label" style="margin-bottom:10px;">ประวัติการเข้าออกวันนี้</div>
+                    <div id="today-logs-container" style="display:flex;flex-direction:column;gap:8px;max-height:200px;overflow-y:auto;padding-right:2px;"></div>
+                </div>
+
+                <div class="card" style="padding:18px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                        <div class="section-label">ประวัติการแจ้งลา</div>
+                        <button onclick="openLeaveModal()" style="background:none;border:none;cursor:pointer;font-size:.75rem;color:var(--accent);font-family:inherit;font-weight:600;">+ แจ้งลาใหม่</button>
+                    </div>
+                    <div id="my-leave-list" style="display:flex;flex-direction:column;gap:8px;max-height:160px;overflow-y:auto;"></div>
+                </div>
             </div>
         </div>
     </div>
 
     <!-- ══ VIEW 3: Scanner ══ -->
-    <div id="view-scanner" class="view" style="max-width:440px;">
-        <div class="card" style="padding:24px;">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
-                <h2 style="font-size:1.1rem;font-weight:700;color:var(--text);margin:0;"><i class="fa-solid fa-camera" style="color:var(--accent);margin-right:8px;"></i>สแกนตอกบัตร</h2>
-                <button onclick="closeScanner()" style="background:var(--surface2);border:1px solid var(--border2);color:var(--muted);width:36px;height:36px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s,color .15s;" onmouseover="this.style.background='rgba(239,68,68,.15)';this.style.color='var(--red)'" onmouseout="this.style.background='var(--surface2)';this.style.color='var(--muted)'">
-                    <i class="fa-solid fa-times"></i>
-                </button>
+    <div id="view-scanner" class="view" style="max-width:420px;">
+        <div class="card" style="padding:20px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+                <h2 style="font-size:1.05rem;font-weight:700;color:var(--text);"><i class="fa-solid fa-camera" style="color:var(--accent);margin-right:8px;"></i>สแกนตอกบัตร</h2>
+                <button onclick="closeScanner()" style="background:var(--surface2);border:1px solid var(--border2);color:var(--muted);width:34px;height:34px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s,color .15s;" onmouseover="this.style.background='rgba(239,68,68,.15)';this.style.color='var(--red)'" onmouseout="this.style.background='var(--surface2)';this.style.color='var(--muted)'"><i class="fa-solid fa-times"></i></button>
             </div>
-
-            <div style="background:#000;border-radius:12px;overflow:hidden;border:1px solid var(--border);aspect-ratio:1;position:relative;margin-bottom:16px;">
+            <div style="background:#000;border-radius:12px;overflow:hidden;border:1px solid var(--border);aspect-ratio:1;position:relative;margin-bottom:14px;">
                 <div id="reader" style="width:100%;height:100%;"></div>
-                <!-- Corner markers -->
                 <div style="position:absolute;inset:0;pointer-events:none;">
-                    <div style="position:absolute;top:20px;left:20px;width:28px;height:28px;border-top:2px solid var(--accent);border-left:2px solid var(--accent);border-radius:3px 0 0 0;"></div>
-                    <div style="position:absolute;top:20px;right:20px;width:28px;height:28px;border-top:2px solid var(--accent);border-right:2px solid var(--accent);border-radius:0 3px 0 0;"></div>
-                    <div style="position:absolute;bottom:20px;left:20px;width:28px;height:28px;border-bottom:2px solid var(--accent);border-left:2px solid var(--accent);border-radius:0 0 0 3px;"></div>
-                    <div style="position:absolute;bottom:20px;right:20px;width:28px;height:28px;border-bottom:2px solid var(--accent);border-right:2px solid var(--accent);border-radius:0 0 3px 0;"></div>
+                    <div style="position:absolute;top:18px;left:18px;width:24px;height:24px;border-top:2px solid var(--accent);border-left:2px solid var(--accent);border-radius:3px 0 0 0;"></div>
+                    <div style="position:absolute;top:18px;right:18px;width:24px;height:24px;border-top:2px solid var(--accent);border-right:2px solid var(--accent);border-radius:0 3px 0 0;"></div>
+                    <div style="position:absolute;bottom:18px;left:18px;width:24px;height:24px;border-bottom:2px solid var(--accent);border-left:2px solid var(--accent);border-radius:0 0 0 3px;"></div>
+                    <div style="position:absolute;bottom:18px;right:18px;width:24px;height:24px;border-bottom:2px solid var(--accent);border-right:2px solid var(--accent);border-radius:0 0 3px 0;"></div>
                 </div>
             </div>
-
-            <p style="font-size:.825rem;color:var(--muted);text-align:center;margin-bottom:16px;">หันกล้องไปที่ QR Code ของบริษัท</p>
-
-            <button onclick="handleScan('COMPANY_QR_SECRET_2026')" class="btn-ghost" style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px;">
-                <i class="fa-solid fa-flask" style="color:var(--accent);"></i>จำลองการสแกน (ทดสอบ)
-            </button>
+            <p style="font-size:.8rem;color:var(--muted);text-align:center;margin-bottom:14px;">หันกล้องไปที่ QR Code ของพื้นที่ทำงาน</p>
+            <button onclick="handleScan('COMPANY_QR_SECRET_2026')" class="btn-ghost" style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px;"><i class="fa-solid fa-flask" style="color:var(--accent);"></i>จำลองการสแกน (ทดสอบ)</button>
         </div>
     </div>
 
     <!-- ══ VIEW 4: Admin Login ══ -->
-    <div id="view-admin-login" class="view" style="max-width:620px;">
+    <div id="view-admin-login" class="view" style="max-width:600px;">
         <div class="card split">
             <div class="split-left">
-                <i class="fa-solid fa-shield-halved" style="font-size:3rem;color:var(--accent);filter:drop-shadow(0 0 20px rgba(79,127,255,.4));margin-bottom:4px;"></i>
-                <h2 style="font-size:1.25rem;font-weight:700;color:var(--text);margin:0;">Admin Access</h2>
-                <p style="font-size:.85rem;color:var(--muted);margin:0;">ระบบสำหรับผู้ดูแลและหัวหน้างาน</p>
+                <i class="fa-solid fa-shield-halved" style="font-size:2.8rem;color:var(--accent);filter:drop-shadow(0 0 20px rgba(79,127,255,.4));margin-bottom:4px;"></i>
+                <h2 style="font-size:1.15rem;font-weight:700;color:var(--text);">Admin Access</h2>
+                <p style="font-size:.82rem;color:var(--muted);">ระบบจัดการพนักงานและการลา</p>
             </div>
             <div class="split-right">
-                <form onsubmit="handleAdminLogin(event)" style="display:flex;flex-direction:column;gap:20px;">
+                <form onsubmit="handleAdminLogin(event)" style="display:flex;flex-direction:column;gap:18px;">
                     <div>
-                        <label style="display:block;font-size:.8rem;font-weight:500;color:var(--muted);margin-bottom:8px;">รหัส PIN 4 หลัก</label>
-                        <input type="password" id="admin-pin" class="pin-field" placeholder="••••" maxlength="4">
+                        <label class="form-label">ชื่อผู้ใช้ (Username)</label>
+                        <div style="position:relative;"><span class="field-icon"><i class="fa-solid fa-user-tie"></i></span><input type="text" id="admin-user" required class="field" placeholder="Username" autocomplete="off"></div>
                     </div>
-                    <button type="submit" class="btn-primary">
-                        <i class="fa-solid fa-right-to-bracket" style="margin-right:8px;"></i>เข้าสู่ระบบ
-                    </button>
-                    <button type="button" onclick="checkAuthStatus()" class="btn-ghost" style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px;">
-                        <i class="fa-solid fa-arrow-left"></i>กลับหน้าพนักงาน
-                    </button>
+                    <div>
+                        <label class="form-label">รหัสผ่าน (Password)</label>
+                        <div style="position:relative;"><span class="field-icon"><i class="fa-solid fa-key"></i></span><input type="password" id="admin-pass" required class="field" placeholder="••••••••"></div>
+                    </div>
+                    <button type="submit" id="btn-admin-submit" class="btn-primary mt-2"><i class="fa-solid fa-right-to-bracket" style="margin-right:8px;"></i>เข้าสู่ระบบแอดมิน</button>
                 </form>
             </div>
         </div>
     </div>
 
     <!-- ══ VIEW 5: Admin Dashboard ══ -->
-    <div id="view-admin-dashboard" class="view" style="max-width:1100px;">
-
-        <!-- Header row -->
-        <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:24px;">
+    <div id="view-admin-dashboard" class="view" style="max-width:1150px; width:100%;">
+        <div class="admin-header">
             <div>
-                <h2 style="font-size:1.3rem;font-weight:700;color:var(--text);margin:0 0 4px;">
-                    <i class="fa-solid fa-chart-line" style="color:var(--accent);margin-right:10px;"></i>ข้อมูลลงเวลาทำการ
-                </h2>
-                <p style="font-size:.825rem;color:var(--muted);margin:0;">ซิงค์กับ Google Sheets แบบเรียลไทม์</p>
+                <h2 style="font-size:1.3rem;font-weight:700;color:var(--text);margin-bottom:3px;"><i class="fa-solid fa-chart-line" style="color:var(--accent);margin-right:10px;"></i>แผงควบคุมผู้ดูแล</h2>
+                <p style="font-size:.78rem;color:var(--muted);">เชื่อมต่อกับระบบฐานข้อมูลเรียลไทม์</p>
             </div>
-            <div style="display:flex;flex-wrap:wrap;gap:8px;">
+            <div class="admin-actions">
+                <button onclick="openManualLogModal()" class="btn-ghost btn-sm" style="color:var(--green);border-color:rgba(52,211,153,.3);display:flex;align-items:center;gap:6px;"><i class="fa-solid fa-plus"></i>เพิ่มข้อมูลย้อนหลัง</button>
+                <button onclick="loadAdminData()" class="btn-ghost btn-sm" style="display:flex;align-items:center;gap:6px;"><i class="fa-solid fa-rotate-right"></i>อัปเดต</button>
+            </div>
+        </div>
+
+        <div class="tab-row">
+            <button onclick="switchAdminTab('daily')" id="tab-btn-daily" class="tab-btn active">สรุปรายวัน</button>
+            <button onclick="switchAdminTab('report')" id="tab-btn-report" class="tab-btn">รายงานรายบุคคล</button>
+            <button onclick="switchAdminTab('leave')" id="tab-btn-leave" class="tab-btn">ใบลา <span id="leave-pending-badge" style="display:none;background:var(--orange);color:#fff;font-size:.65rem;padding:1px 6px;border-radius:100px;margin-left:4px;vertical-align:middle;"></span></button>
+            <button onclick="switchAdminTab('users')" id="tab-btn-users" class="tab-btn">รายชื่อผู้ใช้งาน</button>
+        </div>
+
+        <!-- ADMIN TAB: DAILY -->
+        <div id="admin-view-daily">
+            <div style="margin-bottom:16px;display:flex;flex-wrap:wrap;align-items:center;gap:10px;">
                 <div style="position:relative;">
                     <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted2);font-size:.8rem;pointer-events:none;"><i class="fa-solid fa-calendar-day"></i></span>
-                    <input type="date" id="filter-date" onchange="loadAdminData()" style="background:#000;border:1px solid var(--border2);border-radius:10px;color:var(--text);padding:10px 12px 10px 36px;font-family:inherit;font-size:.85rem;outline:none;cursor:pointer;min-width:160px;transition:border-color .15s;" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border2)'">
+                    <input type="date" id="filter-date" onchange="renderDailyAdmin()" style="background:#000;border:1px solid var(--border2);border-radius:10px;color:var(--text);padding:11px 12px 11px 36px;font-family:inherit;font-size:.875rem;outline:none;cursor:pointer;transition:border-color .15s;">
                 </div>
-                <button onclick="loadAdminData()" class="btn-ghost" style="display:flex;align-items:center;gap:7px;">
-                    <i class="fa-solid fa-rotate-right"></i>รีเฟรช
-                </button>
-                <button onclick="runDebug()" class="btn-ghost" style="color:#a855f7;border-color:rgba(168,85,247,.3);display:flex;align-items:center;gap:7px;">
-                    <i class="fa-solid fa-bug"></i>เช็คระบบ
-                </button>
-                <button onclick="checkAuthStatus()" class="btn-ghost" style="display:flex;align-items:center;gap:7px;">
-                    <i class="fa-solid fa-power-off" style="color:var(--red);"></i>ปิด
-                </button>
+                <div style="display:flex;align-items:center;gap:6px;">
+                    <span style="font-size:.78rem;color:var(--muted);">เรียงตาม:</span>
+                    <select id="sort-col" onchange="setSort(this.value)" class="form-select" style="padding:10px 12px;font-size:.8rem;min-width:120px;border-radius:10px;">
+                        <option value="time">เวลา</option>
+                        <option value="empId">รหัสพนักงาน</option>
+                        <option value="empName">ชื่อ</option>
+                        <option value="type">ประเภท</option>
+                        <option value="status">สถานะ</option>
+                    </select>
+                    <button onclick="toggleSortDir()" id="sort-dir-btn" class="btn-ghost btn-sm" style="padding:10px 12px;"><i class="fa-solid fa-arrow-down-wide-short"></i></button>
+                </div>
+            </div>
+
+            <div class="stats-grid" style="margin-bottom:20px;">
+                <div class="stat-card">
+                    <div style="font-size:.72rem;color:var(--muted);margin-bottom:6px;font-weight:500;">พนักงานวันนี้ (คน)</div>
+                    <div id="stat-total" style="font-size:2rem;font-weight:700;color:var(--text);font-family:'IBM Plex Mono',monospace;">0</div>
+                </div>
+                <div class="stat-card" style="border-color:rgba(52,211,153,.2);">
+                    <div style="font-size:.72rem;color:var(--green);margin-bottom:6px;font-weight:500;">เข้างานแล้ว</div>
+                    <div id="stat-in" style="font-size:2rem;font-weight:700;color:var(--green);font-family:'IBM Plex Mono',monospace;">0</div>
+                </div>
+                <div class="stat-card" style="border-color:rgba(251,191,36,.2);">
+                    <div style="font-size:.72rem;color:var(--orange);margin-bottom:6px;font-weight:500;">ออกงานแล้ว</div>
+                    <div id="stat-out" style="font-size:2rem;font-weight:700;color:var(--orange);font-family:'IBM Plex Mono',monospace;">0</div>
+                </div>
+                <div class="stat-card" style="border-color:rgba(239,68,68,.2);">
+                    <div style="font-size:.72rem;color:var(--red);margin-bottom:6px;font-weight:500;">มาสาย (คน)</div>
+                    <div id="stat-late" style="font-size:2rem;font-weight:700;color:var(--red);font-family:'IBM Plex Mono',monospace;">0</div>
+                </div>
+            </div>
+
+            <div class="table-wrap">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th onclick="setSort('time')" id="th-time">เวลา<span class="sort-icon"></span></th>
+                            <th onclick="setSort('empId')" id="th-empId">รหัส<span class="sort-icon"></span></th>
+                            <th onclick="setSort('empName')" id="th-empName">ชื่อ-นามสกุล<span class="sort-icon"></span></th>
+                            <th onclick="setSort('type')" id="th-type">ประเภท<span class="sort-icon"></span></th>
+                            <th onclick="setSort('status')" id="th-status">สถานะ<span class="sort-icon"></span></th>
+                            <th class="hide-sm">Device ID</th>
+                        </tr>
+                    </thead>
+                    <tbody id="admin-table-body"></tbody>
+                </table>
             </div>
         </div>
 
-        <!-- Stats -->
-        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:24px;" id="stats-grid">
-            <div class="stat-card">
-                <div style="font-size:.75rem;color:var(--muted);margin-bottom:8px;font-weight:500;">พนักงานวันนี้</div>
-                <div id="stat-total" style="font-size:2.25rem;font-weight:700;color:var(--text);font-family:'IBM Plex Mono',monospace;">0</div>
+        <!-- ADMIN TAB: REPORT -->
+        <div id="admin-view-report" style="display:none;">
+            <div class="card" style="padding:20px;margin-bottom:20px;">
+                <div class="section-label" style="margin-bottom:12px;">ค้นหาข้อมูลรายบุคคล</div>
+                <div style="display:flex;flex-wrap:wrap;gap:10px;max-width:480px;">
+                    <div style="flex:1;min-width:180px;position:relative;">
+                        <span class="field-icon"><i class="fa-solid fa-id-badge"></i></span>
+                        <input type="text" id="search-emp-id" class="field" style="padding:14px 14px 14px 38px;" placeholder="รหัสพนักงาน เช่น 1" onkeydown="if(event.key==='Enter') generateEmployeeReport()">
+                    </div>
+                    <button onclick="generateEmployeeReport()" class="btn-primary" style="width:auto;padding:0 20px;"><i class="fa-solid fa-search" style="margin-right:6px;"></i>ค้นหา</button>
+                </div>
             </div>
-            <div class="stat-card" style="border-color:rgba(62,207,142,.15);">
-                <div style="font-size:.75rem;color:var(--green);margin-bottom:8px;font-weight:500;">เข้างานแล้ว</div>
-                <div id="stat-in" style="font-size:2.25rem;font-weight:700;color:var(--green);font-family:'IBM Plex Mono',monospace;">0</div>
-            </div>
-            <div class="stat-card" style="border-color:rgba(249,115,22,.15);">
-                <div style="font-size:.75rem;color:var(--orange);margin-bottom:8px;font-weight:500;">ออกงานแล้ว</div>
-                <div id="stat-out" style="font-size:2.25rem;font-weight:700;color:var(--orange);font-family:'IBM Plex Mono',monospace;">0</div>
-            </div>
-            <div class="stat-card" style="border-color:rgba(239,68,68,.15);">
-                <div style="font-size:.75rem;color:var(--red);margin-bottom:8px;font-weight:500;">มาสาย</div>
-                <div id="stat-late" style="font-size:2.25rem;font-weight:700;color:var(--red);font-family:'IBM Plex Mono',monospace;">0</div>
-            </div>
+
+            <div id="report-content" style="display:none;"></div>
         </div>
 
-        <!-- Table -->
-        <div class="table-wrap">
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th>เวลา</th>
-                        <th>รหัสพนักงาน</th>
-                        <th>ชื่อ-นามสกุล</th>
-                        <th>ประเภท</th>
-                        <th>สถานะ</th>
-                        <th class="hide-mobile">Device ID</th>
-                    </tr>
-                </thead>
-                <tbody id="admin-table-body"></tbody>
-            </table>
+        <!-- TAB 3: LEAVE APPROVAL LIST -->
+        <div id="admin-view-leave" style="display:none;">
+            <div class="section-label" style="margin-bottom:16px;">รายการขออนุมัติใบลาทั้งหมด</div>
+            <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:16px;align-items:center;">
+                <div style="position:relative;flex:1;min-width:180px;max-width:280px;">
+                    <span class="field-icon"><i class="fa-solid fa-filter"></i></span>
+                    <input type="text" id="admin-leave-filter-emp" oninput="renderAdminLeaveList()" class="field" style="padding:12px 14px 12px 38px;font-size:.875rem;" placeholder="ค้นหา รหัส/ชื่อ">
+                </div>
+                <select id="admin-leave-filter-status" onchange="renderAdminLeaveList()" class="form-select" style="min-width:140px;padding:12px 14px;font-size:.875rem;flex:0;">
+                    <option value="">ทุกสถานะ</option>
+                    <option value="pending">รอดำเนินการ</option>
+                    <option value="approved">อนุมัติแล้ว</option>
+                    <option value="rejected">ไม่อนุมัติ</option>
+                </select>
+                <button onclick="openAdminAddLeave()" class="btn-primary" style="width:auto;padding:12px 18px;font-size:.875rem;background:var(--purple);"><i class="fa-solid fa-plus" style="margin-right:6px;"></i>เพิ่มใบลาให้พนักงาน</button>
+            </div>
+            <div id="admin-leave-list" style="display:grid;grid-template-columns:1fr;gap:10px;"></div>
+        </div>
+        
+        <!-- TAB 4: USERS LIST -->
+        <div id="admin-view-users" style="display:none;">
+            <div class="section-label" style="margin-bottom:16px;">รายชื่อพนักงานทั้งหมด</div>
+            <div class="table-wrap">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>รหัส</th>
+                            <th>ชื่อ-นามสกุล</th>
+                            <th>ชื่อเล่น</th>
+                            <th>อายุ</th>
+                            <th>เบอร์โทร</th>
+                            <th>แผนก</th>
+                            <th style="text-align:right;">จัดการ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="admin-users-body"></tbody>
+                </table>
+            </div>
         </div>
 
     </div>
-
 </main>
 
-<!-- ══ MODAL: Admin Reset ══ -->
-<div id="reset-modal" class="modal-backdrop" style="display:none;" onclick="if(event.target===this)closeResetPrompt()">
-    <div class="modal-box">
-        <div style="width:52px;height:52px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;color:var(--red);font-size:1.25rem;">
-            <i class="fa-solid fa-lock"></i>
+<!-- ══ MODAL: Leave Form ══ -->
+<div id="leave-modal" class="modal-backdrop" style="display:none;" onclick="if(event.target===this)closeLeaveModal()">
+    <div class="modal-box" style="max-width:480px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+            <div>
+                <h3 id="leave-modal-title" style="font-size:1.1rem;font-weight:700;color:var(--text);margin-bottom:2px;">
+                    <i class="fa-solid fa-calendar-minus" style="color:var(--purple);margin-right:8px;"></i>แจ้งการลา
+                </h3>
+                <p id="leave-modal-desc" style="font-size:.75rem;color:var(--muted);">ส่งใบลาให้ Admin พิจารณาอนุมัติ</p>
+            </div>
+            <button onclick="closeLeaveModal()" style="background:var(--surface2);border:1px solid var(--border2);color:var(--muted);width:32px;height:32px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;" onmouseover="this.style.color='var(--red)';this.style.borderColor='var(--red)'" onmouseout="this.style.color='var(--muted)';this.style.borderColor='var(--border2)'">
+                <i class="fa-solid fa-times"></i>
+            </button>
         </div>
-        <h3 style="font-size:1.1rem;font-weight:700;color:var(--text);text-align:center;margin:0 0 6px;">ล้างข้อมูลอุปกรณ์</h3>
-        <p style="font-size:.825rem;color:var(--muted);text-align:center;margin:0 0 20px;">ใส่รหัส Admin เพื่อยืนยัน</p>
-        <input type="password" id="reset-pin" class="pin-field" placeholder="PIN" style="margin-bottom:16px;">
-        <div style="display:flex;gap:10px;">
-            <button onclick="closeResetPrompt()" class="btn-ghost" style="flex:1;">ยกเลิก</button>
-            <button onclick="confirmReset()" style="flex:1;background:var(--red);color:#fff;border:none;border-radius:10px;padding:13px;font-family:inherit;font-size:.9rem;font-weight:600;cursor:pointer;transition:opacity .15s;" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">ยืนยัน</button>
+
+        <form id="leave-form" onsubmit="submitLeave(event)" style="display:flex;flex-direction:column;gap:14px;">
+            <input type="hidden" id="leave-id" value="">
+
+            <!-- ── ADMIN ONLY: Employee Lookup (redesigned) ── -->
+            <div id="admin-leave-emp-group" style="display:none;">
+                <!-- Highlight banner for admin backdated leave -->
+                <div style="background:rgba(79,127,255,.07);border:1px solid rgba(79,127,255,.18);border-radius:10px;padding:10px 14px;margin-bottom:14px;display:flex;align-items:center;gap:8px;">
+                    <i class="fa-solid fa-clock-rotate-left" style="color:var(--accent);font-size:.9rem;flex-shrink:0;"></i>
+                    <span style="font-size:.8rem;color:var(--accent);font-weight:500;">โหมดแอดมิน — สามารถเพิ่มใบลาย้อนหลังได้</span>
+                </div>
+
+                <label class="form-label">รหัสพนักงาน <span style="color:var(--red);">*</span></label>
+                <!-- empId input + lookup button row -->
+                <div style="display:flex;gap:8px;margin-bottom:8px;">
+                    <div style="position:relative;flex:1;">
+                        <span class="field-icon"><i class="fa-solid fa-id-badge"></i></span>
+                        <input
+                            type="text"
+                            id="leave-emp-id"
+                            class="field"
+                            placeholder="กรอกรหัสพนักงาน เช่น 1"
+                            oninput="onLeaveEmpIdInput(this.value)"
+                            autocomplete="off"
+                        >
+                    </div>
+                    <button
+                        type="button"
+                        onclick="lookupLeaveEmployee()"
+                        class="btn-ghost"
+                        style="flex-shrink:0;padding:0 16px;border-radius:10px;color:var(--accent);border-color:rgba(79,127,255,.3);"
+                        title="ค้นหาพนักงาน"
+                    >
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                    </button>
+                </div>
+
+                <!-- Result box — hidden until lookup fires -->
+                <div id="leave-emp-lookup-result" style="display:none;margin-bottom:4px;">
+                    <div id="leave-emp-lookup-box" class="emp-lookup-box">
+                        <i id="leave-emp-lookup-icon" class="fa-solid fa-circle-notch fa-spin" style="color:var(--muted);"></i>
+                        <div style="min-width:0;">
+                            <div id="leave-emp-lookup-name" style="font-size:.9rem;font-weight:700;color:var(--text);"></div>
+                            <div id="leave-emp-lookup-sub" style="font-size:.75rem;color:var(--muted);"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hidden field carries the actual name to submit -->
+                <input type="hidden" id="leave-emp-name">
+            </div>
+
+            <div>
+                <label class="form-label">ประเภทการลา</label>
+                <select id="leave-type" class="form-select" style="padding:12px;font-size:.95rem;">
+                    <option value="sick">ลาป่วย</option>
+                    <option value="personal">ลากิจ</option>
+                </select>
+            </div>
+
+            <div class="form-row form-row-2">
+                <div>
+                    <label class="form-label">วันที่เริ่มลา</label>
+                    <!-- NO min attribute — allows backdating -->
+                    <input type="date" id="leave-start-date" class="field field-date" style="padding:12px;font-size:.9rem;">
+                </div>
+                <div>
+                    <label class="form-label">วันที่สิ้นสุด</label>
+                    <!-- NO min attribute — allows backdating -->
+                    <input type="date" id="leave-end-date" class="field field-date" style="padding:12px;font-size:.9rem;">
+                </div>
+            </div>
+
+            <div>
+                <label class="form-label">จำนวนวันลา</label>
+                <select id="leave-days" class="form-select" style="padding:12px;font-size:.95rem;">
+                    <option value="0.5">0.5 วัน (ครึ่งวัน)</option>
+                    <option value="1" selected>1 วัน</option>
+                    <option value="2">2 วัน</option>
+                    <option value="3">3 วัน</option>
+                    <option value="4">4 วัน</option>
+                    <option value="5">5 วัน</option>
+                    <option value="custom">ระบุเอง…</option>
+                </select>
+                <input type="number" id="leave-days-custom" class="field field-no-icon" placeholder="ระบุจำนวนวัน" min="0.5" step="0.5" style="display:none;margin-top:8px;padding:12px;font-size:.9rem;">
+            </div>
+
+            <div>
+                <label class="form-label">เหตุผล / หมายเหตุ</label>
+                <textarea id="leave-note" class="form-textarea" placeholder="ระบุเหตุผลหรือรายละเอียดเพิ่มเติม (ถ้ามี)" style="padding:12px;font-size:.9rem;min-height:80px;"></textarea>
+            </div>
+
+            <button type="submit" id="leave-submit-btn" class="btn-primary" style="background:var(--purple);margin-top:4px;" onmouseover="this.style.background='#9333ea'" onmouseout="this.style.background='var(--purple)'">
+                <i class="fa-solid fa-paper-plane" style="margin-right:8px;"></i>ส่งคำขอใบลา
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- ══ MODAL: Add Manual Log (Admin Only) ══ -->
+<div id="manual-log-modal" class="modal-backdrop" style="display:none;" onclick="if(event.target===this)closeManualLogModal()">
+    <div class="modal-box" style="max-width:400px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+            <div>
+                <h3 style="font-size:1.1rem;font-weight:700;color:var(--text);margin-bottom:2px;"><i class="fa-solid fa-clock-rotate-left" style="color:var(--green);margin-right:8px;"></i>เพิ่มข้อมูลย้อนหลัง</h3>
+            </div>
+            <button onclick="closeManualLogModal()" style="background:var(--surface2);border:1px solid var(--border2);color:var(--muted);width:32px;height:32px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;" onmouseover="this.style.color='var(--red)';this.style.borderColor='var(--red)'" onmouseout="this.style.color='var(--muted)';this.style.borderColor='var(--border2)'">
+                <i class="fa-solid fa-times"></i>
+            </button>
         </div>
+        <form id="manual-log-form" onsubmit="submitManualLog(event)" style="display:flex;flex-direction:column;gap:14px;">
+            <div>
+                <label class="form-label">รหัสพนักงาน</label>
+                <select id="manual-emp-id" required class="form-select" onchange="updateManualEmpName()" style="padding:12px;">
+                    <option value="" disabled selected>เลือกพนักงาน...</option>
+                </select>
+                <input type="hidden" id="manual-emp-name">
+            </div>
+            <div class="form-row form-row-2">
+                <div>
+                    <label class="form-label">วันที่</label>
+                    <input type="date" id="manual-date" required class="field field-date" style="padding:12px;">
+                </div>
+                <div>
+                    <label class="form-label">เวลา</label>
+                    <input type="time" id="manual-time" required class="field field-no-icon" step="1" style="padding:12px;">
+                </div>
+            </div>
+            <div class="form-row form-row-2">
+                <div>
+                    <label class="form-label">ประเภท</label>
+                    <select id="manual-type" required class="form-select" style="padding:12px;">
+                        <option value="IN">เข้างาน (IN)</option>
+                        <option value="OUT">ออกงาน (OUT)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="form-label">สถานะ</label>
+                    <select id="manual-status" required class="form-select" style="padding:12px;">
+                        <option value="ปกติ">ปกติ</option>
+                        <option value="สาย">สาย</option>
+                    </select>
+                </div>
+            </div>
+            <div id="manual-late-group" style="display:none;">
+                <label class="form-label">สายกี่นาที?</label>
+                <input type="number" id="manual-late-mins" class="field field-no-icon" min="0" value="0" style="padding:12px;">
+            </div>
+            <button type="submit" id="manual-submit-btn" class="btn-primary" style="background:var(--green);margin-top:4px;" onmouseover="this.style.background='#10b981'" onmouseout="this.style.background='var(--green)'">
+                <i class="fa-solid fa-save" style="margin-right:8px;"></i>บันทึกข้อมูล
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- ══ MODAL: Custom Confirmation ══ -->
+<div id="custom-confirm-modal" class="modal-backdrop" style="display:none; z-index: 300;">
+    <div class="modal-box text-center p-6">
+        <div class="w-14 h-14 bg-orange-900/20 border border-orange-500/50 rounded-full flex items-center justify-center mx-auto mb-4 text-orange-500 text-2xl shadow-[0_0_15px_rgba(249,115,22,0.2)]">
+            <i class="fa-solid fa-question"></i>
+        </div>
+        <h3 id="confirm-title" class="font-bold text-lg mb-2 text-white">ยืนยัน?</h3>
+        <p id="confirm-message" class="text-sm text-brand-muted mb-6 font-medium">...</p>
+        <div class="flex gap-3">
+            <button onclick="closeCustomConfirm()" class="btn-outline flex-1 py-2 text-sm">ยกเลิก</button>
+            <button onclick="executeConfirm()" class="btn-primary flex-1 bg-orange-600 text-white hover:bg-orange-500 py-2 text-sm border-none shadow-lg">ยืนยัน</button>
+        </div>
+    </div>
+</div>
+
+<!-- ══ MODAL: Custom Alert ══ -->
+<div id="custom-alert-modal" class="modal-backdrop" style="display:none; z-index: 300;">
+    <div class="modal-box text-center p-6">
+        <div id="alert-icon" class="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl border"></div>
+        <h3 id="alert-title" class="font-bold text-lg mb-2 text-white">แจ้งเตือน</h3>
+        <p id="alert-message" class="text-sm text-brand-muted mb-6 font-medium leading-relaxed">...</p>
+        <button onclick="closeCustomAlert()" class="btn-primary w-full py-2 text-sm shadow-lg">ตกลง</button>
     </div>
 </div>
 
 <!-- ══ TOAST ══ -->
-<div id="toast">
-    <i id="toast-icon" class="fa-solid fa-circle-check"></i>
-    <span id="toast-msg"></span>
-</div>
+<div id="toast"><i id="toast-icon" class="fa-solid fa-circle-check"></i><span id="toast-msg"></span></div>
 
 <script>
-// ─── Config ───────────────────────────────────────────────
+// ─── Global State ─────────────────────────────────────────────
+let sortOrderDesc       = true;
+let currentReportEmpId = null;
+let reportCalYear       = new Date().getFullYear();
+let reportCalMonth      = new Date().getMonth();
+
+// ─── Config ───────────────────────────────────────────────────
 const GOOGLE_APP_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxC1A0RVRD7qEUclxGlZ5CudI7lWyWEVYP-zP0BMRmfC18snr08kLljyngntOEjXkTr/exec";
-const COMPANY_QR_CODE  = "COMPANY_QR_SECRET_2026";
-const LATE_TIME_LIMIT  = "08:30:00";
-const SESSION_KEY      = 'attendance_device_auth';
-const STORAGE_KEY      = 'attendance_logs_v2';
-const ADMIN_SESSION_KEY= 'attendance_admin_auth'; // เพิ่ม Key สำหรับ Admin
-const VIEW_SESSION_KEY = 'attendance_last_view';  // เพิ่ม Key สำหรับจำหน้าล่าสุด
+const COMPANY_QR_CODE       = "COMPANY_QR_SECRET_2026";
+const LATE_TIME_LIMIT       = "08:30:00";
+const SESSION_KEY           = 'attendance_device_auth';
+const STORAGE_KEY           = 'attendance_logs_v2';
+const LEAVE_KEY             = 'attendance_leaves_v1';
+const USERS_KEY             = 'attendance_users_v1';
+const ADMIN_SESSION_KEY     = 'attendance_admin_auth';
+const VIEW_SESSION_KEY      = 'attendance_last_view';
 
-// 📍 การตั้งค่าพิกัด GPS ของโรงพยาบาล/บริษัท
-const REQUIRE_GPS           = true;       // เปลี่ยนเป็น false หากต้องการปิดระบบตรวจ GPS
-const COMPANY_LAT           = 8.449098;  // ละติจูดของสถานที่
-const COMPANY_LNG           = 98.526203; // ลองจิจูดของสถานที่
-const ALLOWED_RADIUS_METERS = 150;        // รัศมีที่อนุญาตให้ตอกบัตรได้ (เมตร)
+const REQUIRE_GPS           = true;
+const COMPANY_LAT           = 8.449098;
+const COMPANY_LNG           = 98.526203;
+const ALLOWED_RADIUS_METERS = 150;
 
-// ─── State ────────────────────────────────────────────────
-let currentUser       = null;
+// ─── Runtime State ────────────────────────────────────────────
+let currentUser        = null;
 let html5QrcodeScanner = null;
-let clockInterval     = null;
+let clockInterval      = null;
+let globalAdminLogs    = [];
+let globalLeaves       = [];
+let globalUsers        = [];
+let sortCol            = 'time';
+let sortDir            = 'desc';
 
-// ─── Local DB ─────────────────────────────────────────────
+// ─── Local DB ─────────────────────────────────────────────────
 const db = {
-    getLogs: () => { try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; } catch { return []; } },
-    saveLog: (log) => {
-        const logs = db.getLogs();
-        logs.push(log);
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(logs));
-    }
+    getLogs:   () => { try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; } catch { return []; } },
+    saveLog:   (log) => { const logs = db.getLogs(); logs.push(log); localStorage.setItem(STORAGE_KEY, JSON.stringify(logs)); },
+    getLeaves: () => { try { return JSON.parse(localStorage.getItem(LEAVE_KEY)) || []; } catch { return []; } },
+    saveLeave: (lv) => { const lvs = db.getLeaves(); lvs.push(lv); localStorage.setItem(LEAVE_KEY, JSON.stringify(lvs)); },
+    updateLeave: (id, update) => {
+        const lvs = db.getLeaves();
+        const idx = lvs.findIndex(l => l.id === id);
+        if (idx !== -1) { lvs[idx] = { ...lvs[idx], ...update }; localStorage.setItem(LEAVE_KEY, JSON.stringify(lvs)); return true; }
+        return false;
+    },
+    getUsers:  () => { try { return JSON.parse(localStorage.getItem(USERS_KEY)) || []; } catch { return []; } },
+    saveUsers: (users) => { localStorage.setItem(USERS_KEY, JSON.stringify(users)); }
 };
 
-// ─── Boot ─────────────────────────────────────────────────
+// ─── Boot ─────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
-    // Always init clock (it's in view-employee but the element exists in DOM)
     initClock();
 
-    // Set default date filter for admin view
     const filterDate = document.getElementById('filter-date');
     if (filterDate) filterDate.valueAsDate = new Date();
 
-    // Restore session last — decides which view to show
+    // Default leave dates to TODAY — no min restriction so admin can backdate
+    const today = new Date().toLocaleDateString('en-CA');
+    const leaveStart = document.getElementById('leave-start-date');
+    if (leaveStart) leaveStart.value = today;          // ← removed .min
+    const leaveEnd = document.getElementById('leave-end-date');
+    if (leaveEnd) leaveEnd.value = today;              // ← removed .min
+
+    const leaveDaysSel = document.getElementById('leave-days');
+    if (leaveDaysSel) {
+        leaveDaysSel.addEventListener('change', function() {
+            document.getElementById('leave-days-custom').style.display = this.value === 'custom' ? 'block' : 'none';
+        });
+    }
+
+    const manualStatus = document.getElementById('manual-status');
+    if (manualStatus) {
+        manualStatus.addEventListener('change', function() {
+            document.getElementById('manual-late-group').style.display = this.value === 'สาย' ? 'block' : 'none';
+        });
+    }
+
     restoreSession();
 });
 
-// ─── Session (persists across page refresh) ───────────────
-function loadCurrentUserSilently() {
-    try {
-        const saved = localStorage.getItem(SESSION_KEY);
-        if (saved) {
-            const parsed = JSON.parse(saved);
-            if (parsed && parsed.empId && parsed.empName && parsed.deviceId) {
-                currentUser = parsed;
-                return true;
-            }
-        }
-    } catch(e) {
-        console.warn('User restore failed:', e);
-        localStorage.removeItem(SESSION_KEY);
-    }
-    currentUser = null;
-    return false;
-}
+// ─── Navbar & View Management ─────────────────────────────────
+function updateNavbar() {
+    const navActions  = document.getElementById('nav-actions');
+    const currentView = document.querySelector('.view.active')?.id;
+    if (!navActions) return;
 
-function restoreSession() {
-    // โหลดข้อมูล User มาเก็บไว้แบบเงียบๆ ก่อน
-    loadCurrentUserSilently();
-
-    // ตรวจสอบว่าก่อนหน้านี้ค้างอยู่หน้าไหน
-    const lastView = sessionStorage.getItem(VIEW_SESSION_KEY);
-
-    // 1. ถ้าค้างอยู่หน้า Admin Dashboard และเคยเข้าสู่ระบบ Admin ไว้แล้ว
-    if (lastView === 'view-admin-dashboard' && sessionStorage.getItem(ADMIN_SESSION_KEY) === 'true') {
-        showView('view-admin-dashboard');
-        loadAdminData();
-        return;
-    }
-
-    // 2. ถ้าค้างอยู่หน้า Admin Login
-    if (lastView === 'view-admin-login') {
-        showView('view-admin-login');
-        return;
-    }
-
-    // 3. เส้นทางปกติ (ฝั่งพนักงาน)
-    if (currentUser) {
-        setupEmployeeDashboard();
-        showView('view-employee');
+    if (sessionStorage.getItem(ADMIN_SESSION_KEY) === 'true' && currentView === 'view-admin-dashboard') {
+        navActions.innerHTML = `
+            <div style="display:flex;align-items:center;gap:12px;">
+                <div style="display:none;" class="sm:flex items-center gap-2 text-xs font-semibold px-3 py-1.5 rounded-full border" style="background:var(--surface2);border-color:var(--border);color:var(--muted);">
+                    <i class="fa-solid fa-shield-halved" style="color:var(--accent);"></i> โหมดแอดมิน
+                </div>
+                <button onclick="handleAdminLogout()" class="btn-danger btn-sm" style="padding:6px 12px;border-radius:8px;display:flex;align-items:center;gap:6px;">
+                    <i class="fa-solid fa-power-off"></i> ออกจากระบบ
+                </button>
+            </div>`;
+    } else if (currentUser && currentView !== 'view-login' && currentView !== 'view-admin-login') {
+        const shortName = currentUser.empName.split(' ')[0];
+        navActions.innerHTML = `
+            <div style="display:flex;align-items:center;gap:12px;">
+                <span style="font-size:.8rem;color:var(--muted);font-weight:600;"><i class="fa-solid fa-user" style="color:var(--green);margin-right:4px;"></i>${shortName}</span>
+                <button onclick="handleLogout()" class="btn-danger btn-sm" style="padding:6px 12px;border-radius:8px;display:flex;align-items:center;gap:6px;">
+                    <i class="fa-solid fa-power-off"></i> ออกจากระบบ
+                </button>
+            </div>`;
+    } else if (currentView === 'view-admin-login') {
+        navActions.innerHTML = `
+            <button onclick="showView('view-login')" style="background:none;border:none;cursor:pointer;color:var(--muted);padding:6px;border-radius:8px;transition:all .15s;" onmouseover="this.style.color='var(--text)';this.style.background='var(--surface2)'" onmouseout="this.style.color='var(--muted)';this.style.background='none'">
+                <i class="fa-solid fa-arrow-left"></i> กลับ
+            </button>`;
     } else {
-        showView('view-register');
+        navActions.innerHTML = `
+            <button onclick="showAdminLogin()" style="background:none;border:none;cursor:pointer;color:var(--muted);padding:6px;border-radius:8px;transition:all .15s;" onmouseover="this.style.color='var(--text)';this.style.background='var(--surface2)'" onmouseout="this.style.color='var(--muted)';this.style.background='none'" title="เข้าสู่ระบบผู้ดูแล">
+                <i class="fa-solid fa-shield-halved"></i> แอดมิน
+            </button>`;
     }
 }
 
-function checkAuthStatus() {
-    // เมื่อกดปิดหรือถอยกลับ ให้ล้าง Session การจำหน้าจอของ Admin
-    sessionStorage.removeItem(ADMIN_SESSION_KEY);
-    sessionStorage.removeItem(VIEW_SESSION_KEY);
-
-    const filterDate = document.getElementById('filter-date');
-    if (filterDate && !filterDate.value) filterDate.valueAsDate = new Date();
-    
-    if (currentUser || loadCurrentUserSilently()) {
-        setupEmployeeDashboard();
-        showView('view-employee');
-    } else {
-        showView('view-register');
-    }
-}
-
-// ─── View Controller ──────────────────────────────────────
 function showView(id) {
-    ['view-register','view-employee','view-scanner','view-admin-login','view-admin-dashboard']
-        .forEach(v => document.getElementById(v).classList.remove('active', 'active-flex'));
-    document.getElementById(id).classList.add('active');
-    
-    // บันทึกหน้าปัจจุบันไว้ (ยกเว้นหน้าสแกนกล้อง เพื่อความปลอดภัยเวลาโหลดใหม่จะได้ไม่ติดบัคกล้อง)
-    if (id !== 'view-scanner') {
-        sessionStorage.setItem(VIEW_SESSION_KEY, id);
-    }
-
-    // Scroll to top on view change
+    ['view-login','view-employee','view-scanner','view-admin-login','view-admin-dashboard'].forEach(v => {
+        const el = document.getElementById(v);
+        if (el) el.classList.remove('active');
+    });
+    const target = document.getElementById(id);
+    if (target) target.classList.add('active');
+    if (id !== 'view-scanner') sessionStorage.setItem(VIEW_SESSION_KEY, id);
+    updateNavbar();
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// ─── Registration ─────────────────────────────────────────
-function handleRegister(e) {
-    e.preventDefault();
-    const empId   = document.getElementById('reg-emp-id').value.trim();
-    const empName = document.getElementById('reg-emp-name').value.trim();
-    if (!empId || !empName) return;
-
-    const deviceId = 'dev_' + Math.random().toString(36).slice(2, 9) + Date.now().toString(36);
-    currentUser = { empId, empName, deviceId };
-    localStorage.setItem(SESSION_KEY, JSON.stringify(currentUser));
-
-    showToast('ลงทะเบียนอุปกรณ์สำเร็จ', 'success');
-    setupEmployeeDashboard();
-    showView('view-employee');
+// ─── Session ──────────────────────────────────────────────────
+function loadCurrentUserSilently() {
+    try {
+        const saved = localStorage.getItem(SESSION_KEY);
+        if (saved) { const p = JSON.parse(saved); if (p && p.empId && p.empName) { currentUser = p; return true; } }
+    } catch { localStorage.removeItem(SESSION_KEY); }
+    currentUser = null; return false;
 }
 
-// ─── Reset ────────────────────────────────────────────────
-function showResetPrompt() {
-    document.getElementById('reset-pin').value = '';
-    const modal = document.getElementById('reset-modal');
-    modal.style.display = 'flex';
-    requestAnimationFrame(() => modal.classList.add('open'));
+function restoreSession() {
+    loadCurrentUserSilently();
+    const lastView = sessionStorage.getItem(VIEW_SESSION_KEY);
+    if (lastView === 'view-admin-dashboard' && sessionStorage.getItem(ADMIN_SESSION_KEY) === 'true') {
+        showView('view-admin-dashboard'); loadAdminData(); return;
+    }
+    if (lastView === 'view-admin-login') { showView('view-admin-login'); return; }
+    if (currentUser) { setupEmployeeDashboard(); showView('view-employee'); }
+    else showView('view-login');
 }
-function closeResetPrompt() {
-    const modal = document.getElementById('reset-modal');
-    modal.classList.remove('open');
-    setTimeout(() => { modal.style.display = 'none'; }, 200);
-}
-function confirmReset() {
-    if (document.getElementById('reset-pin').value === '2026') {
+
+function handleLogout() {
+    showCustomConfirm('ยืนยันออกจากระบบ', 'คุณแน่ใจหรือไม่ที่จะออกจากระบบ?', () => {
         localStorage.removeItem(SESSION_KEY);
         currentUser = null;
-        document.getElementById('form-register').reset();
-        closeResetPrompt();
-        showToast('รีเซ็ตอุปกรณ์สำเร็จ', 'success');
-        setTimeout(() => showView('view-register'), 300);
-    } else {
-        showToast('รหัส PIN ไม่ถูกต้อง', 'error');
+        showView('view-login');
+    });
+}
+
+function handleAdminLogout() {
+    showCustomConfirm('ยืนยันออกจากระบบแอดมิน', 'คุณแน่ใจหรือไม่ที่จะออกจากระบบผู้ดูแล?', () => {
+        sessionStorage.removeItem(ADMIN_SESSION_KEY);
+        showView('view-admin-login');
+    });
+}
+
+// ─── Login (User) ─────────────────────────────────────────────
+async function handleLogin(e) {
+    if (e) e.preventDefault();
+    const empId   = document.getElementById('login-emp-id').value.trim();
+    const empPass = document.getElementById('login-emp-pass').value.trim();
+    if (!empId || !empPass) { showToast('กรุณากรอกข้อมูลให้ครบถ้วน', 'error'); return; }
+
+    const btn = document.getElementById('btn-login-submit');
+    const orig = btn.innerHTML;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> กำลังตรวจสอบ...';
+    btn.disabled  = true;
+    try {
+        const res    = await fetch(GOOGLE_APP_SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'login', empId, password: empPass }) });
+        const result = await res.json();
+        if (result.status === 'success') {
+            currentUser = { empId: result.user.empId, empName: result.user.empName, deviceId: 'web_' + empId };
+            localStorage.setItem(SESSION_KEY, JSON.stringify(currentUser));
+            showToast('เข้าสู่ระบบสำเร็จ', 'success');
+            setupEmployeeDashboard();
+            showView('view-employee');
+            document.getElementById('form-login').reset();
+        } else {
+            showCustomAlert('เข้าสู่ระบบไม่สำเร็จ', result.message || 'รหัสพนักงานหรือรหัสผ่านไม่ถูกต้อง!', 'error');
+        }
+    } catch {
+        showCustomAlert('ข้อผิดพลาด', 'เชื่อมต่อเซิร์ฟเวอร์ไม่ได้', 'error');
+    } finally {
+        btn.innerHTML = orig; btn.disabled = false;
     }
 }
 
-// ─── Employee Dashboard ───────────────────────────────────
+// ─── Modals helpers ───────────────────────────────────────────
+let _confirmCallback = null;
+
+function showCustomConfirm(title, message, callback) {
+    document.getElementById('confirm-title').textContent   = title;
+    document.getElementById('confirm-message').textContent = message;
+    _confirmCallback = callback;
+    openModal('custom-confirm-modal');
+}
+function closeCustomConfirm() { closeModal('custom-confirm-modal'); }
+function executeConfirm()     { closeCustomConfirm(); if (_confirmCallback) _confirmCallback(); }
+
+function showCustomAlert(title, message, type = 'info') {
+    document.getElementById('alert-title').textContent = title;
+    document.getElementById('alert-message').innerHTML = message.replace(/\n/g, '<br>');
+    const iconBox = document.getElementById('alert-icon');
+    iconBox.className = 'w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl border';
+    if (type === 'error')        { iconBox.classList.add('bg-red-900/20','border-red-500/50','text-red-500');     iconBox.innerHTML = '<i class="fa-solid fa-xmark"></i>'; }
+    else if (type === 'success') { iconBox.classList.add('bg-green-900/20','border-green-500/50','text-green-500'); iconBox.innerHTML = '<i class="fa-solid fa-check"></i>'; }
+    else                         { iconBox.classList.add('bg-blue-900/20','border-blue-500/50','text-blue-500');   iconBox.innerHTML = '<i class="fa-solid fa-info"></i>'; }
+    openModal('custom-alert-modal');
+}
+function closeCustomAlert() { closeModal('custom-alert-modal'); }
+
+function openModal(id)  { const m = document.getElementById(id); m.style.display = 'flex'; requestAnimationFrame(() => m.classList.add('open')); }
+function closeModal(id) { const m = document.getElementById(id); m.classList.remove('open'); setTimeout(() => { m.style.display = 'none'; }, 200); }
+
+// ─── Employee Dashboard ───────────────────────────────────────
 function setupEmployeeDashboard() {
     document.getElementById('display-emp-name').textContent = currentUser.empName;
     document.getElementById('display-emp-id').textContent   = currentUser.empId;
     loadTodayLogsForUser();
+    renderMyLeaves();
+    syncUserLeaves();
 }
 
-// ─── Clock ────────────────────────────────────────────────
 function initClock() {
     const timeEl = document.getElementById('current-time');
     const dateEl = document.getElementById('current-date');
@@ -894,52 +930,338 @@ function initClock() {
     clockInterval = setInterval(tick, 1000);
 }
 
-// ─── Scanner ──────────────────────────────────────────────
-// คำนวณระยะห่าง GPS
+// ─── Manual Log (Admin) ───────────────────────────────────────
+function openManualLogModal() {
+    const select = document.getElementById('manual-emp-id');
+    select.innerHTML = '<option value="" disabled selected>เลือกพนักงาน...</option>';
+    const users = db.getUsers().filter(u => u.role === 'user' && u.status === 'active');
+    users.forEach(u => { select.innerHTML += `<option value="${u.empId}">${u.empName}</option>`; });
+    const today = new Date();
+    document.getElementById('manual-date').value = today.toLocaleDateString('en-CA');
+    document.getElementById('manual-time').value = today.toLocaleTimeString('en-GB', { hour12: false }).slice(0,5);
+    openModal('manual-log-modal');
+}
+function closeManualLogModal() { closeModal('manual-log-modal'); }
+function updateManualEmpName() {
+    const sel = document.getElementById('manual-emp-id');
+    document.getElementById('manual-emp-name').value = sel.options[sel.selectedIndex].text;
+}
+
+function submitManualLog(e) {
+    if (e) e.preventDefault();
+    const empId   = document.getElementById('manual-emp-id').value;
+    const empName = document.getElementById('manual-emp-name').value;
+    const date    = document.getElementById('manual-date').value;
+    const time    = document.getElementById('manual-time').value + ':00';
+    const type    = document.getElementById('manual-type').value;
+    const status  = document.getElementById('manual-status').value;
+    const lateMins = status === 'สาย' ? document.getElementById('manual-late-mins').value : 0;
+
+    if (!empId) { showToast('กรุณาเลือกพนักงาน', 'error'); return; }
+
+    const payload = { action: 'add_manual_log', date, time, empId, empName, type, status, lateMinutes: parseInt(lateMins) || 0 };
+    const btn = document.getElementById('manual-submit-btn');
+    const org = btn.innerHTML;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> บันทึก...'; btn.disabled = true;
+
+    fetch(GOOGLE_APP_SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) })
+        .then(r => r.json())
+        .then(data => {
+            if (data.status === 'success') { showToast('เพิ่มข้อมูลสำเร็จ', 'success'); closeManualLogModal(); loadAdminData(); }
+            else showCustomAlert('ผิดพลาด', 'เกิดข้อผิดพลาด: ' + data.message, 'error');
+        })
+        .catch(() => showToast('เชื่อมต่อล้มเหลว', 'error'))
+        .finally(() => { btn.innerHTML = org; btn.disabled = false; });
+}
+
+// ─── Leave: Employee Lookup (Admin mode) ──────────────────────
+
+/** Called on every keystroke in the empId field — auto-lookup when 1+ chars */
+function onLeaveEmpIdInput(val) {
+    // Clear result immediately when field is emptied
+    if (!val.trim()) {
+        setLeaveEmpLookupResult(null);
+        document.getElementById('leave-emp-name').value = '';
+    }
+}
+
+/** Triggered by the magnifying-glass button OR Enter key */
+function lookupLeaveEmployee() {
+    const id = (document.getElementById('leave-emp-id').value || '').trim();
+    if (!id) { showToast('กรุณากรอกรหัสพนักงานก่อน', 'error'); return; }
+
+    // Search globalUsers first (already loaded), then fallback to db.getUsers()
+    const allUsers = globalUsers.length ? globalUsers : db.getUsers();
+    const found    = allUsers.find(u => String(u.empId).trim() === String(id).trim());
+
+    setLeaveEmpLookupResult(found || null, id);
+
+    if (found) {
+        document.getElementById('leave-emp-name').value = found.empName;
+    } else {
+        document.getElementById('leave-emp-name').value = '';
+    }
+}
+
+/** Also allow pressing Enter in the empId field to trigger lookup */
+document.addEventListener('DOMContentLoaded', () => {
+    const empIdInput = document.getElementById('leave-emp-id');
+    if (empIdInput) {
+        empIdInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') { e.preventDefault(); lookupLeaveEmployee(); }
+        });
+    }
+});
+
+function setLeaveEmpLookupResult(user, searchedId = '') {
+    const resultDiv = document.getElementById('leave-emp-lookup-result');
+    const box       = document.getElementById('leave-emp-lookup-box');
+    const icon      = document.getElementById('leave-emp-lookup-icon');
+    const nameEl    = document.getElementById('leave-emp-lookup-name');
+    const subEl     = document.getElementById('leave-emp-lookup-sub');
+
+    if (!user && !searchedId) {
+        resultDiv.style.display = 'none';
+        return;
+    }
+
+    resultDiv.style.display = 'block';
+
+    if (user) {
+        box.className = 'emp-lookup-box found';
+        icon.className = 'fa-solid fa-circle-check';
+        icon.style.color = 'var(--green)';
+        nameEl.textContent = user.empName;
+        nameEl.style.color = 'var(--green)';
+        subEl.textContent  = `รหัส ${user.empId}${user.department && user.department !== '-' ? ' · ' + user.department : ''}`;
+    } else {
+        box.className = 'emp-lookup-box not-found';
+        icon.className = 'fa-solid fa-circle-xmark';
+        icon.style.color = 'var(--red)';
+        nameEl.textContent = `ไม่พบพนักงานรหัส "${searchedId}"`;
+        nameEl.style.color = 'var(--red)';
+        subEl.textContent  = 'กรุณาตรวจสอบรหัสอีกครั้ง';
+    }
+}
+
+// ─── Leave Form & CRUD ────────────────────────────────────────
+function openAdminAddLeave() { openLeaveModal(); }
+
+function openLeaveModal(lvId = null) {
+    const isAdmin = sessionStorage.getItem(ADMIN_SESSION_KEY) === 'true';
+    const adminGroup = document.getElementById('admin-leave-emp-group');
+    if (adminGroup) adminGroup.style.display = isAdmin ? 'block' : 'none';
+
+    document.getElementById('leave-id').value = lvId || '';
+
+    if (lvId && typeof lvId === 'string') {
+        // Edit mode
+        const lv = db.getLeaves().find(l => l.id === lvId) || globalLeaves.find(l => l.id === lvId);
+        if (lv) {
+            document.getElementById('leave-start-date').value = lv.startDate;
+            document.getElementById('leave-end-date').value   = lv.endDate || lv.startDate;
+            document.getElementById('leave-type').value       = lv.leaveType;
+            const daysOptions = ['0.5','1','2','3','4','5'];
+            if (daysOptions.includes(String(lv.totalDays))) {
+                document.getElementById('leave-days').value = String(lv.totalDays);
+                document.getElementById('leave-days-custom').style.display = 'none';
+            } else {
+                document.getElementById('leave-days').value = 'custom';
+                document.getElementById('leave-days-custom').value = lv.totalDays;
+                document.getElementById('leave-days-custom').style.display = 'block';
+            }
+            document.getElementById('leave-note').value = lv.note || '';
+            document.getElementById('leave-modal-title').innerHTML = '<i class="fa-solid fa-pen-to-square" style="color:var(--purple);margin-right:8px;"></i>แก้ไขใบลา';
+            document.getElementById('leave-submit-btn').innerHTML  = '<i class="fa-solid fa-save" style="margin-right:8px;"></i>บันทึกการแก้ไข';
+            if (isAdmin) {
+                document.getElementById('leave-emp-id').value = lv.empId;
+                // Pre-populate lookup result
+                const allUsers = globalUsers.length ? globalUsers : db.getUsers();
+                const found = allUsers.find(u => String(u.empId) === String(lv.empId));
+                setLeaveEmpLookupResult(found || { empId: lv.empId, empName: lv.empName, department: '' }, lv.empId);
+                document.getElementById('leave-emp-name').value = lv.empName;
+            }
+        }
+    } else {
+        // Add mode — reset all
+        const today = new Date().toLocaleDateString('en-CA');
+        document.getElementById('leave-start-date').value = today;
+        document.getElementById('leave-end-date').value   = today;
+        document.getElementById('leave-type').value       = 'sick';
+        document.getElementById('leave-days').value       = '1';
+        document.getElementById('leave-days-custom').style.display = 'none';
+        document.getElementById('leave-note').value       = '';
+        document.getElementById('leave-modal-title').innerHTML = '<i class="fa-solid fa-calendar-plus" style="color:var(--purple);margin-right:8px;"></i>แจ้งการลา';
+        document.getElementById('leave-submit-btn').innerHTML  = '<i class="fa-solid fa-paper-plane" style="margin-right:8px;"></i>ส่งคำขอใบลา';
+        if (isAdmin) {
+            document.getElementById('leave-emp-id').value   = '';
+            document.getElementById('leave-emp-name').value = '';
+            setLeaveEmpLookupResult(null); // Hide result box
+        }
+    }
+
+    openModal('leave-modal');
+}
+
+function closeLeaveModal() { closeModal('leave-modal'); }
+
+function submitLeave(e) {
+    if (e) e.preventDefault();
+    const leaveId    = document.getElementById('leave-id').value;
+    const leaveType  = document.getElementById('leave-type').value;
+    const startDate  = document.getElementById('leave-start-date').value;
+    const endDate    = document.getElementById('leave-end-date').value || startDate;
+    const daysSelect = document.getElementById('leave-days').value;
+    const daysCustom = document.getElementById('leave-days-custom').value;
+    const note       = document.getElementById('leave-note').value.trim();
+
+    if (!startDate) { showToast('กรุณาระบุวันที่เริ่มลา', 'error'); return; }
+    const totalDays = daysSelect === 'custom' ? parseFloat(daysCustom) : parseFloat(daysSelect);
+    if (!totalDays || totalDays < 0.5) { showToast('กรุณาระบุจำนวนวันลาที่ถูกต้อง', 'error'); return; }
+
+    const isAdmin = sessionStorage.getItem(ADMIN_SESSION_KEY) === 'true';
+    let eId   = currentUser ? currentUser.empId   : '';
+    let eName = currentUser ? currentUser.empName : '';
+
+    if (isAdmin) {
+        eId   = (document.getElementById('leave-emp-id').value || '').trim();
+        eName = (document.getElementById('leave-emp-name').value || '').trim();
+        if (!eId)   { showToast('กรุณากรอกรหัสพนักงาน', 'error'); return; }
+        if (!eName) { showToast('กรุณาค้นหาพนักงานก่อน (กดไอคอนแว่นขยาย)', 'error'); return; }
+    }
+
+    const isUpdate = !!leaveId;
+    const idToUse  = isUpdate ? leaveId : eId + '_' + startDate + '_' + Date.now().toString(36);
+
+    const localLeave = {
+        id: idToUse, empId: eId, empName: eName,
+        deviceId: currentUser ? currentUser.deviceId : 'admin',
+        leaveType, startDate, endDate, totalDays, note,
+        status: isAdmin ? 'approved' : 'pending',
+        createdAt: new Date().toISOString()
+    };
+
+    if (isUpdate) {
+        db.updateLeave(idToUse, localLeave);
+        const idx = globalLeaves.findIndex(l => l.id === idToUse);
+        if (idx !== -1) globalLeaves[idx] = { ...globalLeaves[idx], ...localLeave };
+    } else {
+        db.saveLeave(localLeave);
+        if (isAdmin) globalLeaves.unshift(localLeave);
+    }
+
+    closeLeaveModal();
+    showToast(`${isUpdate ? 'แก้ไข' : 'บันทึก'}ใบลาสำเร็จ`, 'success');
+
+    if (isAdmin) {
+        renderAdminLeaveList();
+        if (document.getElementById('admin-view-report').style.display === 'block') generateEmployeeReport();
+    } else {
+        renderMyLeaves();
+        loadTodayLogsForUser();
+    }
+
+    const payload = {
+        action: isUpdate ? 'update_leave' : 'request_leave',
+        id: idToUse, empId: eId, empName: eName,
+        leaveType, startDate, endDate, totalDays, note,
+        status: localLeave.status
+    };
+    if (GOOGLE_APP_SCRIPT_URL) {
+        fetch(GOOGLE_APP_SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) }).catch(e => console.warn('Leave sync failed:', e));
+    }
+}
+
+function userDeleteLeave(id) {
+    showCustomConfirm('ยืนยันการยกเลิก', 'คุณแน่ใจหรือไม่ที่จะยกเลิกใบลานี้?', () => {
+        let lvs = db.getLeaves().filter(l => l.id !== id);
+        localStorage.setItem(LEAVE_KEY, JSON.stringify(lvs));
+        showToast('ยกเลิกใบลาสำเร็จ', 'success');
+        renderMyLeaves(); loadTodayLogsForUser();
+        if (GOOGLE_APP_SCRIPT_URL) {
+            fetch(GOOGLE_APP_SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'delete_leave', id }) }).catch(e=>{});
+        }
+    });
+}
+
+async function syncUserLeaves() {
+    if (!GOOGLE_APP_SCRIPT_URL) return;
+    try {
+        const res    = await fetch(GOOGLE_APP_SCRIPT_URL + '?action=get_all_data&t=' + Date.now());
+        const parsed = await res.json();
+        if (parsed.status !== 'success') return;
+        const remoteLeaves = (parsed.leaves || []).map(l => ({
+            id: l.id || l.leaveId || l.LeaveID,
+            empId: String(l.empId || l.EmpID),
+            empName: l.empName || l.EmpName,
+            leaveType: l.leaveType || l.LeaveType || l.type,
+            startDate: parseGASDateString(l.startDate || l.StartDate),
+            endDate:   parseGASDateString(l.endDate   || l.EndDate),
+            totalDays: parseFloat(l.totalDays || l.TotalDays) || 0,
+            note: l.note || l.Note,
+            status: l.status || l.Status,
+            createdAt: l.createdAt || l.Timestamp || l.timestamp
+        })).filter(l => l.empId === String(currentUser.empId));
+        if (remoteLeaves.length > 0) {
+            localStorage.setItem(LEAVE_KEY, JSON.stringify(remoteLeaves.reverse()));
+            if (document.getElementById('view-employee').classList.contains('active')) {
+                renderMyLeaves(); loadTodayLogsForUser();
+            }
+        }
+    } catch {}
+}
+
+function renderMyLeaves() {
+    const container = document.getElementById('my-leave-list');
+    const leaves    = db.getLeaves().filter(l => l.empId === currentUser.empId);
+    if (leaves.length === 0) {
+        container.innerHTML = '<div class="empty-state" style="padding:16px 0;"><i class="fa-regular fa-calendar-xmark"></i>ยังไม่มีการแจ้งลา</div>';
+        return;
+    }
+    container.innerHTML = '';
+    [...leaves].reverse().forEach(lv => {
+        const typeLabel   = lv.leaveType === 'sick' ? '🤒 ลาป่วย' : '📋 ลากิจ';
+        const statusClass = lv.status === 'approved' ? 'leave-approved' : lv.status === 'rejected' ? 'leave-rejected' : 'leave-pending';
+        const statusLabel = lv.status === 'approved' ? 'อนุมัติแล้ว' : lv.status === 'rejected' ? 'ไม่อนุมัติ' : 'รอดำเนินการ';
+        const isPending   = lv.status === 'pending';
+        const div = document.createElement('div');
+        div.className = 'leave-item';
+        div.innerHTML = `
+            <div style="min-width:0;flex:1;">
+                <div style="font-size:.9rem;font-weight:700;color:var(--text);margin-bottom:4px;">${typeLabel} · ${lv.totalDays} วัน</div>
+                <div style="font-size:.8rem;color:var(--muted);">${formatDateTh(lv.startDate)}${lv.endDate && lv.endDate !== lv.startDate ? ' – ' + formatDateTh(lv.endDate) : ''}</div>
+                ${lv.note ? `<div style="font-size:.75rem;color:var(--muted2);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px;"><i class="fa-solid fa-comment-dots" style="margin-right:4px;"></i>${lv.note}</div>` : ''}
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;">
+                <span class="leave-status-badge ${statusClass}">${statusLabel}</span>
+                ${isPending ? `
+                <div style="display:flex;gap:6px;">
+                    <button onclick="openLeaveModal('${lv.id}')" class="btn-ghost btn-sm" style="padding:4px 8px;font-size:.7rem;"><i class="fa-solid fa-pen"></i></button>
+                    <button onclick="userDeleteLeave('${lv.id}')" class="btn-ghost btn-sm" style="padding:4px 8px;font-size:.7rem;color:var(--red);"><i class="fa-solid fa-trash"></i></button>
+                </div>` : ''}
+            </div>`;
+        container.appendChild(div);
+    });
+}
+
+// ─── Scanner ──────────────────────────────────────────────────
 function getDistanceFromLatLonInM(lat1, lon1, lat2, lon2) {
-    const R = 6371e3; // รัศมีโลก (เมตร)
-    const dLat = (lat2-lat1) * (Math.PI/180);
-    const dLon = (lon2-lon1) * (Math.PI/180);
-    const a =
-        Math.sin(dLat/2) * Math.sin(dLat/2) +
-        Math.cos(lat1 * (Math.PI/180)) * Math.cos(lat2 * (Math.PI/180)) *
-        Math.sin(dLon/2) * Math.sin(dLon/2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-    return R * c;
+    const R = 6371e3; const dLat = (lat2-lat1)*(Math.PI/180); const dLon = (lon2-lon1)*(Math.PI/180);
+    const a = Math.sin(dLat/2)**2 + Math.cos(lat1*(Math.PI/180))*Math.cos(lat2*(Math.PI/180))*Math.sin(dLon/2)**2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
 }
 
 function openScanner() {
-    if (!REQUIRE_GPS) {
-        startScannerUI();
-        return;
-    }
-
-    if (!navigator.geolocation) {
-        showToast('อุปกรณ์หรือเบราว์เซอร์ไม่รองรับ GPS', 'error');
-        return;
-    }
-
+    if (!REQUIRE_GPS) { startScannerUI(); return; }
+    if (!navigator.geolocation) { showToast('อุปกรณ์ไม่รองรับ GPS', 'error'); return; }
     showToast('กำลังตรวจสอบพิกัด GPS...', 'info');
-
     navigator.geolocation.getCurrentPosition(
-        (position) => {
-            const userLat = position.coords.latitude;
-            const userLng = position.coords.longitude;
-            const distance = getDistanceFromLatLonInM(COMPANY_LAT, COMPANY_LNG, userLat, userLng);
-
-            if (distance <= ALLOWED_RADIUS_METERS) {
-                showToast('พิกัดถูกต้อง เริ่มสแกนได้', 'success');
-                startScannerUI();
-            } else {
-                showToast(`คุณอยู่นอกพื้นที่ (ห่าง ${Math.round(distance)} ม.)`, 'error');
-            }
+        (pos) => {
+            const dist = getDistanceFromLatLonInM(COMPANY_LAT, COMPANY_LNG, pos.coords.latitude, pos.coords.longitude);
+            if (dist <= ALLOWED_RADIUS_METERS) { showToast('พิกัดถูกต้อง เริ่มสแกนได้', 'success'); startScannerUI(); }
+            else showCustomAlert('แจ้งเตือน', `คุณอยู่นอกพื้นที่ทำงาน (ห่าง ${Math.round(dist)} เมตร)`, 'error');
         },
-        (error) => {
-            console.error("GPS Error:", error);
-            let errMsg = 'ไม่สามารถดึงตำแหน่งได้ กรุณาเปิด GPS';
-            if (error.code === 1) errMsg = 'กรุณากด "อนุญาต (Allow)" สิทธิ์ GPS';
-            showToast(errMsg, 'error');
-        },
+        (err) => showCustomAlert('ข้อผิดพลาด', err.code === 1 ? 'กรุณากด "อนุญาต" สิทธิ์ GPS' : 'ไม่สามารถดึงตำแหน่งได้', 'error'),
         { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     );
 }
@@ -948,318 +1270,663 @@ function startScannerUI() {
     showView('view-scanner');
     html5QrcodeScanner = new Html5Qrcode('reader');
     html5QrcodeScanner.start(
-        { facingMode: 'environment' },
-        { fps: 10, qrbox: { width: 220, height: 220 } },
-        onScanSuccess,
-        () => {}
-    ).catch(err => {
-        console.error(err);
-        showToast('ไม่สามารถเปิดกล้องได้ กรุณาให้สิทธิ์', 'error');
-        closeScanner();
-    });
+        { facingMode: 'environment' }, { fps: 10, qrbox: { width: 220, height: 220 } },
+        onScanSuccess, () => {}
+    ).catch(() => { showCustomAlert('ข้อผิดพลาด', 'ไม่สามารถเปิดกล้องได้ กรุณาให้สิทธิ์การใช้งานกล้อง', 'error'); closeScanner(); });
 }
 
 function closeScanner() {
-    if (html5QrcodeScanner) {
-        html5QrcodeScanner.stop().then(() => html5QrcodeScanner.clear()).catch(() => {});
-        html5QrcodeScanner = null;
-    }
+    if (html5QrcodeScanner) { html5QrcodeScanner.stop().then(() => html5QrcodeScanner.clear()).catch(() => {}); html5QrcodeScanner = null; }
     showView('view-employee');
 }
-
 function onScanSuccess(decoded) { handleScan(decoded); }
 
-// ─── Scan Handler ─────────────────────────────────────────
 function calculateLateMinutes(timeStr) {
-    const [h1, m1] = LATE_TIME_LIMIT.split(':').map(Number);
-    const [h2, m2] = timeStr.split(':').map(Number);
-    const diff = (h2 * 60 + m2) - (h1 * 60 + m1);
+    const [h1,m1] = LATE_TIME_LIMIT.split(':').map(Number);
+    const [h2,m2] = timeStr.split(':').map(Number);
+    const diff = (h2*60+m2) - (h1*60+m1);
     return diff > 0 ? diff : 0;
 }
 
 function handleScan(qrData) {
-    const clean = qrData.replace(/(<([^>]+)>)/gi, '').trim();
-    if (clean !== COMPANY_QR_CODE) {
-        closeScanner();
-        showToast('QR Code ไม่ถูกต้อง', 'error');
-        return;
-    }
-    closeScanner();
-    showToast('กำลังบันทึก...', 'info');
-    hideErrorBanner();
-
+    const clean = qrData.replace(/(<([^>]+)>)/gi,'').trim();
+    if (clean !== COMPANY_QR_CODE) { closeScanner(); showCustomAlert('สแกนไม่สำเร็จ', 'QR Code ไม่ถูกต้อง', 'error'); return; }
+    closeScanner(); showToast('กำลังบันทึก...', 'info');
     const now     = new Date();
     const dateStr = now.toLocaleDateString('en-CA');
     const timeStr = now.toLocaleTimeString('th-TH', { hour12: false });
-
-    try {
-        const allLogs  = db.getLogs();
-        const myToday  = allLogs.filter(l => l.empId === currentUser.empId && l.date === dateStr);
-        const lastIsIn = myToday.length > 0 && myToday[myToday.length - 1].type === 'IN';
-        const actionType = lastIsIn ? 'OUT' : 'IN';
-
-        let status = 'ปกติ', lateMins = 0;
-        if (actionType === 'IN') {
-            lateMins = calculateLateMinutes(timeStr);
-            if (lateMins > 0) status = 'สาย';
-        }
-
-        const payload = {
-            date: dateStr, time: timeStr,
-            empId: currentUser.empId, empName: currentUser.empName,
-            type: actionType, status, lateMinutes: lateMins,
-            deviceId: currentUser.deviceId,
-            savedAt: new Date().toISOString()
-        };
-
-        // Save to local storage
-        db.saveLog(payload);
-
-        // Verify the save actually worked
-        const verification = db.getLogs().filter(
-            l => l.empId === currentUser.empId && l.date === dateStr && l.time === timeStr && l.type === actionType
-        );
-
-        if (verification.length === 0) {
-            throw new Error('บันทึกลงอุปกรณ์ไม่สำเร็จ (localStorage อาจเต็มหรือถูกปิดกั้น)');
-        }
-
-        // Update UI
-        loadTodayLogsForUser();
-
-        let msg = `บันทึกเวลา${actionType === 'IN' ? 'เข้างาน' : 'ออกงาน'} ${timeStr} สำเร็จ`;
-        if (status === 'สาย') msg += ` · สาย ${lateMins} นาที`;
-        showToast(msg, status === 'สาย' ? 'error' : 'success');
-
-        // Background sync to Google Sheets (best-effort, non-blocking)
-        if (GOOGLE_APP_SCRIPT_URL) {
-            fetch(GOOGLE_APP_SCRIPT_URL, {
-                method: 'POST', mode: 'no-cors',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            }).catch(e => {
-                console.warn('Background sync failed (data saved locally):', e);
-                // Not a fatal error — local save succeeded
-            });
-        }
-
-    } catch (err) {
-        console.error('handleScan error:', err);
-        showErrorBanner(err.message || 'เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ', timeStr);
-        showToast('บันทึกไม่สำเร็จ กรุณาแจ้งเจ้าหน้าที่', 'error');
-        loadTodayLogsForUser(); // Still refresh to show current state
-    }
+    const allLogs = db.getLogs();
+    const myToday = allLogs.filter(l => l.empId === currentUser.empId && l.date === dateStr && l.type !== 'LEAVE' && l.type !== 'LEAVE_UPDATE');
+    const lastIsIn = myToday.length > 0 && myToday[myToday.length-1].type === 'IN';
+    const actionType = lastIsIn ? 'OUT' : 'IN';
+    let status = 'ปกติ', lateMins = 0;
+    if (actionType === 'IN') { lateMins = calculateLateMinutes(timeStr); if (lateMins > 0) status = 'สาย'; }
+    const payload = {
+        action: 'record_attendance', logId: 'log_' + Date.now().toString(36),
+        date: dateStr, time: timeStr, empId: currentUser.empId, empName: currentUser.empName,
+        type: actionType, status, lateMinutes: lateMins, deviceId: currentUser.deviceId
+    };
+    db.saveLog(payload);
+    loadTodayLogsForUser();
+    let msg = `บันทึกเวลา${actionType==='IN'?'เข้างาน':'ออกงาน'} ${timeStr} สำเร็จ`;
+    if (status === 'สาย') msg += `\nสาย ${lateMins} นาที`;
+    showCustomAlert('บันทึกสำเร็จ', msg, status === 'สาย' ? 'error' : 'success');
+    if (GOOGLE_APP_SCRIPT_URL) fetch(GOOGLE_APP_SCRIPT_URL, { method:'POST', body:JSON.stringify(payload) }).catch(()=>{});
 }
 
-function showErrorBanner(detail, timeStr) {
-    const banner = document.getElementById('error-banner');
-    document.getElementById('error-detail').innerHTML =
-        `เวลาที่พยายามบันทึก: <strong style="color:var(--text);font-family:'IBM Plex Mono',monospace;">${timeStr}</strong><br>สาเหตุ: ${detail}`;
-    banner.style.display = 'block';
-}
-
-function hideErrorBanner() {
-    document.getElementById('error-banner').style.display = 'none';
-}
-
-// ─── Today Logs + Summary ─────────────────────────────────
 function loadTodayLogsForUser() {
     const container = document.getElementById('today-logs-container');
     const dateStr   = new Date().toLocaleDateString('en-CA');
-    const logs      = db.getLogs().filter(l => l.empId === currentUser.empId && String(l.date || '').trim() === dateStr);
+    const logs      = db.getLogs().filter(l => l.empId === currentUser.empId && String(l.date||'').trim() === dateStr && l.type !== 'LEAVE');
+    const firstIn   = logs.find(l => l.type === 'IN');
+    const lastOut   = [...logs].reverse().find(l => l.type === 'OUT');
 
-    // ── Update summary cards ──
-    const firstIn  = logs.find(l => l.type === 'IN');
-    const lastOut  = [...logs].reverse().find(l => l.type === 'OUT');
+    const safeSetHTML  = (id, html)  => { const el = document.getElementById(id); if(el) el.innerHTML = html; };
+    const safeSetText  = (id, text)  => { const el = document.getElementById(id); if(el) el.textContent = text; };
+    const safeSetColor = (id, color) => { const el = document.getElementById(id); if(el) el.style.color = color; };
 
-    const inTimeEl     = document.getElementById('summary-in-time');
-    const inStatusEl   = document.getElementById('summary-in-status');
-    const outTimeEl    = document.getElementById('summary-out-time');
-    const outStatusEl  = document.getElementById('summary-out-status');
-    const inBox        = document.getElementById('summary-in');
-    const outBox       = document.getElementById('summary-out');
+    if (firstIn) { safeSetText('summary-in-time', firstIn.time); safeSetColor('summary-in-time', 'var(--green)'); safeSetHTML('summary-in-status', firstIn.status === 'สาย' ? `<span style="color:var(--red);font-weight:700;">⚠ สาย ${firstIn.lateMinutes} นาที</span>` : `<span style="color:var(--green);font-weight:700;">✓ ตรงเวลา</span>`); }
+    else { safeSetText('summary-in-time', '—'); safeSetColor('summary-in-time', 'var(--muted2)'); safeSetHTML('summary-in-status', `<span style="color:var(--muted2);">ยังไม่ได้สแกน</span>`); }
 
-    if (firstIn) {
-        inTimeEl.textContent  = firstIn.time;
-        inTimeEl.style.color  = 'var(--green)';
-        inBox.style.borderColor = 'rgba(62,207,142,.25)';
-        inBox.style.background  = 'rgba(62,207,142,.05)';
-        if (firstIn.status === 'สาย') {
-            inStatusEl.innerHTML = `<span style="color:var(--red);">⚠ สาย ${firstIn.lateMinutes} นาที</span>`;
+    if (lastOut) { safeSetText('summary-out-time', lastOut.time); safeSetColor('summary-out-time', 'var(--orange)'); safeSetHTML('summary-out-status', `<span style="color:var(--orange);font-weight:700;">✓ บันทึกแล้ว</span>`); }
+    else { safeSetText('summary-out-time', '—'); safeSetColor('summary-out-time', 'var(--muted2)'); safeSetHTML('summary-out-status', `<span style="color:var(--muted2);">ยังไม่ได้สแกน</span>`); }
+
+    const todayLeaves = db.getLeaves().filter(l => l.empId === currentUser.empId && dateStr >= l.startDate && dateStr <= (l.endDate||l.startDate));
+    const banner = document.getElementById('today-leave-banner');
+    if (banner) {
+        if (todayLeaves.length > 0) {
+            const lv = todayLeaves[0];
+            const typeLabel = lv.leaveType === 'sick' ? 'ลาป่วย' : 'ลากิจ';
+            const stLabel   = lv.status === 'approved' ? 'อนุมัติแล้ว' : lv.status === 'rejected' ? 'ไม่ได้รับการอนุมัติ' : 'รอดำเนินการ';
+            safeSetHTML('today-leave-text', `วันนี้แจ้ง<strong style="margin:0 4px;">${typeLabel} ${lv.totalDays} วัน</strong> · สถานะ: ${stLabel}`);
+            banner.style.display = 'block';
+        } else banner.style.display = 'none';
+    }
+
+    if (logs.length === 0) { if(container) container.innerHTML = '<div class="empty-state" style="padding:20px 0;"><i class="fa-regular fa-calendar-xmark"></i>ยังไม่มีประวัติในวันนี้</div>'; return; }
+    if (container) {
+        container.innerHTML = '';
+        [...logs].reverse().forEach((log, idx) => {
+            const isIn = log.type === 'IN';
+            const div  = document.createElement('div');
+            div.className = 'log-item ' + (isIn ? 'log-in' : 'log-out');
+            div.style.cssText = 'transition:opacity .3s,transform .3s;opacity:0;transform:translateY(6px);';
+            div.innerHTML = `
+                <div style="display:flex;align-items:center;gap:12px;">
+                    <div style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;font-size:.9rem;flex-shrink:0;">
+                        <i class="fa-solid ${isIn?'fa-arrow-right-to-bracket':'fa-arrow-right-from-bracket'}"></i>
+                    </div>
+                    <div>
+                        <div style="font-weight:700;font-size:.95rem;">${isIn?'เข้างาน':'ออกงาน'}</div>
+                        ${log.status === 'สาย' ? `<div style="font-size:.75rem;color:var(--red);margin-top:2px;font-weight:600;">สาย ${log.lateMinutes} นาที</div>` : ''}
+                    </div>
+                </div>
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:1.1rem;font-weight:600;color:var(--text);">${log.time}</div>`;
+            container.appendChild(div);
+            setTimeout(() => { div.style.opacity='1'; div.style.transform='translateY(0)'; }, idx*50);
+        });
+    }
+}
+
+// ─── Admin Auth ───────────────────────────────────────────────
+function showAdminLogin() {
+    if (sessionStorage.getItem(ADMIN_SESSION_KEY) === 'true') { showView('view-admin-dashboard'); loadAdminData(); }
+    else showView('view-admin-login');
+}
+
+async function handleAdminLogin(e) {
+    if (e) e.preventDefault();
+    const user = document.getElementById('admin-user').value.trim();
+    const pass = document.getElementById('admin-pass').value.trim();
+    if (!user || !pass) return;
+
+    const btn = document.getElementById('btn-admin-submit');
+    const org = btn.innerHTML;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> กำลังตรวจสอบ...'; btn.disabled = true;
+    try {
+        const res    = await fetch(GOOGLE_APP_SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'login', empId: user, password: pass }) });
+        const result = await res.json();
+        if (result.status === 'success' && result.user.role === 'admin') {
+            sessionStorage.setItem(ADMIN_SESSION_KEY, 'true');
+            showView('view-admin-dashboard'); loadAdminData();
+            document.getElementById('admin-user').value = '';
+            document.getElementById('admin-pass').value = '';
         } else {
-            inStatusEl.innerHTML = `<span style="color:var(--green);">✓ ตรงเวลา</span>`;
+            showCustomAlert('ล็อกอินไม่สำเร็จ', result.message || 'สิทธิ์การเข้าถึงไม่ถูกต้อง', 'error');
         }
-    } else {
-        inTimeEl.textContent    = '—';
-        inTimeEl.style.color    = 'var(--muted2)';
-        inBox.style.borderColor = 'var(--border)';
-        inBox.style.background  = '#000';
-        inStatusEl.innerHTML    = '<span style="color:var(--muted2);">ยังไม่ได้สแกน</span>';
+    } catch { showCustomAlert('ข้อผิดพลาด', 'เชื่อมต่อเซิร์ฟเวอร์ไม่ได้', 'error'); }
+    finally { btn.innerHTML = org; btn.disabled = false; }
+}
+
+// ─── Date Normalizers ─────────────────────────────────────────
+function parseGASDateString(dStr) {
+    if (!dStr) return null;
+    let s = String(dStr).trim();
+    if (s.includes('GMT') || s.includes('(') || s.includes('เวลา')) {
+        try { const d = new Date(s); if (!isNaN(d.getTime())) return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; } catch {}
+    }
+    if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+    const parts = s.split(/[\/]/);
+    if (parts.length === 3) { const [a,b,c] = parts; if (a.length===4) return `${a}-${b.padStart(2,'0')}-${c.padStart(2,'0')}`; return `${c}-${b.padStart(2,'0')}-${a.padStart(2,'0')}`; }
+    return s;
+}
+
+function parseGASTimeString(tStr) {
+    if (!tStr) return '-';
+    let s = String(tStr).trim();
+    if (s === '-') return '-';
+    if (s.includes('GMT') || s.includes('1899') || s.includes('(')) {
+        try { const d = new Date(s); if (!isNaN(d.getTime())) return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}:${String(d.getSeconds()).padStart(2,'0')}`; } catch {}
+    }
+    if (/^\d{2}:\d{2}(:\d{2})?$/.test(s)) return s;
+    return s;
+}
+
+// ─── Admin Data Loader ────────────────────────────────────────
+async function loadAdminData() {
+    const tbody = document.getElementById('admin-table-body');
+    if (tbody) tbody.innerHTML = `<tr><td colspan="6" class="empty-state"><i class="fa-solid fa-spinner fa-spin" style="margin-right:6px;"></i> กำลังโหลด...</td></tr>`;
+    try {
+        const res    = await fetch(GOOGLE_APP_SCRIPT_URL + '?action=get_all_data&t=' + Date.now());
+        const parsed = await res.json();
+        if (parsed.status !== 'success') throw new Error(parsed.message || 'Error');
+
+        globalAdminLogs = (parsed.attendance || []).map(l => ({
+            logId: l.logId || l.LogID,
+            date: parseGASDateString(l.date || l.Date),
+            time: parseGASTimeString(l.time || l.Time),
+            empId: String(l.empId || l.EmpID),
+            empName: l.empName || l.EmpName,
+            type: l.type || l.ActionType || l.Action,
+            status: l.status || l.Status,
+            lateMinutes: parseInt(l.lateMinutes || l.LateMins) || 0,
+            deviceId: l.deviceId || l.DeviceID
+        }));
+
+        globalLeaves = (parsed.leaves || []).map(l => ({
+            id: l.id || l.leaveId || l.LeaveID,
+            empId: String(l.empId || l.EmpID),
+            empName: l.empName || l.EmpName,
+            leaveType: l.leaveType || l.LeaveType || l.type,
+            startDate: parseGASDateString(l.startDate || l.StartDate),
+            endDate:   parseGASDateString(l.endDate   || l.EndDate),
+            totalDays: parseFloat(l.totalDays || l.TotalDays) || 0,
+            note: l.note || l.Note,
+            status: l.status || l.Status,
+            createdAt: l.createdAt || l.Timestamp || l.timestamp
+        })).reverse();
+
+        globalUsers = (parsed.users || []).map(u => ({
+            empId: String(u.empId || u.EmpID),
+            empName: u.empName || u.EmpName,
+            role: u.role || u.Role,
+            status: u.status || u.Status,
+            nickname: u.nickname || u.Nickname || '-',
+            age: u.age || u.Age || '-',
+            phone: u.phone || u.Phone || '-',
+            department: u.department || u.Department || '-'
+        }));
+        db.saveUsers(globalUsers);
+
+    } catch {
+        showCustomAlert('ข้อผิดพลาด', 'ดึงข้อมูลล้มเหลว ใช้ข้อมูลในเครื่องแทน', 'error');
+        globalAdminLogs = db.getLogs();
+        globalLeaves    = db.getLeaves().reverse();
+        globalUsers     = db.getUsers();
     }
 
-    if (lastOut) {
-        outTimeEl.textContent   = lastOut.time;
-        outTimeEl.style.color   = 'var(--orange)';
-        outBox.style.borderColor = 'rgba(249,115,22,.25)';
-        outBox.style.background  = 'rgba(249,115,22,.05)';
-        outStatusEl.innerHTML   = `<span style="color:var(--orange);">✓ บันทึกแล้ว</span>`;
-    } else {
-        outTimeEl.textContent   = '—';
-        outTimeEl.style.color   = 'var(--muted2)';
-        outBox.style.borderColor = 'var(--border)';
-        outBox.style.background  = '#000';
-        outStatusEl.innerHTML   = '<span style="color:var(--muted2);">ยังไม่ได้สแกน</span>';
-    }
+    updateLeavePendingBadge();
+    const tabs      = ['daily','report','leave','users'];
+    const activeTab = tabs.find(t => document.getElementById('tab-btn-'+t).classList.contains('active')) || 'daily';
+    if (activeTab === 'daily')  renderDailyAdmin();
+    if (activeTab === 'report') generateEmployeeReport();
+    if (activeTab === 'leave')  renderAdminLeaveList();
+    if (activeTab === 'users')  renderAdminUsersList();
+}
 
-    // ── Log history list ──
-    if (logs.length === 0) {
-        container.innerHTML = '<div class="empty-state" style="padding:24px 0;"><i class="fa-regular fa-calendar-xmark"></i>ยังไม่มีบันทึกในวันนี้</div>';
-        return;
-    }
+function updateLeavePendingBadge() {
+    const count = globalLeaves.filter(l => l.status === 'pending').length;
+    const badge = document.getElementById('leave-pending-badge');
+    if (badge) { badge.style.display = count > 0 ? 'inline' : 'none'; badge.textContent = count; }
+}
 
-    container.innerHTML = '';
-    [...logs].reverse().forEach((log, idx) => {
-        const isIn = log.type === 'IN';
-        const div  = document.createElement('div');
-        div.className = 'log-item ' + (isIn ? 'log-in' : 'log-out');
-        div.style.transition = 'opacity .3s, transform .3s';
-        div.style.opacity    = '0';
-        div.style.transform  = 'translateY(6px)';
-        div.innerHTML = `
-            <div style="display:flex;align-items:center;gap:10px;">
-                <div style="width:32px;height:32px;border-radius:50%;background:${isIn ? 'rgba(62,207,142,.15)' : 'rgba(249,115,22,.15)'};display:flex;align-items:center;justify-content:center;font-size:.75rem;flex-shrink:0;">
-                    <i class="fa-solid ${isIn ? 'fa-arrow-right-to-bracket' : 'fa-arrow-right-from-bracket'}"></i>
-                </div>
-                <div>
-                    <div style="font-weight:600;font-size:.875rem;">${isIn ? 'เข้างาน' : 'ออกงาน'}</div>
-                    ${log.status === 'สาย' ? `<div style="font-size:.72rem;color:var(--red);">สาย ${log.lateMinutes} นาที</div>` : ''}
-                </div>
-            </div>
-            <div style="text-align:right;">
-                <div style="font-family:'IBM Plex Mono',monospace;font-size:1rem;font-weight:500;">${log.time}</div>
-                <div style="font-size:.7rem;color:var(--muted2);margin-top:2px;">${log.status === 'สาย' ? '⚠ สาย' : '✓ ปกติ'}</div>
-            </div>
-        `;
-        container.appendChild(div);
-        // Staggered fade-in
-        setTimeout(() => {
-            div.style.opacity   = '1';
-            div.style.transform = 'translateY(0)';
-        }, idx * 60);
+// ─── Admin Tabs ───────────────────────────────────────────────
+function switchAdminTab(tab) {
+    ['daily','report','leave','users'].forEach(t => {
+        const v = document.getElementById('admin-view-'+t);
+        const b = document.getElementById('tab-btn-'+t);
+        if(v) v.style.display = t===tab ? 'block' : 'none';
+        if(b) b.classList.toggle('active', t===tab);
+    });
+    if (tab==='daily')  renderDailyAdmin();
+    if (tab==='report') generateEmployeeReport();
+    if (tab==='leave')  renderAdminLeaveList();
+    if (tab==='users')  renderAdminUsersList();
+}
+
+// ─── Admin Sort ───────────────────────────────────────────────
+function setSort(col) {
+    if (sortCol === col) sortDir = sortDir==='asc'?'desc':'asc';
+    else { sortCol = col; sortDir = 'desc'; }
+    const sc = document.getElementById('sort-col');
+    if(sc) sc.value = sortCol;
+    updateSortUI(); renderDailyAdmin();
+}
+function toggleSortDir() { sortDir = sortDir==='asc'?'desc':'asc'; updateSortUI(); renderDailyAdmin(); }
+function updateSortUI() {
+    ['time','empId','empName','type','status'].forEach(col => {
+        const th = document.getElementById('th-'+col);
+        if (!th) return;
+        th.classList.remove('sort-asc','sort-desc');
+        if (col === sortCol) th.classList.add(sortDir==='asc'?'sort-asc':'sort-desc');
+    });
+    const btn = document.getElementById('sort-dir-btn');
+    if(btn) btn.innerHTML = sortDir==='asc' ? '<i class="fa-solid fa-arrow-up-short-wide"></i>' : '<i class="fa-solid fa-arrow-down-wide-short"></i>';
+}
+function sortLogs(logs) {
+    return [...logs].sort((a,b) => {
+        let va = (a[sortCol]||'').toString().toLowerCase();
+        let vb = (b[sortCol]||'').toString().toLowerCase();
+        if (sortCol==='time') { va = a.date+' '+a.time; vb = b.date+' '+b.time; }
+        const cmp = va<vb?-1:va>vb?1:0;
+        return sortDir==='asc'?cmp:-cmp;
     });
 }
 
-// ─── Admin Auth ───────────────────────────────────────────
-function showAdminLogin() { showView('view-admin-login'); }
-
-function handleAdminLogin(e) {
-    e.preventDefault();
-    const pin = document.getElementById('admin-pin').value;
-    if (pin === '2026') {
-        document.getElementById('admin-pin').value = '';
-        sessionStorage.setItem(ADMIN_SESSION_KEY, 'true'); // บันทึกว่า Admin ได้ล็อกอินแล้ว
-        showView('view-admin-dashboard');
-        loadAdminData();
-    } else {
-        showToast('รหัส PIN ไม่ถูกต้อง', 'error');
+// ─── Admin Daily ──────────────────────────────────────────────
+function renderDailyAdmin() {
+    const dateInput = document.getElementById('filter-date');
+    if(!dateInput) return;
+    let logs = [...globalAdminLogs];
+    if (dateInput.value) {
+        const [y,m,d] = dateInput.value.split('-');
+        logs = logs.filter(l => { const s=String(l.date||'').trim(); return s===dateInput.value||s===`${d}/${m}/${y}`||s===`${m}/${d}/${y}`; });
     }
-}
+    const activeLogs = logs.filter(l => l.type!=='LEAVE'&&l.type!=='LEAVE_UPDATE'&&l.type!=='LEAVE_DELETE');
+    const sorted = sortLogs(activeLogs);
+    const uniqueEmps = new Set(activeLogs.map(l=>l.empId)).size;
+    const totalIn    = activeLogs.filter(l=>l.type==='IN').length;
+    const totalOut   = activeLogs.filter(l=>l.type==='OUT').length;
+    const lateRows   = activeLogs.filter(l=>l.status==='สาย');
+    const lateEmps   = new Set(lateRows.map(l=>l.empId)).size;
 
-// ─── Debug ────────────────────────────────────────────────
-async function runDebug() {
-    try {
-        showToast('กำลังทดสอบการเชื่อมต่อ...', 'info');
-        const res  = await fetch(GOOGLE_APP_SCRIPT_URL + '?t=' + Date.now());
-        const text = await res.text();
-        try {
-            const json = JSON.parse(text);
-            if (json.error) { alert('❌ ' + json.error); }
-            else { alert(`✅ เชื่อมต่อสำเร็จ! พบข้อมูล ${json.length} รายการ\n\n${JSON.stringify(json[0] || 'ไม่มีข้อมูล')}`); loadAdminData(); }
-        } catch { alert('❌ ข้อมูลไม่ใช่ตาราง (ลืมเลือก "ทุกคน" ตอน Deploy?)\n\n' + text.substring(0, 200)); }
-        showToast('ทดสอบเสร็จสิ้น', 'success');
-    } catch(e) {
-        alert('❌ CORS Error / URL ผิด\nตรวจสอบการตั้งค่า Deploy ว่าเป็น "ทุกคน (Anyone)" ');
-        showToast('การเชื่อมต่อล้มเหลว', 'error');
-    }
-}
+    const safeSetText = (id,t) => { const el=document.getElementById(id); if(el) el.textContent=t; };
+    safeSetText('stat-total', uniqueEmps); safeSetText('stat-in', totalIn);
+    safeSetText('stat-out', totalOut);     safeSetText('stat-late', lateEmps);
 
-// ─── Admin Data ───────────────────────────────────────────
-async function loadAdminData() {
-    const dateInput = document.getElementById('filter-date').value;
-    const tbody     = document.getElementById('admin-table-body');
-    tbody.innerHTML = `<tr><td colspan="6" class="empty-state"><i class="fa-solid fa-spinner fa-spin"></i>กำลังโหลดข้อมูล...</td></tr>`;
-
-    let allLogs = [];
-    try {
-        if (GOOGLE_APP_SCRIPT_URL) {
-            const res  = await fetch(GOOGLE_APP_SCRIPT_URL + '?t=' + Date.now());
-            const text = await res.text();
-            try {
-                allLogs = JSON.parse(text);
-                if (allLogs.error) throw new Error(allLogs.error);
-                if (!Array.isArray(allLogs)) allLogs = [];
-            } catch(e) { throw new Error('ข้อมูลไม่ถูกต้อง'); }
-        } else { allLogs = db.getLogs(); }
-    } catch(err) {
-        showToast('ดึงข้อมูลล้มเหลว ใช้ข้อมูลในเครื่องแทน', 'error');
-        allLogs = db.getLogs();
-    }
-
-    if (dateInput) {
-        const [y, m, d] = dateInput.split('-');
-        allLogs = allLogs.filter(l => {
-            const s = String(l.date || '').trim();
-            return s === dateInput || s === `${d}/${m}/${y}` || s === `${m}/${d}/${y}`;
-        });
-    }
-
-    document.getElementById('stat-total').textContent = new Set(allLogs.map(l => l.empId)).size;
-    document.getElementById('stat-in').textContent    = allLogs.filter(l => l.type === 'IN').length;
-    document.getElementById('stat-out').textContent   = allLogs.filter(l => l.type === 'OUT').length;
-    document.getElementById('stat-late').textContent  = allLogs.filter(l => l.status === 'สาย').length;
-
+    const tbody = document.getElementById('admin-table-body');
+    if (!tbody) return;
     tbody.innerHTML = '';
-    if (allLogs.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" class="empty-state"><i class="fa-regular fa-folder-open"></i>ไม่มีข้อมูลในวันที่เลือก</td></tr>`;
-        return;
-    }
-
-    [...allLogs].reverse().forEach(log => {
-        const typeBadge   = log.type === 'IN'
-            ? `<span class="badge badge-green"><i class="fa-solid fa-arrow-right-to-bracket" style="font-size:.7rem;"></i>เข้างาน</span>`
-            : `<span class="badge badge-orange"><i class="fa-solid fa-arrow-right-from-bracket" style="font-size:.7rem;"></i>ออกงาน</span>`;
-        const statusBadge = log.status === 'สาย'
-            ? `<span class="badge badge-red">สาย ${log.lateMinutes} นาที</span>`
-            : `<span style="color:var(--muted2);">—</span>`;
-
+    if (sorted.length===0) { tbody.innerHTML = `<tr><td colspan="6" class="empty-state"><i class="fa-regular fa-folder-open"></i>ไม่มีข้อมูลในวันที่เลือก</td></tr>`; return; }
+    sorted.forEach(log => {
+        let typeBadge   = '';
+        if (log.type==='IN')  typeBadge = `<span class="badge badge-green"><i class="fa-solid fa-arrow-right-to-bracket" style="font-size:.65rem;"></i>เข้างาน</span>`;
+        else if (log.type==='OUT') typeBadge = `<span class="badge badge-orange"><i class="fa-solid fa-arrow-right-from-bracket" style="font-size:.65rem;"></i>ออกงาน</span>`;
+        const statusBadge = log.status==='สาย' ? `<span class="badge badge-red">สาย ${log.lateMinutes} นาที</span>` : `<span style="color:var(--muted2);font-weight:600;">—</span>`;
         const tr = document.createElement('tr');
         tr.innerHTML = `
-            <td style="font-family:'IBM Plex Mono',monospace;font-weight:500;">${log.time}</td>
-            <td style="color:var(--accent);font-family:'IBM Plex Mono',monospace;font-size:.825rem;">${log.empId}</td>
-            <td style="color:var(--text);">${log.empName}</td>
-            <td>${typeBadge}</td>
-            <td>${statusBadge}</td>
-            <td class="hide-mobile" style="font-family:'IBM Plex Mono',monospace;font-size:.75rem;color:var(--muted2);">${(log.deviceId || '').slice(0, 12)}…</td>
-        `;
+            <td style="font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:1.05rem;">${log.time}</td>
+            <td style="color:var(--accent);font-family:'IBM Plex Mono',monospace;font-size:.9rem;font-weight:600;">${log.empId}</td>
+            <td style="color:var(--text);font-weight:600;">${log.empName}</td>
+            <td>${typeBadge}</td><td>${statusBadge}</td>
+            <td class="hide-sm" style="font-family:'IBM Plex Mono',monospace;font-size:.8rem;color:var(--muted);">${(log.deviceId||'').slice(0,12)}…</td>`;
+        tbody.appendChild(tr);
+    });
+    updateSortUI();
+}
+
+// ─── Employee Report ──────────────────────────────────────────
+const thMonths = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+
+function getWeekInfo(dateString) {
+    const startDate  = new Date('2026-05-18T00:00:00');
+    const targetDate = new Date(dateString + 'T00:00:00');
+    if (isNaN(targetDate.getTime())) return { label:"N/A", sort:"W99" };
+    const diffDays = Math.floor((targetDate - startDate) / 86400000);
+    if (diffDays < 0) return { label:"ก่อนกำหนด", sort:"W00" };
+    const weekNo  = Math.floor(diffDays / 7) + 1;
+    const endDate = new Date('2026-09-04T23:59:59');
+    return { label: targetDate > endDate ? `สัปดาห์ที่ ${weekNo} (นอกกำหนด)` : `สัปดาห์ที่ ${weekNo}`, sort: `W${weekNo.toString().padStart(2,'0')}` };
+}
+function getMonthInfo(dateString) {
+    const [y,m] = dateString.split('-');
+    if (!y||!m) return { label:"N/A", sort:"" };
+    return { label:`${thMonths[parseInt(m,10)-1]} ${y}`, sort:`${y}-${m}` };
+}
+function toggleSort() { sortOrderDesc = !sortOrderDesc; generateEmployeeReport(); }
+
+function generateEmployeeReport() {
+    const searchInput = document.getElementById('search-emp-id');
+    const contentDiv  = document.getElementById('report-content');
+    if (!searchInput || !contentDiv) return;
+    const empId = searchInput.value.trim();
+    if (!empId) { contentDiv.style.display='none'; return; }
+
+    const empLogs   = globalAdminLogs.filter(l => String(l.empId).trim()===empId && l.type!=='LEAVE'&&l.type!=='LEAVE_UPDATE'&&l.type!=='LEAVE_DELETE');
+    const empLeaves = globalLeaves.filter(l => String(l.empId).trim()===empId && l.status==='approved');
+    if (empLogs.length===0 && empLeaves.length===0) {
+        contentDiv.innerHTML = `<div class="empty-state"><i class="fa-regular fa-folder-open"></i>ไม่พบข้อมูลของพนักงานรหัส: <strong style="color:var(--accent);">${empId}</strong></div>`;
+        contentDiv.style.display='block'; return;
+    }
+
+    const empName  = empLogs.length>0 ? empLogs[0].empName : empLeaves[0].empName;
+    const dailyMap = {};
+    empLogs.forEach(log => {
+        if (!dailyMap[log.date]) dailyMap[log.date] = { worked:false, late:false, lateMins:0, leave:false };
+        if (log.type==='IN') { dailyMap[log.date].worked=true; if(log.status==='สาย'){dailyMap[log.date].late=true; dailyMap[log.date].lateMins=Math.max(dailyMap[log.date].lateMins,parseInt(log.lateMinutes)||0);} }
+    });
+    empLeaves.forEach(lv => {
+        const start = new Date(lv.startDate+'T00:00:00');
+        const end   = new Date((lv.endDate||lv.startDate)+'T00:00:00');
+        let cur = new Date(start);
+        while (cur<=end) { const ds=cur.toLocaleDateString('en-CA'); if(!dailyMap[ds]) dailyMap[ds]={worked:false,late:false,lateMins:0,leave:false}; dailyMap[ds].leave=true; cur.setDate(cur.getDate()+1); }
+    });
+
+    const monthlyStats={}, weeklyStats={};
+    let tWork=0, tLate=0, tMins=0, tLeave=0;
+    Object.keys(dailyMap).forEach(d => {
+        const day=dailyMap[d], mI=getMonthInfo(d), wI=getWeekInfo(d);
+        if(!monthlyStats[mI.sort]) monthlyStats[mI.sort]={label:mI.label,work:0,late:0,mins:0,leave:0,sort:mI.sort};
+        if(!weeklyStats[wI.sort])  weeklyStats[wI.sort] ={label:wI.label,work:0,late:0,mins:0,leave:0,sort:wI.sort};
+        if(day.worked){tWork++;monthlyStats[mI.sort].work++;weeklyStats[wI.sort].work++;if(day.late){tLate++;monthlyStats[mI.sort].late++;weeklyStats[wI.sort].late++;tMins+=day.lateMins;monthlyStats[mI.sort].mins+=day.lateMins;weeklyStats[wI.sort].mins+=day.lateMins;}}
+        if(day.leave){tLeave++;monthlyStats[mI.sort].leave++;weeklyStats[wI.sort].leave++;}
+    });
+
+    const sortedMonths = Object.values(monthlyStats).sort((a,b)=>sortOrderDesc?b.sort.localeCompare(a.sort):a.sort.localeCompare(b.sort));
+    const sortedWeeks  = Object.values(weeklyStats).sort((a,b)=>sortOrderDesc?b.sort.localeCompare(a.sort):a.sort.localeCompare(b.sort));
+    const rowHTML = (rows) => rows.length ? rows.map(r => {
+    const lateStyle  = r.late  > 0 ? 'color:var(--red);font-weight:700;'    : 'color:var(--muted2);';
+    const minsStyle  = r.mins  > 0 ? 'color:var(--red);font-weight:700;'    : 'color:var(--muted2);';
+    const leaveStyle = r.leave > 0 ? 'color:var(--purple);font-weight:700;' : 'color:var(--muted2);';
+    return `<tr>
+        <td style="font-weight:600;color:var(--text);">${r.label}</td>
+        <td style="text-align:center;color:var(--green);font-weight:700;">${r.work}</td>
+        <td style="text-align:center;${lateStyle}">${r.late  > 0 ? r.late  : '-'}</td>
+        <td style="text-align:center;${minsStyle}">${r.mins  > 0 ? r.mins  : '-'}</td>
+        <td style="text-align:center;${leaveStyle}">${r.leave > 0 ? r.leave : '-'}</td>
+    </tr>`;
+}).join('') : '<tr><td colspan="5" class="empty-state">ไม่มีข้อมูล</td></tr>';
+    contentDiv.innerHTML = `
+        <div class="card" style="padding:24px;margin-bottom:24px;background:rgba(79,127,255,.05);border-color:rgba(79,127,255,.2);display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:16px;">
+            <div>
+                <div style="font-size:.85rem;font-weight:600;color:var(--muted);margin-bottom:6px;">รายงานผลการปฏิบัติงานของ</div>
+                <h3 style="font-size:1.8rem;font-weight:700;color:var(--text);margin-bottom:6px;">${empName}</h3>
+                <div style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-size:1rem;font-weight:600;">รหัส: ${empId}</div>
+            </div>
+            <button onclick="toggleSort()" class="btn-ghost" style="display:flex;align-items:center;gap:6px;font-size:.9rem;padding:12px 18px;">
+                <i class="fa-solid fa-sort" style="color:var(--accent);"></i>เรียง: <span style="color:var(--text);font-weight:600;">${sortOrderDesc?'ใหม่สุดขึ้นก่อน':'เก่าสุดขึ้นก่อน'}</span>
+            </button>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:16px;margin-bottom:24px;">
+            <div style="background:#000;border:1px solid rgba(52,211,153,.3);border-radius:12px;padding:20px;text-align:center;"><div style="font-size:.85rem;font-weight:600;color:var(--green);margin-bottom:6px;">มาทำงาน</div><div style="font-size:2.2rem;font-weight:700;color:var(--green);">${tWork} <span style="font-size:1rem;font-weight:500;">วัน</span></div></div>
+            <div style="background:#000;border:1px solid rgba(248,113,113,.3);border-radius:12px;padding:20px;text-align:center;"><div style="font-size:.85rem;font-weight:600;color:var(--red);margin-bottom:6px;">มาสาย</div><div style="font-size:2.2rem;font-weight:700;color:var(--red);">${tLate} <span style="font-size:1rem;font-weight:500;">วัน</span></div></div>
+            <div style="background:#000;border:1px solid rgba(248,113,113,.3);border-radius:12px;padding:20px;text-align:center;"><div style="font-size:.85rem;font-weight:600;color:var(--red);margin-bottom:6px;">รวมเวลาสาย</div><div style="font-size:2.2rem;font-weight:700;color:var(--red);">${tMins} <span style="font-size:1rem;font-weight:500;">นาที</span></div></div>
+            <div style="background:#000;border:1px solid rgba(192,132,252,.3);border-radius:12px;padding:20px;text-align:center;"><div style="font-size:.85rem;font-weight:600;color:var(--purple);margin-bottom:6px;">ลาหยุด</div><div style="font-size:2.2rem;font-weight:700;color:var(--purple);">${tLeave} <span style="font-size:1rem;font-weight:500;">วัน</span></div></div>
+        </div>
+        <div class="card" style="padding:24px;margin-bottom:24px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:12px;">
+                <div class="section-label" style="margin:0;"><i class="fa-regular fa-calendar" style="margin-right:8px;color:var(--accent);"></i>ปฏิทินการปฏิบัติงาน</div>
+                <div style="display:flex;gap:12px;align-items:center;background:#000;padding:6px 12px;border-radius:10px;border:1px solid var(--border);">
+                    <button onclick="reportCalPrevMonth()" class="btn-ghost btn-sm" style="padding:6px 10px;border:none;"><i class="fa-solid fa-chevron-left"></i></button>
+                    <span id="report-cal-month-label" style="font-size:.9rem;font-weight:700;color:var(--text);min-width:110px;text-align:center;"></span>
+                    <button onclick="reportCalNextMonth()" class="btn-ghost btn-sm" style="padding:6px 10px;border:none;"><i class="fa-solid fa-chevron-right"></i></button>
+                </div>
+            </div>
+            <div style="display:flex;flex-wrap:wrap;gap:16px;margin-bottom:16px;font-size:.8rem;color:var(--muted);padding-bottom:12px;border-bottom:1px solid var(--border);">
+                <div style="display:flex;align-items:center;gap:6px;"><div style="width:8px;height:8px;border-radius:50%;background:var(--green);"></div>มาทำงาน</div>
+                <div style="display:flex;align-items:center;gap:6px;"><div style="width:8px;height:8px;border-radius:50%;background:var(--red);"></div>มาสาย</div>
+                <div style="display:flex;align-items:center;gap:6px;"><div style="width:8px;height:8px;border-radius:50%;background:var(--purple);"></div>มีใบลา</div>
+            </div>
+            <div style="overflow-x:auto;"><div style="min-width:400px;">
+                <div class="cal-grid" style="font-size:.85rem;padding-bottom:12px;"><div>อาทิตย์</div><div>จันทร์</div><div>อังคาร</div><div>พุธ</div><div>พฤหัสฯ</div><div>ศุกร์</div><div>เสาร์</div></div>
+                <div id="report-cal-body" class="cal-grid" style="gap:6px;"></div>
+            </div></div>
+            <div id="report-day-detail" style="display:none;margin-top:20px;padding:20px;background:#000;border:1px solid var(--border);border-radius:12px;"></div>
+        </div>
+        <div class="report-grid">
+            <div class="card" style="padding:24px;">
+                <div class="section-label" style="margin-bottom:18px;"><i class="fa-solid fa-calendar-week" style="margin-right:8px;color:var(--accent);"></i>สรุปรายสัปดาห์</div>
+                <div class="table-wrap"><table class="data-table"><thead><tr><th>สัปดาห์</th><th style="text-align:center;">มาทำงาน</th><th style="text-align:center;">สาย(วัน)</th><th style="text-align:center;">รวม(นาที)</th><th style="text-align:center;">ลา(วัน)</th></tr></thead><tbody>${rowHTML(sortedWeeks)}</tbody></table></div>
+            </div>
+            <div class="card" style="padding:24px;">
+                <div class="section-label" style="margin-bottom:18px;"><i class="fa-regular fa-calendar" style="margin-right:8px;color:var(--green);"></i>สรุปรายเดือน</div>
+                <div class="table-wrap"><table class="data-table"><thead><tr><th>เดือน</th><th style="text-align:center;">มาทำงาน</th><th style="text-align:center;">สาย(วัน)</th><th style="text-align:center;">รวม(นาที)</th><th style="text-align:center;">ลา(วัน)</th></tr></thead><tbody>${rowHTML(sortedMonths)}</tbody></table></div>
+            </div>
+        </div>`;
+    contentDiv.style.display = 'block';
+    currentReportEmpId = empId;
+    renderReportCalendar();
+}
+
+// ─── Report Calendar ──────────────────────────────────────────
+function reportCalPrevMonth() { reportCalMonth--; if(reportCalMonth<0){reportCalMonth=11;reportCalYear--;} renderReportCalendar(); }
+function reportCalNextMonth() { reportCalMonth++; if(reportCalMonth>11){reportCalMonth=0;reportCalYear++;} renderReportCalendar(); }
+
+function renderReportCalendar() {
+    const grid  = document.getElementById('report-cal-body');
+    const label = document.getElementById('report-cal-month-label');
+    if(!grid||!label) return;
+    label.textContent = `${thMonths[reportCalMonth]} ${reportCalYear}`;
+    grid.innerHTML = '';
+
+    const empLogs   = globalAdminLogs.filter(l => String(l.empId).trim()===currentReportEmpId && l.type!=='LEAVE'&&l.type!=='LEAVE_UPDATE'&&l.type!=='LEAVE_DELETE');
+    const empLeaves = globalLeaves.filter(l => l.empId===currentReportEmpId);
+    const dayMap    = {};
+    empLogs.forEach(l => {
+        const d = normalizeDate(l.date); if(!d) return;
+        if(!dayMap[d]) dayMap[d]={work:false,late:false,lateMins:0,leave:null};
+        dayMap[d].work=true;
+        if(l.type==='IN'&&l.status==='สาย'){dayMap[d].late=true;dayMap[d].lateMins=Math.max(dayMap[d].lateMins,parseInt(l.lateMinutes)||0);}
+    });
+    empLeaves.forEach(lv => {
+        const start=new Date(lv.startDate+'T00:00:00'), end=new Date((lv.endDate||lv.startDate)+'T00:00:00');
+        let cur=new Date(start);
+        while(cur<=end){const ds=cur.toLocaleDateString('en-CA');if(!dayMap[ds])dayMap[ds]={work:false,late:false,lateMins:0,leave:null};dayMap[ds].leave=lv;cur.setDate(cur.getDate()+1);}
+    });
+
+    const firstDay   = new Date(reportCalYear,reportCalMonth,1).getDay();
+    const daysInMon  = new Date(reportCalYear,reportCalMonth+1,0).getDate();
+    const today      = new Date().toLocaleDateString('en-CA');
+
+    for(let i=0;i<firstDay;i++){const b=document.createElement('div');b.className='cal-day other-month';grid.appendChild(b);}
+    for(let day=1;day<=daysInMon;day++){
+        const dateStr=`${reportCalYear}-${String(reportCalMonth+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+        const data=dayMap[dateStr];
+        const div=document.createElement('div');
+        div.className='cal-day'+(dateStr===today?' today':'');
+        let dots='';
+        if(data){
+            div.classList.add('has-data');
+            if(data.work&&data.late)  dots+=`<div class="cal-day-dot" style="background:var(--red);"></div>`;
+            else if(data.work)         dots+=`<div class="cal-day-dot" style="background:var(--green);"></div>`;
+            if(data.leave)             dots+=`<div class="cal-day-dot" style="background:var(--purple);"></div>`;
+        }
+        div.innerHTML=`<span style="font-size:.9rem;font-weight:600;${data?(data.leave?'color:var(--purple);':data.late?'color:var(--red);':data.work?'color:var(--green);':''):'color:var(--muted2);'}">${day}</span>${dots?`<div class="cal-dot-row">${dots}</div>`:''}`;
+        if(data) div.onclick=()=>showReportDayDetail(dateStr);
+        grid.appendChild(div);
+    }
+}
+
+function showReportDayDetail(dateStr) {
+    const panel = document.getElementById('report-day-detail');
+    if(!panel) return;
+    panel.style.display='block';
+    const logs   = globalAdminLogs.filter(l=>l.empId===currentReportEmpId&&normalizeDate(l.date)===dateStr&&l.type!=='LEAVE'&&l.type!=='LEAVE_UPDATE'&&l.type!=='LEAVE_DELETE');
+    const leaves = globalLeaves.filter(l=>l.empId===currentReportEmpId&&l.startDate<=dateStr&&(l.endDate||l.startDate)>=dateStr);
+    let html = `<div style="font-size:1.1rem;font-weight:700;color:var(--text);margin-bottom:12px;">รายละเอียดวันที่ <span style="color:var(--accent);">${formatDateTh(dateStr)}</span></div>`;
+    if(logs.length===0&&leaves.length===0) html+=`<div style="color:var(--muted2);font-size:.9rem;">ไม่มีข้อมูลในวันนี้</div>`;
+    if(logs.length>0){
+        html+=`<div style="margin-bottom:12px;font-size:.85rem;color:var(--muted);font-weight:600;">บันทึกเวลาทำงาน</div>`;
+        logs.forEach(l=>{
+            const isIn=l.type==='IN';
+            html+=`<div style="padding:12px 16px;background:var(--surface);border:1px solid var(--border);border-radius:10px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;">
+                <div style="display:flex;align-items:center;gap:8px;"><i class="fa-solid ${isIn?'fa-arrow-right-to-bracket':'fa-arrow-right-from-bracket'}" style="color:${isIn?'var(--green)':'var(--orange)'};width:20px;text-align:center;"></i><span style="font-weight:600;">${isIn?'เข้างาน':'ออกงาน'}</span>${l.status==='สาย'?`<span class="badge badge-red" style="margin-left:6px;">สาย ${l.lateMinutes} นาที</span>`:''}</div>
+                <div style="font-family:'IBM Plex Mono',monospace;font-weight:600;color:var(--text);">${l.time}</div>
+            </div>`;
+        });
+    }
+    if(leaves.length>0){
+        html+=`<div style="margin-top:16px;margin-bottom:12px;font-size:.85rem;color:var(--purple);font-weight:600;">ข้อมูลใบลา</div>`;
+        leaves.forEach(lv=>{
+            const isSick=String(lv.leaveType).includes('sick');
+            const statusColor=lv.status==='approved'?'var(--green)':lv.status==='rejected'?'var(--red)':'#facc15';
+            const statusText=lv.status==='approved'?'อนุมัติแล้ว':lv.status==='rejected'?'ไม่อนุมัติ':'รอดำเนินการ';
+            html+=`<div style="padding:16px;background:var(--surface);border:1px solid rgba(168,85,247,.3);border-radius:12px;margin-bottom:8px;">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;">
+                    <div>
+                        <div style="font-weight:700;color:var(--text);margin-bottom:4px;font-size:1.05rem;">${isSick?'ลาป่วย':'ลากิจ'} (${lv.totalDays} วัน)</div>
+                        <div style="font-size:.85rem;color:var(--muted);margin-bottom:6px;">เหตุผล: <span style="color:var(--text);">${lv.note||'-'}</span></div>
+                        <div style="font-size:.85rem;color:${statusColor};font-weight:600;">${statusText}</div>
+                    </div>
+                    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                        <button onclick="openLeaveModal('${lv.id}')" class="btn-ghost btn-sm" style="color:var(--accent);"><i class="fa-solid fa-pen"></i> แก้ไข</button>
+                        ${lv.status==='pending'?`<button onclick="approveLeave('${lv.id}')" class="btn-success btn-sm"><i class="fa-solid fa-check"></i> อนุมัติ</button><button onclick="rejectLeave('${lv.id}')" class="btn-danger btn-sm"><i class="fa-solid fa-times"></i> ปฏิเสธ</button>`:''}
+                        <button onclick="adminDeleteLeave('${lv.id}')" class="btn-ghost btn-sm" style="color:var(--red);border-color:rgba(239,68,68,.3);"><i class="fa-solid fa-trash"></i> ลบ</button>
+                    </div>
+                </div>
+            </div>`;
+        });
+    }
+    panel.innerHTML = html;
+}
+
+// ─── Admin Leave List ─────────────────────────────────────────
+function renderAdminLeaveList() {
+    updateLeavePendingBadge();
+    const container    = document.getElementById('admin-leave-list');
+    const filterEmp    = (document.getElementById('admin-leave-filter-emp').value||'').toLowerCase().trim();
+    const filterStatus = document.getElementById('admin-leave-filter-status').value;
+    let leaves = [...globalLeaves];
+    if(filterEmp)    leaves=leaves.filter(l=>String(l.empId).toLowerCase().includes(filterEmp)||l.empName.toLowerCase().includes(filterEmp));
+    if(filterStatus) leaves=leaves.filter(l=>l.status===filterStatus);
+    leaves=leaves.sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt));
+    if(leaves.length===0){container.innerHTML='<div class="empty-state"><i class="fa-regular fa-folder-open"></i>ไม่มีข้อมูลใบลา</div>';return;}
+    container.innerHTML='';
+    leaves.forEach(lv=>{
+        const typeLabel=lv.leaveType==='sick'?'🤒 ลาป่วย':'📋 ลากิจ';
+        const dateRange=lv.endDate&&lv.endDate!==lv.startDate?`${formatDateTh(lv.startDate)} – ${formatDateTh(lv.endDate)}`:formatDateTh(lv.startDate);
+        const statusClass=lv.status==='approved'?'badge-green':lv.status==='rejected'?'badge-red':'badge-yellow';
+        const statusLabel=lv.status==='approved'?'อนุมัติแล้ว':lv.status==='rejected'?'ไม่อนุมัติ':'รอดำเนินการ';
+        const div=document.createElement('div');
+        div.style.cssText='background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;';
+        div.innerHTML=`
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;">
+                <div style="min-width:0;">
+                    <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap;">
+                        <span style="font-weight:700;font-size:1.1rem;color:var(--text);">${lv.empName}</span>
+                        <span style="font-family:'IBM Plex Mono',monospace;font-size:.9rem;font-weight:600;color:var(--accent);">${lv.empId}</span>
+                    </div>
+                    <div style="font-size:1rem;font-weight:600;color:var(--text);margin-bottom:6px;">${typeLabel} · <strong>${lv.totalDays} วัน</strong></div>
+                    <div style="font-size:.85rem;color:var(--muted);margin-bottom:6px;"><i class="fa-regular fa-calendar" style="margin-right:6px;"></i>${dateRange}</div>
+                    ${lv.note?`<div style="font-size:.85rem;color:var(--muted2);">หมายเหตุ: <span style="color:var(--text);">${lv.note}</span></div>`:''}
+                </div>
+                <div style="display:flex;flex-direction:column;align-items:flex-end;gap:10px;flex-shrink:0;">
+                    <span class="badge ${statusClass}">${statusLabel}</span>
+                    <div style="display:flex;gap:8px;">
+                        <button onclick="openLeaveModal('${lv.id}')" class="btn-ghost btn-sm" style="color:var(--accent);"><i class="fa-solid fa-pen"></i> แก้ไข</button>
+                        ${lv.status==='pending'?`<button onclick="approveLeave('${lv.id}')" class="btn-success btn-sm"><i class="fa-solid fa-check"></i> อนุมัติ</button><button onclick="rejectLeave('${lv.id}')" class="btn-danger btn-sm"><i class="fa-solid fa-times"></i> ปฏิเสธ</button>`:''}
+                        <button onclick="adminDeleteLeave('${lv.id}')" class="btn-ghost btn-sm" style="color:var(--red);border-color:rgba(239,68,68,.3);"><i class="fa-solid fa-trash"></i> ลบ</button>
+                    </div>
+                </div>
+            </div>`;
+        container.appendChild(div);
+    });
+}
+
+function updateLeaveStatus(id, newStatus) {
+    if(db.updateLeave(id,{status:newStatus})){
+        const idx=globalLeaves.findIndex(l=>l.id===id);
+        if(idx!==-1) globalLeaves[idx].status=newStatus;
+        showToast(newStatus==='approved'?'อนุมัติใบลาสำเร็จ':'ปฏิเสธใบลาแล้ว', newStatus==='approved'?'success':'error');
+        renderAdminLeaveList(); updateLeavePendingBadge();
+        if(document.getElementById('admin-view-report').style.display==='block') generateEmployeeReport();
+    }
+    if(GOOGLE_APP_SCRIPT_URL) fetch(GOOGLE_APP_SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'update_leave',id,status:newStatus})}).catch(()=>{});
+}
+function approveLeave(id){ updateLeaveStatus(id,'approved'); }
+function rejectLeave(id){  updateLeaveStatus(id,'rejected'); }
+
+function adminDeleteLeave(id){
+    showCustomConfirm('ยืนยันการลบ','คุณแน่ใจหรือไม่ที่จะลบใบลานี้?',()=>{
+        localStorage.setItem(LEAVE_KEY,JSON.stringify(db.getLeaves().filter(l=>l.id!==id)));
+        globalLeaves=globalLeaves.filter(l=>l.id!==id);
+        showToast('ลบใบลาสำเร็จ','success');
+        renderAdminLeaveList(); updateLeavePendingBadge();
+        if(document.getElementById('admin-view-report').style.display==='block') generateEmployeeReport();
+        if(GOOGLE_APP_SCRIPT_URL) fetch(GOOGLE_APP_SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'delete_leave',id})}).catch(()=>{});
+    });
+}
+
+// ─── Admin Users ──────────────────────────────────────────────
+let editingUserId = null;
+
+function renderAdminUsersList() {
+    const tbody = document.getElementById('admin-users-body');
+    if(!tbody) return;
+    const users = globalUsers.filter(u=>u.role!=='admin');
+    if(users.length===0){tbody.innerHTML=`<tr><td colspan="7" class="empty-state"><i class="fa-solid fa-users-slash"></i> ไม่มีข้อมูลผู้ใช้งาน</td></tr>`;return;}
+    tbody.innerHTML='';
+    users.forEach(u=>{
+        const isEditing = editingUserId===u.empId;
+        const tr = document.createElement('tr');
+        if(isEditing){
+            tr.innerHTML=`<td style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">${u.empId}</td><td style="font-weight:600;">${u.empName}</td><td><input type="text" id="edit-nick-${u.empId}" class="inline-edit-input" value="${u.nickname!=='-'?u.nickname:''}"></td><td><input type="number" id="edit-age-${u.empId}" class="inline-edit-input" value="${u.age!=='-'?u.age:''}" style="width:60px;"></td><td><input type="text" id="edit-phone-${u.empId}" class="inline-edit-input" value="${u.phone!=='-'?u.phone:''}"></td><td><input type="text" id="edit-dept-${u.empId}" class="inline-edit-input" value="${u.department!=='-'?u.department:''}"></td><td style="text-align:right;"><div style="display:flex;gap:6px;justify-content:flex-end;"><button onclick="saveUserEdit('${u.empId}')" class="btn-success btn-sm" style="padding:4px 8px;"><i class="fa-solid fa-save"></i></button><button onclick="cancelUserEdit()" class="btn-ghost btn-sm" style="padding:4px 8px;"><i class="fa-solid fa-times"></i></button></div></td>`;
+        } else {
+            tr.innerHTML=`<td style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">${u.empId}</td><td style="font-weight:600;">${u.empName}</td><td style="color:var(--muted2);">${u.nickname}</td><td style="color:var(--muted2);">${u.age}</td><td style="color:var(--muted2);">${u.phone}</td><td style="color:var(--muted2);">${u.department}</td><td style="text-align:right;"><div style="display:flex;gap:6px;justify-content:flex-end;"><button onclick="startUserEdit('${u.empId}')" class="btn-ghost btn-sm" style="padding:4px 8px;"><i class="fa-solid fa-pen"></i></button><button onclick="deleteUser('${u.empId}')" class="btn-danger btn-sm" style="padding:4px 8px;background:transparent;"><i class="fa-solid fa-trash"></i></button></div></td>`;
+        }
         tbody.appendChild(tr);
     });
 }
+function startUserEdit(id)  { editingUserId=id; renderAdminUsersList(); }
+function cancelUserEdit()   { editingUserId=null; renderAdminUsersList(); }
+function saveUserEdit(empId) {
+    const nick=document.getElementById(`edit-nick-${empId}`).value.trim()||'-';
+    const age =document.getElementById(`edit-age-${empId}`).value.trim()||'-';
+    const ph  =document.getElementById(`edit-phone-${empId}`).value.trim()||'-';
+    const dept=document.getElementById(`edit-dept-${empId}`).value.trim()||'-';
+    const idx =globalUsers.findIndex(u=>u.empId===empId);
+    if(idx!==-1){globalUsers[idx].nickname=nick;globalUsers[idx].age=age;globalUsers[idx].phone=ph;globalUsers[idx].department=dept;db.saveUsers(globalUsers);}
+    editingUserId=null; renderAdminUsersList(); showToast('อัปเดตข้อมูลผู้ใช้สำเร็จ','success');
+    if(GOOGLE_APP_SCRIPT_URL) fetch(GOOGLE_APP_SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'update_user',empId,nickname:nick,age,phone:ph,department:dept})}).catch(()=>{});
+}
+function deleteUser(empId){
+    showCustomConfirm('ลบผู้ใช้งาน',`แน่ใจหรือไม่ที่จะลบพนักงานรหัส ${empId}?`,()=>{
+        globalUsers=globalUsers.filter(u=>u.empId!==empId); db.saveUsers(globalUsers);
+        renderAdminUsersList(); showToast('ลบพนักงานสำเร็จ','success');
+        if(GOOGLE_APP_SCRIPT_URL) fetch(GOOGLE_APP_SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'delete_user',empId})}).catch(()=>{});
+    });
+}
 
-// ─── Toast ────────────────────────────────────────────────
+// ─── Helpers ──────────────────────────────────────────────────
+function normalizeDate(d) {
+    if(!d) return null;
+    let s=String(d).trim();
+    if(s.includes('GMT')||s.includes('(')||s.includes('เวลา')){try{const dt=new Date(s);if(!isNaN(dt.getTime()))return `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;}catch{}}
+    if(/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+    const p=s.split(/[\/]/);
+    if(p.length===3){const[a,b,c]=p;if(a.length===4)return `${a}-${b.padStart(2,'0')}-${c.padStart(2,'0')}`;return `${c}-${b.padStart(2,'0')}-${a.padStart(2,'0')}`;}
+    return null;
+}
+function formatDateTh(dateStr) {
+    const norm=normalizeDate(dateStr);
+    if(!norm) return dateStr;
+    const[y,m,d]=norm.split('-');
+    return `${parseInt(d)} ${thMonths[parseInt(m,10)-1]} ${y}`;
+}
+
+// ─── Toast ────────────────────────────────────────────────────
 let _toastTimer;
-function showToast(msg, type = 'success') {
-    const toast = document.getElementById('toast');
-    const icon  = document.getElementById('toast-icon');
-    document.getElementById('toast-msg').textContent = msg;
-
-    const icons = { success: 'fa-circle-check', error: 'fa-circle-xmark', info: 'fa-spinner fa-spin' };
-    const colors = { success: 'var(--green)', error: 'var(--red)', info: 'var(--accent)' };
-    icon.className = `fa-solid ${icons[type] || icons.success}`;
-    icon.style.color = colors[type] || colors.success;
-
+function showToast(msg, type='success') {
+    const toast=document.getElementById('toast');
+    const icon=document.getElementById('toast-icon');
+    document.getElementById('toast-msg').textContent=msg;
+    const icons={success:'fa-circle-check',error:'fa-circle-xmark',info:'fa-spinner fa-spin'};
+    const colors={success:'var(--green)',error:'var(--red)',info:'var(--accent)'};
+    icon.className=`fa-solid ${icons[type]||icons.success}`;
+    icon.style.color=colors[type]||colors.success;
     toast.classList.add('show');
     clearTimeout(_toastTimer);
-    _toastTimer = setTimeout(() => toast.classList.remove('show'), type === 'info' ? 8000 : 3000);
+    _toastTimer=setTimeout(()=>toast.classList.remove('show'),type==='info'?8000:3000);
 }
 </script>
 </body>
