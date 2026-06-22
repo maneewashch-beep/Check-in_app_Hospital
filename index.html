@@ -323,9 +323,9 @@
         }
 
         /* ─── Views ─── */
-        .view { display: none; width: 100%; }
+        .view { display: none; width: 100%; max-width: 100%; }
         .view.active { display: block; }
-        .view.active-flex { display: flex; }
+        .view.active-flex { display: block; } /* split layout uses inner .split flex */
 
         /* ─── Clock ─── */
         #current-time {
@@ -341,7 +341,7 @@
         .divider { height: 1px; background: var(--border); margin: 0; }
 
         /* ─── Split layout for register/admin views ─── */
-        .split { display: flex; flex-direction: column; }
+        .split { display: flex; flex-direction: column; width: 100%; }
         @media (min-width: 768px) {
             .split { flex-direction: row; }
             .split-left { width: 40%; border-right: 1px solid var(--border); border-bottom: none; }
@@ -718,6 +718,12 @@ const LATE_TIME_LIMIT  = "08:30:00";
 const SESSION_KEY      = 'attendance_device_auth';
 const STORAGE_KEY      = 'attendance_logs_v2';
 
+// 📍 การตั้งค่าพิกัด GPS ของโรงพยาบาล/บริษัท
+const REQUIRE_GPS           = true;       // เปลี่ยนเป็น false หากต้องการปิดระบบตรวจ GPS
+const COMPANY_LAT           = 8.449098;  // ละติจูดของสถานที่ (เปลี่ยนเป็นพิกัดจริง)
+const COMPANY_LNG           = 98.526203; // ลองจิจูดของสถานที่ (เปลี่ยนเป็นพิกัดจริง)
+const ALLOWED_RADIUS_METERS = 150;        // รัศมีที่อนุญาตให้ตอกบัตรได้ (เมตร)
+
 // ─── State ────────────────────────────────────────────────
 let currentUser       = null;
 let html5QrcodeScanner = null;
@@ -735,8 +741,14 @@ const db = {
 
 // ─── Boot ─────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
+    // Always init clock (it's in view-employee but the element exists in DOM)
     initClock();
-    document.getElementById('filter-date').valueAsDate = new Date();
+
+    // Set default date filter for admin view
+    const filterDate = document.getElementById('filter-date');
+    if (filterDate) filterDate.valueAsDate = new Date();
+
+    // Restore session last — decides which view to show
     restoreSession();
 });
 
@@ -745,35 +757,37 @@ function restoreSession() {
     try {
         const saved = localStorage.getItem(SESSION_KEY);
         if (saved) {
-            currentUser = JSON.parse(saved);
-            setupEmployeeDashboard();
-            showView('view-employee');
-        } else {
-            showView('view-register');
+            const parsed = JSON.parse(saved);
+            // Validate saved data has required fields
+            if (parsed && parsed.empId && parsed.empName && parsed.deviceId) {
+                currentUser = parsed;
+                setupEmployeeDashboard();
+                showView('view-employee');
+                return;
+            }
         }
     } catch(e) {
-        showView('view-register');
+        console.warn('Session restore failed:', e);
+        localStorage.removeItem(SESSION_KEY);
     }
+    currentUser = null;
+    showView('view-register');
 }
 
 function checkAuthStatus() {
+    // Re-init date filter in case admin view was open
+    const filterDate = document.getElementById('filter-date');
+    if (filterDate && !filterDate.value) filterDate.valueAsDate = new Date();
     restoreSession();
 }
 
 // ─── View Controller ──────────────────────────────────────
 function showView(id) {
     ['view-register','view-employee','view-scanner','view-admin-login','view-admin-dashboard']
-        .forEach(v => {
-            const el = document.getElementById(v);
-            el.classList.remove('active','active-flex');
-        });
-    const target = document.getElementById(id);
-    // split-layout views need flex
-    if (id === 'view-register' || id === 'view-admin-login') {
-        target.classList.add('active-flex');
-    } else {
-        target.classList.add('active');
-    }
+        .forEach(v => document.getElementById(v).classList.remove('active', 'active-flex'));
+    document.getElementById(id).classList.add('active');
+    // Scroll to top on view change
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 // ─── Registration ─────────────────────────────────────────
@@ -839,7 +853,56 @@ function initClock() {
 }
 
 // ─── Scanner ──────────────────────────────────────────────
+// คำนวณระยะห่าง GPS
+function getDistanceFromLatLonInM(lat1, lon1, lat2, lon2) {
+    const R = 6371e3; // รัศมีโลก (เมตร)
+    const dLat = (lat2-lat1) * (Math.PI/180);
+    const dLon = (lon2-lon1) * (Math.PI/180);
+    const a =
+        Math.sin(dLat/2) * Math.sin(dLat/2) +
+        Math.cos(lat1 * (Math.PI/180)) * Math.cos(lat2 * (Math.PI/180)) *
+        Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c;
+}
+
 function openScanner() {
+    if (!REQUIRE_GPS) {
+        startScannerUI();
+        return;
+    }
+
+    if (!navigator.geolocation) {
+        showToast('อุปกรณ์หรือเบราว์เซอร์ไม่รองรับ GPS', 'error');
+        return;
+    }
+
+    showToast('กำลังตรวจสอบพิกัด GPS...', 'info');
+
+    navigator.geolocation.getCurrentPosition(
+        (position) => {
+            const userLat = position.coords.latitude;
+            const userLng = position.coords.longitude;
+            const distance = getDistanceFromLatLonInM(COMPANY_LAT, COMPANY_LNG, userLat, userLng);
+
+            if (distance <= ALLOWED_RADIUS_METERS) {
+                showToast('พิกัดถูกต้อง เริ่มสแกนได้', 'success');
+                startScannerUI();
+            } else {
+                showToast(`คุณอยู่นอกพื้นที่ (ห่าง ${Math.round(distance)} ม.)`, 'error');
+            }
+        },
+        (error) => {
+            console.error("GPS Error:", error);
+            let errMsg = 'ไม่สามารถดึงตำแหน่งได้ กรุณาเปิด GPS';
+            if (error.code === 1) errMsg = 'กรุณากด "อนุญาต (Allow)" สิทธิ์ GPS';
+            showToast(errMsg, 'error');
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
+}
+
+function startScannerUI() {
     showView('view-scanner');
     html5QrcodeScanner = new Html5Qrcode('reader');
     html5QrcodeScanner.start(
@@ -850,6 +913,7 @@ function openScanner() {
     ).catch(err => {
         console.error(err);
         showToast('ไม่สามารถเปิดกล้องได้ กรุณาให้สิทธิ์', 'error');
+        closeScanner();
     });
 }
 
