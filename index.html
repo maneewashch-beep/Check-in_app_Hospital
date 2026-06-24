@@ -81,7 +81,6 @@
         .stat-card { background: #000; border: 1px solid var(--border); border-radius: 12px; padding: 16px; text-align: center; transition: border-color .15s; display: flex; flex-direction: column; justify-content: center; }
         .stat-card:hover { border-color: var(--border2); }
 
-        /* ปรับปรุง Tab บนมือถือให้เลื่อนปัดได้และเป็นทรงยาแคปซูล */
         .tab-row { display: flex; gap: 8px; border-bottom: 1px solid transparent; margin-bottom: 24px; overflow-x: auto; padding-bottom: 8px; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
         .tab-row::-webkit-scrollbar { display: none; }
         .tab-btn { flex: 0 0 auto; background: var(--surface2); border: 1px solid var(--border); border-radius: 100px; color: var(--muted); padding: 10px 18px; font-weight: 500; font-family: inherit; cursor: pointer; font-size: .9rem; transition: all .2s; white-space: nowrap; }
@@ -198,7 +197,7 @@
         .upload-box { border: 2px dashed var(--border2); border-radius: 10px; padding: 16px; text-align: center; cursor: pointer; transition: all .2s; background: rgba(255,255,255,.02); display: block; }
         .upload-box:hover { border-color: var(--accent); background: rgba(79,127,255,.05); }
 
-        /* ── Image Viewer Modal (รองรับภาพขนาดใหญ่) ── */
+        /* ── Image Viewer Modal ── */
         #image-view-modal .img-viewer-inner { background: var(--surface); border: 1px solid var(--border2); border-radius: 16px; padding: 16px; max-width: 92vw; max-height: 92vh; display: flex; flex-direction: column; position: relative; overflow: hidden; }
         #image-viewer-img { max-width: 100%; max-height: calc(90vh - 60px); object-fit: contain; border-radius: 8px; display: block; margin:0 auto; }
 
@@ -358,6 +357,14 @@
 
                     <div id="today-leave-banner" style="display:none;background:rgba(168,85,247,.08);border:1px solid rgba(168,85,247,.3);border-radius:12px;padding:14px 16px;margin-bottom:20px;">
                         <div style="display:flex;align-items:center;gap:10px;"><i class="fa-solid fa-calendar-minus" style="color:var(--purple);font-size:1.1rem;flex-shrink:0;"></i><div id="today-leave-text" style="font-size:.9rem;font-weight:600;color:var(--purple);"></div></div>
+                    </div>
+
+                    <!-- เพิ่ม Error Banner เพื่อรองรับฟังก์ชัน JavaScript ที่แก้ไขแล้ว -->
+                    <div id="error-banner" style="display:none;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.3);border-radius:12px;padding:14px 16px;margin-bottom:20px;">
+                        <div style="display:flex;align-items:center;gap:10px;">
+                            <i class="fa-solid fa-triangle-exclamation" style="color:var(--red);font-size:1.1rem;flex-shrink:0;"></i>
+                            <div id="error-detail" style="font-size:.9rem;font-weight:600;color:var(--red);"></div>
+                        </div>
                     </div>
 
                     <div class="section-label" style="margin-bottom:12px;">ประวัติการลงเวลาวันนี้</div>
@@ -550,7 +557,7 @@
 
 <!-- ══ MODALS ══ -->
 
-<!-- Modal: View Image (รองรับภาพทุกขนาด มี scroll) -->
+<!-- Modal: View Image -->
 <div id="image-view-modal" class="modal-backdrop" style="display:none;z-index:400;align-items:center;justify-content:center;" onclick="if(event.target===this)closeImageModal()">
     <div class="img-viewer-inner" style="background:var(--surface);border:1px solid var(--border2);border-radius:16px;padding:20px;max-width:92vw;max-height:92vh;display:flex;flex-direction:column;position:relative;overflow:hidden;box-shadow:0 10px 40px rgba(0,0,0,0.8);">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-shrink:0;">
@@ -579,7 +586,7 @@
     </div>
 </div>
 
-<!-- Modal: Custom Prompt (Replacement for window.prompt) -->
+<!-- Modal: Custom Prompt -->
 <div id="custom-prompt-modal" class="modal-backdrop" style="display:none; z-index: 500;">
     <div class="modal-box text-center p-8" style="max-width: 400px;">
         <div class="w-16 h-16 bg-blue-900/20 border-2 border-blue-500/50 rounded-full flex items-center justify-center mx-auto mb-5 text-blue-500 text-3xl shadow-[0_0_15px_rgba(59,130,246,0.2)]">
@@ -703,7 +710,7 @@
                 <textarea id="leave-note" class="form-textarea" placeholder="ระบุเหตุผลหรือรายละเอียดเพิ่มเติม (ถ้ามี)" style="padding:14px;font-size:.95rem;min-height:90px;"></textarea>
             </div>
             
-            <!-- 📷 Upload Image Box (ไม่จำกัดขนาด) -->
+            <!-- 📷 Upload Image Box -->
             <div>
                 <label class="form-label">
                     แนบรูปภาพ (ใบรับรองแพทย์/หลักฐาน)
@@ -947,7 +954,7 @@ function togglePassword(inputId, btnEl) {
 }
 
 /* ══════════════════════════════════════════════════════
-   IMAGE UPLOAD — ไม่จำกัดขนาด อ่าน base64 ตรงๆ
+   IMAGE UPLOAD
 ══════════════════════════════════════════════════════ */
 function handleImageUpload(e) {
     const file = e.target.files[0];
@@ -1172,7 +1179,7 @@ async function syncUserData() {
 
         if (document.getElementById('view-employee').classList.contains('active')) {
             displayUserProfile();
-            loadTodayLogsForUser(); // Calculates stats using unified date parsing
+            loadTodayLogsForUser();
             renderMyLeaves();
         }
     } catch(e) { console.error('sync error:', e); }
@@ -1294,7 +1301,7 @@ function closeModal(id) { const m = document.getElementById(id); m.classList.rem
 function closeLeaveModal() { closeModal('leave-modal'); }
 
 /* ══════════════════════════════════════════════════════
-   USER PROFILE — แสดงผลและแก้ไข
+   USER PROFILE
 ══════════════════════════════════════════════════════ */
 function displayUserProfile() {
     const users = db.getUsers();
@@ -1322,13 +1329,11 @@ function openProfileEditModal() {
     const users = db.getUsers();
     const me = users.find(u => String(u.empId || u.id) === String(currentUser.empId));
     
-    // โหลดข้อมูลปัจจุบันเข้า form
     document.getElementById('edit-profile-nick').value  = (me?.nickname && me.nickname !== '-') ? me.nickname : '';
     document.getElementById('edit-profile-age').value   = (me?.age && me.age !== '-') ? me.age : '';
     document.getElementById('edit-profile-phone').value = (me?.phone && me.phone !== '-') ? formatPhone(me.phone) : '';
     document.getElementById('edit-profile-dept').value  = (me?.department && me.department !== '-') ? me.department : '';
 
-    // รีเซ็ตปุ่ม
     const btn = document.getElementById('profile-save-btn');
     if (btn) { btn.innerHTML = '<i class="fa-solid fa-save" style="margin-right:8px;"></i>บันทึกข้อมูล'; btn.disabled = false; }
 
@@ -1345,11 +1350,9 @@ async function submitProfileEdit(e) {
     const ph   = document.getElementById('edit-profile-phone').value.trim() || '-';
     const dept = document.getElementById('edit-profile-dept').value.trim() || '-';
 
-    // แสดงสถานะกำลังบันทึก
     const btn = document.getElementById('profile-save-btn');
     if (btn) { btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin" style="margin-right:8px;"></i>กำลังบันทึก...'; btn.disabled = true; }
 
-    // บันทึกลง localStorage ก่อน (ทำงานเร็ว)
     const users = db.getUsers();
     const userIdx = users.findIndex(u => String(u.empId || u.id) === String(currentUser.empId));
     if (userIdx !== -1) {
@@ -1360,17 +1363,14 @@ async function submitProfileEdit(e) {
         db.saveUsers(users);
     }
 
-    // อัปเดต UI ทันที
     displayUserProfile();
 
-    // Animation บน profile card
     const profileCard = document.getElementById('user-profile-card');
     if (profileCard) { profileCard.classList.add('profile-save-anim'); setTimeout(() => profileCard.classList.remove('profile-save-anim'), 400); }
 
     closeProfileEditModal();
     showToast('บันทึกข้อมูลส่วนตัวสำเร็จ ✓', 'success');
 
-    // ส่งไป Google Sheets แบบ background (ไม่รอผล)
     if (GOOGLE_APP_SCRIPT_URL) {
         const payload = { action: 'update_user', empId: currentUser.empId, nickname: nick, age, phone: ph, department: dept };
         fetch(GOOGLE_APP_SCRIPT_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(payload) })
@@ -1406,7 +1406,7 @@ function initClock() {
 }
 
 /* ══════════════════════════════════════════════════════
-   LEAVE (พนักงาน)
+   LEAVE
 ══════════════════════════════════════════════════════ */
 function openLeaveModal(lvId = null) {
     const isAdmin = sessionStorage.getItem(ADMIN_SESSION_KEY) === 'true';
@@ -1431,7 +1431,6 @@ function openLeaveModal(lvId = null) {
             }
             document.getElementById('leave-note').value = lv.note || '';
 
-            // โหลดรูปเดิม (ถ้ามี)
             if (lv.attachedImage && lv.attachedImage.startsWith('data:image')) {
                 document.getElementById('leave-image-base64').value = lv.attachedImage;
                 document.getElementById('leave-upload-text').style.display = 'none';
@@ -1628,16 +1627,13 @@ function handleScan(qrData) {
     closeScanner(); showToast('กำลังบันทึก...', 'info'); hideErrorBanner();
     
     const now = new Date();
-    // สร้างวันที่ให้อยู่ในฟอร์แมท YYYY-MM-DD แน่นอน 100%
     const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
     const timeStr = now.toLocaleTimeString('th-TH', { hour12: false });
     
     try {
         const allLogs = db.getLogs();
-        // แก้ไขบัคการหาบันทึกของวันนี้ โดยใช้ normalizeDate
         const myToday = allLogs.filter(l => String(l.empId) === String(currentUser.empId) && normalizeDate(l.date) === dateStr && l.type !== 'LEAVE');
         
-        // เรียงตามเวลาเพื่อให้แน่ใจว่าดึงการสแกนล่าสุดจริงๆ
         myToday.sort((a,b) => a.time.localeCompare(b.time));
         
         const lastLog = myToday[myToday.length - 1];
@@ -1663,11 +1659,18 @@ function handleScan(qrData) {
     }
 }
 
+// แก้ไขฟังก์ชัน showErrorBanner และ hideErrorBanner ให้ตรวจสอบการมีอยู่ของ Element ก่อน
 function showErrorBanner(detail, timeStr) {
-    document.getElementById('error-detail').innerHTML = `เวลาที่พยายามบันทึก: <strong>${timeStr}</strong><br>สาเหตุ: ${detail}`;
-    document.getElementById('error-banner').style.display = 'block';
+    const detailEl = document.getElementById('error-detail');
+    const bannerEl = document.getElementById('error-banner');
+    if (detailEl) detailEl.innerHTML = `เวลาที่พยายามบันทึก: <strong>${timeStr}</strong><br>สาเหตุ: ${detail}`;
+    if (bannerEl) bannerEl.style.display = 'block';
 }
-function hideErrorBanner() { document.getElementById('error-banner').style.display = 'none'; }
+
+function hideErrorBanner() { 
+    const bannerEl = document.getElementById('error-banner');
+    if (bannerEl) bannerEl.style.display = 'none'; 
+}
 
 /* ══════════════════════════════════════════════════════
    TODAY LOGS & STATS
@@ -1679,7 +1682,6 @@ function loadTodayLogsForUser() {
     
     const logs = db.getLogs().filter(l => String(l.empId) === String(currentUser.empId) && normalizeDate(l.date) === dateStr && l.type !== 'LEAVE' && l.type !== 'LEAVE_UPDATE' && l.type !== 'LEAVE_DELETE');
     
-    // เรียงตามเวลาเพื่อให้ได้ลำดับที่ถูกต้อง
     logs.sort((a,b) => a.time.localeCompare(b.time));
     
     const firstIn = logs.find(l => l.type === 'IN');
@@ -1755,7 +1757,6 @@ function loadUserStats() {
     const currentMonth = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
     let workDays = new Set(), lateDays = new Set(), leaveCount = 0, absenceCount = 0;
     
-    // กรองหา Logs ทั้งหมดในเดือนนี้
     const allLogs = db.getLogs().filter(l => {
         const nd = normalizeDate(l.date);
         return String(l.empId) === String(currentUser.empId) && nd && nd.startsWith(currentMonth) && l.type !== 'LEAVE';
@@ -2198,7 +2199,6 @@ function showReportDayDetail(dateStr) {
 /* ══════════════════════════════════════════════════════
    ADMIN: LEAVE LIST & MODALS
 ══════════════════════════════════════════════════════ */
-// เปิดรายละเอียดการลาแบบสมบูรณ์
 function openLeaveDetailModal(leaveId) {
     const lv = globalLeaves.find(l => l.id === leaveId) || db.getLeaves().find(l => l.id === leaveId);
     if (!lv) return;
