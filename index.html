@@ -966,22 +966,59 @@ function handleImageUpload(e) {
 
     const reader = new FileReader();
     reader.onload = function(event) {
-        const base64String = event.target.result; 
+        const img = new Image();
+        img.onload = function() {
+            // บีบอัดรูปภาพด้วย Canvas เพื่อป้องกันปัญหา Payload Too Large
+            const canvas = document.createElement('canvas');
+            const MAX_WIDTH = 800;
+            const MAX_HEIGHT = 800;
+            let width = img.width;
+            let height = img.height;
 
-        document.getElementById('leave-image-base64').value = base64String;
-        document.getElementById('leave-upload-progress').style.display = 'none';
-        document.getElementById('leave-upload-text').style.display = 'none';
+            if (width > height) {
+                if (width > MAX_WIDTH) {
+                    height *= MAX_WIDTH / width;
+                    width = MAX_WIDTH;
+                }
+            } else {
+                if (height > MAX_HEIGHT) {
+                    width *= MAX_HEIGHT / height;
+                    height = MAX_HEIGHT;
+                }
+            }
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+            
+            // แปลงเป็น base64 JPEG quality 60%
+            const base64String = canvas.toDataURL('image/jpeg', 0.6);
 
-        const preview = document.getElementById('leave-image-preview');
-        preview.src = base64String;
-        document.getElementById('leave-image-preview-wrap').style.display = 'block';
-        document.getElementById('leave-upload-box').style.padding = '8px';
+            document.getElementById('leave-image-base64').value = base64String;
+            document.getElementById('leave-upload-progress').style.display = 'none';
+            document.getElementById('leave-upload-text').style.display = 'none';
 
-        const sizeKB = (file.size / 1024).toFixed(1);
-        const sizeMB = (file.size / 1024 / 1024).toFixed(2);
-        const sizeInfo = document.getElementById('leave-image-size-info');
-        sizeInfo.textContent = `ขนาดไฟล์: ${sizeKB >= 1024 ? sizeMB + ' MB' : sizeKB + ' KB'}`;
-        sizeInfo.style.display = 'block';
+            const preview = document.getElementById('leave-image-preview');
+            preview.src = base64String;
+            document.getElementById('leave-image-preview-wrap').style.display = 'block';
+            document.getElementById('leave-upload-box').style.padding = '8px';
+
+            // คำนวณขนาดไฟล์หลังบีบอัด
+            const base64Length = base64String.length - (base64String.indexOf(',') + 1);
+            const padding = (base64String.charAt(base64String.length - 2) === '=') ? 2 : ((base64String.charAt(base64String.length - 1) === '=') ? 1 : 0);
+            const fileSize = (base64Length * 0.75) - padding;
+            
+            const sizeKB = (fileSize / 1024).toFixed(1);
+            const sizeMB = (fileSize / 1024 / 1024).toFixed(2);
+            const sizeInfo = document.getElementById('leave-image-size-info');
+            sizeInfo.textContent = `ขนาดไฟล์: ${sizeKB >= 1024 ? sizeMB + ' MB' : sizeKB + ' KB'}`;
+            sizeInfo.style.display = 'block';
+        };
+        img.onerror = function() {
+            showToast('ไฟล์รูปภาพไม่ถูกต้อง', 'error');
+            resetImageUploadUI();
+        };
+        img.src = event.target.result;
     };
     reader.onerror = function() {
         showToast('ไม่สามารถโหลดรูปภาพได้', 'error');
@@ -1012,6 +1049,15 @@ function openImageModal(base64Src) {
     openModal('image-view-modal');
 }
 function closeImageModal() { closeModal('image-view-modal'); }
+
+function openImageModalByLeaveId(leaveId) {
+    const lv = globalLeaves.find(l => l.id === leaveId) || db.getLeaves().find(l => l.id === leaveId);
+    if (lv && lv.attachedImage) {
+        openImageModal(lv.attachedImage);
+    } else {
+        showToast('ไม่พบรูปภาพ', 'error');
+    }
+}
 
 /* ══════════════════════════════════════════════════════
    INIT
@@ -1565,7 +1611,7 @@ function renderMyLeaves() {
             <div style="display:flex; flex-direction:column; align-items:flex-end; gap:8px;">
                 <span class="leave-status-badge ${statusClass}">${statusLabel}</span>
                 <div style="display:flex; gap:6px;">
-                    ${lv.attachedImage ? `<button onclick="openImageModal(db.getLeaves().find(l=>l.id==='${lv.id}')?.attachedImage || '')" class="btn-ghost btn-sm" style="padding:4px 8px;font-size:.7rem;color:var(--accent);" title="ดูรูปภาพแนบ"><i class="fa-solid fa-image"></i></button>` : ''}
+                    ${lv.attachedImage ? `<button onclick="openImageModalByLeaveId('${lv.id}')" class="btn-ghost btn-sm" style="padding:4px 8px;font-size:.7rem;color:var(--accent);" title="ดูรูปภาพแนบ"><i class="fa-solid fa-image"></i></button>` : ''}
                     ${canEdit ? `
                     <button onclick="openLeaveModal('${lv.id}')" class="btn-ghost btn-sm" style="padding:4px 8px;font-size:.7rem;" title="แก้ไข"><i class="fa-solid fa-pen"></i></button>
                     <button onclick="userDeleteLeave('${lv.id}')" class="btn-ghost btn-sm" style="padding:4px 8px;font-size:.7rem;color:var(--red);" title="ยกเลิก"><i class="fa-solid fa-trash"></i></button>
@@ -2184,7 +2230,7 @@ function showReportDayDetail(dateStr) {
                         <div style="font-size:.85rem;color:${statusColor};font-weight:600;">${statusText}</div>
                     </div>
                     <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start;">
-                        ${lv.attachedImage ? `<button onclick="openImageModal('${lv.attachedImage}')" class="btn-ghost btn-sm" style="color:var(--accent);padding:6px 10px;" title="ดูรูปหลักฐาน"><i class="fa-solid fa-image"></i> ดูรูป</button>` : ''}
+                        ${lv.attachedImage ? `<button onclick="openImageModalByLeaveId('${lv.id}')" class="btn-ghost btn-sm" style="color:var(--accent);padding:6px 10px;" title="ดูรูปหลักฐาน"><i class="fa-solid fa-image"></i> ดูรูป</button>` : ''}
                         <button onclick="openLeaveModal('${lv.id}')" class="btn-ghost btn-sm" style="color:var(--accent);"><i class="fa-solid fa-pen"></i> แก้ไข</button>
                         ${lv.status === 'pending' ? `<button onclick="approveLeave('${lv.id}')" class="btn-success btn-sm"><i class="fa-solid fa-check"></i> อนุมัติ</button><button onclick="rejectLeave('${lv.id}')" class="btn-danger btn-sm"><i class="fa-solid fa-times"></i> ปฏิเสธ</button>` : ''}
                         <button onclick="adminDeleteLeave('${lv.id}')" class="btn-ghost btn-sm" style="color:var(--red);border-color:rgba(239,68,68,.3);"><i class="fa-solid fa-trash"></i></button>
@@ -2223,7 +2269,7 @@ function openLeaveDetailModal(leaveId) {
         imageHTML = `
             <div style="margin-top:16px; border-top: 1px solid var(--border); padding-top:16px;">
                 <div style="font-size:.85rem; color:var(--muted); margin-bottom:12px; font-weight:600;"><i class="fa-solid fa-paperclip mr-2"></i>รูปภาพหลักฐานใบลา</div>
-                <img src="${lv.attachedImage}" style="max-width:100%; max-height:280px; border-radius:8px; cursor:zoom-in; border:1px solid var(--border); display:block; margin:0 auto;" onclick="openImageModal('${lv.attachedImage}')" title="คลิกเพื่อขยายดูรูปเต็ม">
+                <img id="detail-leave-image" style="max-width:100%; max-height:280px; border-radius:8px; cursor:zoom-in; border:1px solid var(--border); display:block; margin:0 auto;" onclick="openImageModalByLeaveId('${lv.id}')" title="คลิกเพื่อขยายดูรูปเต็ม">
             </div>
         `;
     } else {
@@ -2288,6 +2334,13 @@ function openLeaveDetailModal(leaveId) {
         ${actionButtonsHTML}
     `;
     openModal('leave-detail-modal');
+
+    if (lv.attachedImage) {
+        setTimeout(() => {
+            const imgEl = document.getElementById('detail-leave-image');
+            if (imgEl) imgEl.src = lv.attachedImage;
+        }, 10);
+    }
 }
 function closeLeaveDetailModal() { closeModal('leave-detail-modal'); }
 
